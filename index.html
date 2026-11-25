@@ -362,6 +362,17 @@ details.qa summary::after { position: absolute; right: 20px; top: 14px; }
 .code { overflow-x: auto; }
 .view code, .view h2 { overflow-wrap: anywhere; }
 
+/* ---- tinh chỉnh theo taste-skill (system.md): nhãn viết thường, chữ ≥ 13px,
+   chữ để đọc ≥ 15px, một thang bo góc 8/12, vùng bấm 44px ---- */
+.kicker { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--soft); }
+.flowpane, .panel, .code, .card, .diagram, .fig, .msg { border-radius: 12px; }
+.flow .rec, .flow .chip, .filenav .chip span, .stepcard code, .fig figcaption .src { font-size: 13px; }
+.expl table, .stepcard span, .fig figcaption { font-size: 15px; }
+.tabs a, button.b, .filenav .chip { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 640px) { .code { font-size: 13px; } }
+/* cột đọc căn giữa: lề trái phải bằng nhau (taste-skill, equal edges) */
+main .view:not(.file) { margin-inline: auto; width: 100%; }
+
 </style>
 </head>
 <body>
