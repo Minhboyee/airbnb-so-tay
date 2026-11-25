@@ -33,8 +33,8 @@ Ngày bàn giao: 25/11/2026. Sổ tay giờ nằm ở repo public riêng `Minhbo
 | `pages/luong.html` | Xong (sơ đồ Mức 0, bảng Mức 1, cờ chạy, bản đồ file). |
 | `pages/buoc-0..6.html`, `buoc-4bc.html` | Xong phần mở đầu + sơ đồ Mức 2 + bảng tóm tắt. |
 | `pages/kiem-thu.html` | Xong (bảng 17 file test, 453 test). |
-| `pages/ly-thuyet.html` | **Chỉ là khung, cần viết** (mục 3.2). |
-| `pages/hoi-dap.html` | Tự gom câu hỏi + nhận xét từ notes. **Cần thêm câu hỏi tổng quát** (mục 3.3). |
+| `pages/ly-thuyet.html` | Xong (12 mục). |
+| `pages/hoi-dap.html` | Xong: câu hỏi tổng quát + tự gom từ notes. |
 
 ### Chú giải từng file (`notes/<id>.md`)
 | id | File | Dòng | Trạng thái |
@@ -46,20 +46,20 @@ Ngày bàn giao: 25/11/2026. Sổ tay giờ nằm ở repo public riêng `Minhbo
 | qa_constraints | src/qa_constraints.py | 135 | ✅ xong |
 | qa_rules | src/qa_rules.py | 605 | ✅ xong |
 | baseline | src/baseline.py | 97 | ✅ có 13 khối (agent bị dừng giữa chừng, nên đọc lại một lượt) |
-| metrics | src/metrics.py | 145 | ⚠️ gần xong: còn thiếu dòng 78, 128–129, 143–145 |
-| run_pipeline | run_pipeline.py | 213 | ❌ chưa làm |
-| sydney_yaml | configs/sydney.yaml | 93 | ❌ |
-| pyproject | pyproject.toml | ~50 | ❌ |
-| ci | .github/workflows/ci.yml | 94 | ❌ |
-| seg_init, seg_load, seg_rules, seg_transitions, seg_report | src/segments/*.py | 521 | ❌ |
-| llm | src/llm.py | 440 | ❌ |
-| label_additional | scripts/label_additional_reviews.py | 247 | ❌ |
-| llm_segments | src/llm_segments.py | 268 | ❌ |
-| evaluate | src/evaluate.py | 456 | ❌ |
-| eval_report | src/eval_report.py | 245 | ❌ |
-| kpi | src/kpi.py | 1.007 | ❌ |
-| viz | src/viz.py | 439 | ❌ |
-| viz_phantom | src/viz_phantom.py | 980 | ❌ |
+| metrics | src/metrics.py | 145 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| run_pipeline | run_pipeline.py | 213 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| sydney_yaml | configs/sydney.yaml | 93 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| pyproject | pyproject.toml | ~50 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| ci | .github/workflows/ci.yml | 94 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| seg_init, seg_load, seg_rules, seg_transitions, seg_report | src/segments/*.py | 521 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| llm | src/llm.py | 440 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| label_additional | scripts/label_additional_reviews.py | 247 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| llm_segments | src/llm_segments.py | 268 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| evaluate | src/evaluate.py | 456 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| eval_report | src/eval_report.py | 245 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| kpi | src/kpi.py | 1.007 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| viz | src/viz.py | 439 | ✅ xong (opencode, 25/11/2026), `--check` OK |
+| viz_phantom | src/viz_phantom.py | 980 | ✅ xong (opencode, 25/11/2026), `--check` OK |
 
 File chưa có chú giải vẫn hiện đủ code trên trang, chỉ chưa bấm ra giải thích được.
 

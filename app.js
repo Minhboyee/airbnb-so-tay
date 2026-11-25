@@ -24,7 +24,11 @@
     b.querySelector(":scope > .lines").setAttribute("aria-expanded", open);
   }
   function go(id) {
-    const t = (id && document.getElementById(id)) || views[0];
+    let t = id && document.getElementById(id);
+    // link sinh động (#file-L85) có thể rơi giữa khối: lùi về dòng đầu khối chứa nó
+    const m = !t && /^(.+)-L(\d+)$/.exec(id || "");
+    if (m) for (let n = +m[2]; n > 0 && !t; n--) t = document.getElementById(`${m[1]}-L${n}`);
+    t = t || views[0];
     const view = t.closest("[data-view]") || views[0];
     views.forEach((v) => (v.hidden = v !== view));
     tabs.forEach((a) => {
@@ -46,6 +50,7 @@
     go(id);
   });
   addEventListener("popstate", () => go(location.hash.slice(1)));
+  addEventListener("hashchange", () => go(location.hash.slice(1)));
 
   /* ---------- bấm dòng mở giải thích ---------- */
   document.addEventListener("click", (e) => {

@@ -52,25 +52,25 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <tr><td>gold mixed</td><td>3</td><td>12</td><td>0</td><td>12</td><td>3</td><td>0</td></tr>
 <tr><td>gold negative</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></table>
 
-=== 66-71
+=== 66-72
 <p>Cohen's kappa trả lời: hai bên đồng ý nhiều hơn mức "trùng do may" bao nhiêu? Công thức κ = (p<sub>o</sub> − p<sub>e</sub>) / (1 − p<sub>e</sub>):</p>
 <ul><li>p<sub>o</sub>: tỷ lệ khớp thật = accuracy.</li>
 <li>p<sub>e</sub>: tỷ lệ khớp nếu hai bên gán độc lập, mỗi bên giữ tần suất nhãn của mình.</li></ul>
-<p>κ = 1 là khớp hoàn toàn, 0 là không hơn ngẫu nhiên, âm là tệ hơn ngẫu nhiên.</p>
+<p>κ = 1 là khớp hoàn toàn, 0 là không hơn ngẫu nhiên, âm là tệ hơn ngẫu nhiên. Ma trận rỗng hoặc p<sub>e</sub> = 1 thì trả 0 (hai khối dưới).</p>
 
-=== 72-74
-<p>Ma trận rỗng (n = 0) thì trả 0, tránh chia cho 0.</p>
-
-=== 75
-<p>p<sub>o</sub> = tổng đường chéo / n.</p>
+=== 73-75
+<p><code>total = matrix.sum()</code> là tổng số review đã chấm. Ma trận rỗng (n = 0) thì trả 0 ngay, tránh chia cho 0. Với gold 100 review, <code>total</code> = 100.</p>
 
 === 76
+<p>p<sub>o</sub> = tổng đường chéo / n = số dự đoán đúng / tổng. LLM: 97/100 = 0,97.</p>
+
+=== 77
 <p>p<sub>e</sub> = Σ<sub>k</sub> (tổng cột k × tổng hàng k) / n². Tổng hàng là số gold của lớp k, tổng cột là số máy đoán lớp k.</p>
 <p>Ví dụ LLM: hàng (85, 15, 0), cột (88, 12, 0). p<sub>e</sub> = (85·88 + 15·12)/10.000 = 0,766; p<sub>o</sub> = 0,97 → κ = (0,97 − 0,766)/0,234 = <b>0,872</b>.</p>
 <p>Baseline: hàng (85, 15, 0), cột (96, 4, 0). p<sub>e</sub> = (85·96 + 15·4)/10.000 = 0,822; p<sub>o</sub> = 0,87 → κ = 0,048/0,178 = <b>0,270</b>. Accuracy cao nhưng p<sub>e</sub> cũng cao vì cả hai bên gần như toàn positive.</p>
 
-=== 77
-<p>p<sub>e</sub> = 1 xảy ra khi cả gold và máy chỉ dùng đúng một nhãn (ví dụ toàn positive): mẫu số 1 − p<sub>e</sub> = 0, kappa không xác định. Code quy ước trả 0. Với gold thật (15 mixed) trường hợp này không xảy ra; trong bootstrap thì chỉ xảy ra nếu một mẫu bốc lại không có review mixed nào, xác suất cỡ 0,85<sup>100</sup>, bỏ qua được.</p>
+=== 78
+<p>Chốt kết quả. Điều kiện viết <code>expected &gt;= 1</code> chứ không phải <code>== 1</code>: p<sub>e</sub> về lý thuyết không vượt 1, nhưng phép cộng số thực có thể cho 1,0000000000000002; lúc đó mẫu số âm rất nhỏ và kappa bùng nổ, nên chặn luôn. Trường hợp p<sub>e</sub> = 1 xảy ra khi cả gold và máy chỉ dùng đúng một nhãn (ví dụ toàn positive): mẫu số 1 − p<sub>e</sub> = 0, kappa không xác định, code quy ước trả 0. Với gold thật (15 mixed) trường hợp này không xảy ra; trong bootstrap chỉ xảy ra nếu một mẫu bốc lại không có review mixed nào, xác suất cỡ 0,85<sup>100</sup>, bỏ qua được.</p>
 
 === 81-84
 <p>Precision/recall/F1 của <b>từng lớp</b> sentiment, đọc từ ma trận. <code>support</code> = tổng hàng (gold có bao nhiêu), <code>predicted</code> = tổng cột (máy đoán bao nhiêu).</p>
@@ -94,26 +94,35 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <p><b>Chỉ lấy lớp có support &gt; 0.</b> Gold không có negative; nếu tính cả lớp đó (F1 = 0 theo quy ước trên) thì mọi phương pháp bị trừ oan. Chạy thử: macro-F1 baseline tính 3 lớp là 0,415, tính 2 lớp là 0,622. Hàm trả kèm số lớp đã dùng (<code>sentiment_macro_f1_labels = 2</code> trong <code>eval_summary.csv</code>) để người đọc biết trung bình trên mấy lớp.</p>
 <p>Số thật: LLM (0,983 + 0,889)/2 = 0,936; baseline (0,928 + 0,316)/2 = 0,622. Lưu ý: lớp negative mà máy đoán sai (gold không có) vẫn làm giảm precision chỗ khác, nhưng không có dòng negative nào trong trung bình.</p>
 
-=== 118-122
-<p>Khoảng tin cậy cho một tỷ lệ (accuracy = số đúng / n). n = 0 thì trả NaN, báo cáo hiện "n/a".</p>
+=== 118-123
+<p>Khoảng tin cậy cho một tỷ lệ (accuracy = số đúng / n). Cho biết tỷ lệ thật nhiều khả năng nằm trong khoảng nào. n = 0 thì trả <code>(nan, nan)</code>, báo cáo hiện "n/a".</p>
 
-=== 123-127
+=== 124-127
 <p>Công thức Wilson, với p̂ = đúng/n, z = 1,96:</p>
 <ul><li>tâm = (p̂ + z²/2n) / (1 + z²/n)</li>
 <li>nửa độ rộng = z·√(p̂(1−p̂)/n + z²/4n²) / (1 + z²/n)</li></ul>
-<p>Tính tay LLM 97/100: tâm = (0,97 + 0,0192)/1,0384 = 0,9526; nửa độ rộng = 1,96·√(0,000291 + 0,000096)/1,0384 = 0,0371 → <b>[0,915; 0,990]</b>. Baseline 87/100 → [0,790; 0,922].</p>
-<p>Vì sao không dùng khoảng chuẩn (Wald) p̂ ± 1,96√(p̂(1−p̂)/n)? Với 97/100 Wald cho [0,937; 1,003], vượt 1, vô nghĩa. Wilson luôn nằm trong [0; 1] và tâm bị kéo về 0,5 một chút, hợp với n nhỏ và tỷ lệ sát 1. (Chạy thử <code>wilson_interval(0, 10)</code> ra cận dưới −2,8·10<sup>−17</sup>: sai số dấu phẩy động, thực chất là 0.)</p>
+<p><code>rate</code> là p̂; <code>denominator</code> = 1 + z²/n = 1,0384 khi n = 100. Hai dòng sau dùng lại <code>rate</code> và <code>denominator</code>.</p>
 
-=== 130-138
+=== 128-129
+<p>Tâm và nửa độ rộng đúng như công thức trên. Tính tay LLM 97/100: tâm = (0,97 + 0,0192)/1,0384 = 0,9526; nửa độ rộng = 1,96·√(0,000291 + 0,000096)/1,0384 = 0,0371 → <b>[0,915; 0,990]</b>. Baseline 87/100 → [0,790; 0,922].</p>
+<p>Vì sao không dùng khoảng chuẩn (Wald) p̂ ± 1,96√(p̂(1−p̂)/n)? Với 97/100 Wald cho [0,937; 1,003], vượt 1, vô nghĩa. Wilson luôn nằm trong [0; 1] và tâm bị kéo về 0,5 một chút, hợp với n nhỏ và tỷ lệ sát 1.</p>
+
+=== 130
+<p>Trả hai cận dưới dạng <code>float</code>. Chạy thử <code>wilson_interval(0, 10)</code> ra cận dưới −2,8·10<sup>−17</sup>: sai số dấu phẩy động, thực chất là 0; cận trên 0,278.</p>
+
+=== 133-139
 <p>Kappa và F1 không có công thức khoảng gọn như Wilson, nên dùng bootstrap: coi 100 review là "tổng thể thu nhỏ", bốc lại có hoàn lại 100 review, tính lại số đo, lặp nhiều lần, xem số đo dao động thế nào. Tắt bằng <code>n_boot = 0</code> (test dùng điều này).</p>
 
-=== 139
-<p>Sinh một lần ma trận chỉ số <code>(n_boot, n)</code>, mỗi hàng là một mẫu bốc lại. Với config thật <code>n_boot = 2000</code> (<code>eval.bootstrap_samples</code>), n = 100, seed 42. Cùng seed và cùng n thì ra đúng cùng 2000 mẫu: baseline và LLM, kappa, macro-F1 và micro-F1 đều được bốc trên cùng các bộ chỉ số. Kết quả lặp lại được từng chữ số.</p>
+=== 140-141
+<p>Hai trường hợp không tính được: n = 0 (không có review) hoặc <code>n_boot &lt;= 0</code> (người gọi tắt bootstrap). Trả <code>(nan, nan)</code> để báo cáo hiện "n/a" thay vì lỗi. Trong <code>score_method</code>, test truyền <code>n_boot=0</code> và kiểm hai cận là NaN.</p>
 
-=== 140
+=== 142
+<p>Sinh một lần ma trận chỉ số <code>(n_boot, n)</code>, mỗi hàng là một mẫu bốc lại, bằng <code>default_rng(seed).integers(0, n, size=(n_boot, n))</code>. Với config thật <code>n_boot = 2000</code> (<code>eval.bootstrap_samples</code>), n = 100, seed 42. Cùng seed và cùng n thì ra đúng cùng 2000 mẫu: baseline và LLM, kappa, macro-F1 và micro-F1 đều được bốc trên cùng các bộ chỉ số. Kết quả lặp lại được từng chữ số.</p>
+
+=== 143
 <p>Gọi <code>metric</code> trên từng hàng chỉ số. <code>metric</code> là hàm đóng (lambda) do <code>evaluate.score_method</code> truyền vào, tự lấy dòng gold/máy theo chỉ số và tính lại ma trận (<a href="#evaluate-L211">evaluate dòng 211</a>).</p>
 
-=== 141-142
+=== 144-145
 <p>Phương pháp <b>phân vị</b>: khoảng 95% là phân vị 2,5% và 97,5% của 2000 giá trị. Ví dụ kappa baseline [−0,019; 0,534]: cận dưới âm nghĩa là với 100 review này chưa loại được khả năng baseline không hơn ngẫu nhiên. Kappa LLM [0,706; 1,000] và macro-F1 LLM [0,851; 1,000] chạm 1 vì có những mẫu bốc lại không chứa 3 ca LLM sai.</p>
 
 --- flow

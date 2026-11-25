@@ -1,4 +1,237 @@
 <section class="head">
+  <span class="kicker">Ôn vấn đáp · Lý thuyết</span>
   <h1>Lý thuyết</h1>
-  <p class="lead">Đang viết. Xem HANDOFF.md: phần này gồm IQR, bẫy gộp nhóm (Simpson), trung vị, ma trận chuyển nhóm chuẩn hoá theo hàng, accuracy/precision/recall/F1, macro vs micro, Cohen’s kappa, khoảng tin cậy Wilson và bootstrap, cache và tính tái lập.</p>
+  <p class="lead">Mười hai mẩu lý thuyết đứng sau pipeline. Mỗi mục có giải thích ngắn, công thức, một ví dụ số thật lấy từ CSV/báo cáo trong repo, và link về đúng dòng code dùng nó. Số nào không có trong CSV đã commit thì không ghi.</p>
+</section>
+
+<section class="block">
+  <h2>1. Snapshot là ảnh chụp, không phải thước phim</h2>
+  <div class="text">
+    <p>Inside Airbnb tải lại toàn bộ listing vào một ngày. Mỗi mốc là một tấm ảnh chụp trạng thái lúc đó, không phải một dòng dữ liệu nối tiếp. Vì vậy <b>không suy ra xu hướng</b> bằng cách nối bốn cột: một căn vắng ở mốc sau có thể do bị lọc khỏi file, không phải đã đóng cửa. Chỉ so sánh <b>trong cùng một mốc</b>; muốn nói “đổi theo thời gian” thì theo dõi cùng <code>id</code> qua các mốc (mục 6).</p>
+    <p>Bốn mốc nằm trong <a href="#sydney_yaml-L8">configs/sydney.yaml dòng 8</a>; vòng lặp đọc từng mốc ở <a href="#run_pipeline-L73">run_pipeline.py dòng 73</a>. Tỷ lệ mỗi nhóm luôn tính trên mẫu số của chính mốc đó:</p>
+  </div>
+  <div class="formula">share(nhóm, mốc) = số listing thuộc nhóm ở mốc / tổng listing có mặt ở mốc</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Mốc</th><th>12/09/2025</th><th>12/12/2025</th><th>21/03/2026</th><th>16/06/2026</th></tr></thead>
+    <tbody><tr><td>Số listing (cả TP)</td><td>17.730</td><td>20.436</td><td>13.563</td><td>20.573</td></tr></tbody>
+  </table></div>
+  <p class="muted">Nguồn: tổng cột <code>n</code> của <code>data/processed/segments_counts_full.csv</code>. Báo cáo gap ghi mốc 03/2026 vắng 4.645 căn (3.569 giải thích được, 1.076 chưa rõ; <code>segments_gap_summary_full.csv</code>), nên mốc này chỉ dùng để mô tả, không dùng để kết luận xu hướng.</p>
+</section>
+
+<section class="block">
+  <h2>2. QA gắn cờ, không xoá dòng</h2>
+  <div class="text">
+    <p>Bước QA chỉ thêm cột đúng/sai cho từng dòng; không dòng nào bị xoá. Có ba cờ tổng: <code>qa_has_error</code> (vi phạm ít nhất một luật mức lỗi), <code>qa_has_error_excl_price</code> (như trên nhưng bỏ qua luật giá) và <code>qa_has_warning</code> (bất thường thống kê). KPI phi giá giữ các dòng có <code>qa_has_error_excl_price = False</code>, để một căn thiếu giá vẫn được tính cho KPI lịch, host, điểm đánh giá.</p>
+    <p>Cờ tách riêng phần giá vì hai mốc đầu <b>không có cột giá</b>: chạy luật giá ở đó sẽ gắn cờ “thiếu giá” cho gần như mọi dòng. Hàm <a href="#qa_rules-L110">has_price_data</a> kiểm tra có ít nhất một ô giá đọc được trước khi chạy nhóm luật giá. Định nghĩa cờ ở <a href="#qa_rules-L45">qa_rules.py dòng 45</a>; KPI lọc dòng ở <a href="#kpi-L849">kpi.py dòng 849</a>.</p>
+  </div>
+  <div class="formula">n_sau_lọc_lỗi = số dòng có qa_has_error = False<br>n_sau_lọc_lỗi_và_cảnh_báo = số dòng có qa_has_error = False và qa_has_warning = False</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Mốc</th><th>Trước QA</th><th>Bỏ lỗi</th><th>Bỏ thêm cảnh báo</th><th>price_unusable</th><th>price_outlier</th></tr></thead>
+    <tbody>
+      <tr><td>09/2025</td><td>1.000</td><td>1.000</td><td>1.000</td><td>không chạy</td><td>không chạy</td></tr>
+      <tr><td>12/2025</td><td>1.000</td><td>1.000</td><td>1.000</td><td>không chạy</td><td>không chạy</td></tr>
+      <tr><td>03/2026</td><td>1.000</td><td>997</td><td>948</td><td>3</td><td>51</td></tr>
+      <tr><td>06/2026</td><td>1.000</td><td>978</td><td>928</td><td>22</td><td>52</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>reports/qa_report.csv</code>. Ở mốc cuối, 22 dòng <code>price_unusable</code> gồm 20 thiếu giá và 2 giá trên 10.000 AUD; 52 dòng <code>price_outlier</code> là cảnh báo, không phải lỗi.</p>
+</section>
+
+<section class="block">
+  <h2>3. IQR và ngoại lệ: k = 3, không phải 1,5</h2>
+  <div class="text">
+    <p>IQR là độ rộng 50% dữ liệu ở giữa. Hàng rào ngoại lệ đặt cách Q1/Q3 một khoảng <code>k·IQR</code>. Nhóm chọn <code>k = 3</code> (<a href="#sydney_yaml-L14">sydney.yaml dòng 14</a>, mặc định trong <a href="#qa_rules-L180">qa_rules.py dòng 180</a>) để chỉ bắt giá rất lạ, không phạt giá cao hợp lý. Đây là <b>cảnh báo</b>, không phải lỗi: dòng bị cờ vẫn vào KPI phi giá.</p>
+  </div>
+  <div class="formula">IQR = Q3 − Q1<br>hàng rào dưới = Q1 − k·IQR<br>hàng rào trên = Q3 + k·IQR<br>cờ nếu giá &lt; hàng rào dưới hoặc giá &gt; hàng rào trên</div>
+  <div class="text">
+    <p>Với phân phối chuẩn, <code>IQR ≈ 1,349σ</code> và Q1/Q3 cách trung bình <code>0,6745σ</code>. Thay vào hàng rào:</p>
+    <ul><li><code>k = 1,5</code> (quy tắc boxplot thường): ±2,70σ.</li>
+    <li><code>k = 3</code>: ±4,72σ.</li></ul>
+    <p>Nghĩa là k = 1,5 bắt khoảng 0,7% đuôi phân phối chuẩn; k = 3 gần như chỉ bắt giá nhập sai. Số thật: mốc 06/2026 có <b>52/1.000</b> dòng bị <code>price_outlier</code> (5,2%); mốc 03/2026 có <b>51/1.000</b> (5,1%) — <code>reports/qa_report.csv</code>. Máy thử IQR nằm ở <a href="#buoc-2">trang bước 2</a>.</p>
+  </div>
+</section>
+
+<section class="block">
+  <h2>4. Trung vị và trung bình: cùng một cột giá, hai câu chuyện</h2>
+  <div class="text">
+    <p>Trung bình cộng mọi giá trị nên bị vài căn giá rất cao kéo lên; trung vị chỉ là giá trị đứng giữa sau khi sắp xếp, nên ít bị đuôi ảnh hưởng. Vì vậy báo cáo QA in cả hai, và chênh lệch giữa chúng là dấu hiệu đuôi phải. Code tính ở <a href="#qa-L25">qa.compute_kpis</a>; giá được làm sạch bằng <code>parse_price</code> rồi bỏ NaN (<a href="#qa-L41">dòng 41</a>).</p>
+  </div>
+  <div class="formula">trung bình = (1/n) · Σ giá<sub>i</sub><br>trung vị = giá trị thứ ⌈n/2⌉ sau khi sắp xếp (phân vị 50%)</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Mốc 06/2026</th><th>n</th><th>Trung bình (AUD)</th><th>Trung vị (AUD)</th></tr></thead>
+    <tbody>
+      <tr><td>Trước QA</td><td>1.000</td><td>490,01</td><td>343,00</td></tr>
+      <tr><td>Bỏ dòng lỗi</td><td>978</td><td>464,16</td><td>342,84</td></tr>
+      <tr><td>Bỏ thêm cảnh báo</td><td>928</td><td>370,56</td><td>333,33</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>reports/qa_report.csv</code>, phần <code>kpi</code> mốc 2026-06-16. Từ trước QA tới sau khi bỏ cảnh báo, trung bình giảm 119,45 AUD (24,4%) còn trung vị chỉ giảm 9,67 AUD (2,8%). Nếu chỉ nhìn trung bình sẽ tưởng giá giảm mạnh; thực ra vài đuôi giá bị loại.</p>
+</section>
+
+<section class="block">
+  <h2>5. Luật ưu tiên: khớp trước thì thắng</h2>
+  <div class="text">
+    <p>Mỗi căn vào đúng một trong bảy nhóm bằng một <i>decision list</i>: xét điều kiện từ trên xuống, điều kiện đầu tiên đúng thì gán nhãn và dừng. Thứ tự là “thang bằng chứng”: lịch kín là quan sát mạnh nhất, rồi lịch sử review, cuối cùng là mức mở lịch. Code ở <a href="#seg_rules-L50">segments/rules.py dòng 50</a>; sáu điều kiện và nhãn mặc định ở <a href="#seg_rules-L84">dòng 84–93</a>.</p>
+  </div>
+  <div class="formula">nhãn = nhãn của điều kiện đúng đầu tiên; không điều kiện nào đúng → H_healthy</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Thứ tự</th><th>Nhóm</th><th>Điều kiện (tóm tắt)</th><th>Cả TP 06/2026</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>B_ghost</td><td><code>availability_365 ≤ 0</code> và không review trong 365 ngày</td><td>918</td></tr>
+      <tr><td>2</td><td>B_booked</td><td><code>availability_365 ≤ 0</code> và có review trong 365 ngày</td><td>1.159</td></tr>
+      <tr><td>3</td><td>D_dormant</td><td>có review nhưng review cuối cũ hơn 365 ngày</td><td>1.913</td></tr>
+      <tr><td>4</td><td>D_never</td><td>0 review và id đã thấy ở mốc cách ≥ 150 ngày</td><td>1.528</td></tr>
+      <tr><td>5</td><td>N_new</td><td>0 review, chưa đủ cũ để kết luận</td><td>1.525</td></tr>
+      <tr><td>6</td><td>L_low</td><td>mở ≥ 180 ngày và 1–3 review trong 12 tháng</td><td>1.623</td></tr>
+      <tr><td>7</td><td>H_healthy</td><td>phần còn lại</td><td>11.907</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Ngưỡng lấy từ <a href="#sydney_yaml-L81">sydney.yaml dòng 81–85</a>; số đếm từ <code>segments_counts_full.csv</code>. Ví dụ ưu tiên: căn có <code>availability_365 = 0</code> và review cuối 500 ngày trước thoả cả B_ghost lẫn D_dormant, nhưng B_ghost đứng trước nên thắng.</p>
+  <div class="note-box">
+    <b>Vì sao hai mốc 2025 có 0 căn D_never</b>
+    <span><a href="#seg_rules-L96">seen_before_ids</a> trả <code>None</code> khi không có mốc nào cách ≥ 150 ngày. Lúc đó mọi căn 0 review rơi vào N_new, không thể phân biệt D_never. Đây là giới hạn dữ liệu, không phải bug.</span>
+  </div>
+</section>
+
+<section class="block">
+  <h2>6. Ma trận chuyển nhóm: chuẩn hoá theo hàng</h2>
+  <div class="text">
+    <p>Muốn biết “căn ở nhóm A tháng 9 giờ ở đâu”, phải theo dõi cùng <code>id</code>. Ma trận đếm cặp <code>(nhóm nguồn, nhóm đích)</code>; id không còn ở mốc đích rơi vào cột <code>BIEN_MAT</code>. Ma trận 7 hàng × 8 cột (7 nhóm + BIEN_MAT), rồi chia mỗi hàng cho tổng hàng để so được các cohort khác cỡ. Code ở <a href="#seg_transitions-L33">transitions.py dòng 33</a>; <code>crosstab</code> và <code>reindex</code> ở <a href="#seg_transitions-L50">dòng 50</a>. Cặp mốc khai ở <a href="#sydney_yaml-L91">yaml dòng 91</a>.</p>
+  </div>
+  <div class="formula">M[i][j] = số id ở nhóm i tại mốc nguồn và nhóm j tại mốc đích / số id ở nhóm i tại mốc nguồn<br>mỗi hàng i cộng lại = 100%</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Từ → đến</th><th>09/2025 → 06/2026</th><th>12/2025 → 06/2026</th></tr></thead>
+    <tbody>
+      <tr><td>D_dormant → D_dormant</td><td>65,44%</td><td>67,12%</td></tr>
+      <tr><td>D_dormant → BIEN_MAT</td><td>15,99%</td><td>14,07%</td></tr>
+      <tr><td>H_healthy → H_healthy</td><td>69,41%</td><td>72,81%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>segments_transitions_full.csv</code>. Không dùng mốc 03/2026 làm nguồn hay đích vì mốc đó thiếu 4.645 căn; “biến mất” ở mốc đó phần lớn là do lọc, không phải căn rời sàn. Cột <code>BIEN_MAT</code> và hàm <code>track</code> là hai cách gọi cùng một hiện tượng: id không còn trong dữ liệu mốc đích.</p>
+</section>
+
+<section class="block">
+  <h2>7. Bẫy gộp nhóm (Simpson): gộp thì rẻ, tách ra thì đắt</h2>
+  <div class="text">
+    <p>Giá/đêm của căn thuê dài thường thấp hơn căn ngắn ngày. Nếu tính một trung vị “hàng xóm” chung cho cả hai chế độ, trung vị bị kéo xuống, và tỷ số của căn ngắn ngày bị thổi lên. Vì vậy mỗi căn chỉ so với các căn <b>cùng khu, cùng loại phòng, cùng chế độ lưu trú</b>: ngắn ngày ≤ 20 đêm hoặc thuê dài ≥ 90 đêm; căn 21–89 đêm bị bỏ khỏi cả tử lẫn mẫu. Đây là nghịch lý Simpson: nhìn gộp thấy một đằng, tách nhóm thấy một nẻo. Code ở <a href="#kpi-L262">kpi.py dòng 262</a>, trung vị hàng xóm ở <a href="#kpi-L335">dòng 335</a>, tỷ số ở <a href="#kpi-L342">dòng 342</a>; ngưỡng ở <a href="#sydney_yaml-L86">yaml dòng 86–87</a>.</p>
+  </div>
+  <div class="formula">ratio(căn) = giá(căn) / median{ giá(căn khác cùng khu, cùng room_type, cùng chế độ) }<br>KPI của nhóm = median{ ratio(các căn trong nhóm) }</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Nhóm</th><th>Ngắn ngày ≤ 20 đêm</th><th>Thuê dài ≥ 90 đêm</th></tr></thead>
+    <tbody>
+      <tr><td>D_dormant</td><td>1,3203× (n = 791)</td><td>0,9583× (n = 836)</td></tr>
+      <tr><td>D_never</td><td>1,8549× (n = 529)</td><td>1,0706× (n = 740)</td></tr>
+      <tr><td>H_healthy</td><td>0,9639× (n = 11.584)</td><td>0,9761× (n = 66)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>data/processed/kpi_phantom.csv</code>, mốc 06/2026. Ở khung ngắn ngày, căn ngủ đông đắt hơn hàng xóm 1,32 lần, căn chưa từng có review đắt 1,85 lần; căn khoẻ gần 1. Ở khung ≥ 90 đêm, tỷ số gần 1 vì phần lớn “hàng xóm” cũng là căn ảo — khung này không dùng để nói rẻ hay đắt.</p>
+</section>
+
+<section class="block">
+  <h2>8. Mẫu không đại diện: 8,4% và 21,2% đều đúng</h2>
+  <div class="text">
+    <p>Mẫu 1.000 căn của đề không phải lát cắt ngẫu nhiên của Sydney: nó gồm các căn còn sống ở cả bốn mốc, 875 nguyên căn và 125 phòng riêng. Vì vậy tỷ lệ căn ảo trên mẫu thấp hơn hẳn cả thành phố. Hai con số trả lời hai câu hỏi khác nhau, không lấy số này trừ số kia.</p>
+  </div>
+  <div class="formula">tỷ lệ căn ảo = (B_ghost + D_dormant + D_never) / tổng listing có nhãn</div>
+  <div class="cards">
+    <div class="card"><span class="who">Mẫu đề · 1.000 căn · 06/2026</span><span class="big">8,4%</span><span>84 căn: 1 B_ghost + 58 D_dormant + 25 D_never.</span></div>
+    <div class="card ph"><span class="who">Cả thành phố · 20.573 căn · cùng ngày</span><span class="big">21,2%</span><span>4.359 căn: 918 + 1.913 + 1.528. Tỷ lệ chính xác 21,188%.</span></div>
+  </div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Tỷ lệ căn ảo</th><th>09/2025</th><th>12/2025</th><th>03/2026</th><th>06/2026</th></tr></thead>
+    <tbody>
+      <tr><td>Cả thành phố</td><td>13,1%</td><td>12,0%</td><td>6,5% (bẫy)</td><td>21,2%</td></tr>
+      <tr><td>Mẫu 1.000 căn</td><td>3,6%</td><td>4,1%</td><td>7,6%</td><td>8,4%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>segments_counts_full.csv</code>, <code>segments_counts_sample.csv</code>; công thức ở <a href="#kpi-L140">phantom_listing_rate</a>. H_healthy chiếm 84,6% mẫu nhưng chỉ 57,9% cả thành phố. Không đọc hàng “cả thành phố” thành xu hướng: hai mốc 2025 chưa tách được D_never, mốc 03/2026 bị lọc thiếu căn.</p>
+</section>
+
+<section class="block">
+  <h2>9. Accuracy, precision, recall, F1; macro và micro; Cohen’s kappa</h2>
+  <div class="text">
+    <p>Gold có 100 review nhãn tay: 85 positive, 15 mixed, 0 negative. Vì không có negative, mọi chỉ số của lớp đó bằng 0 và <b>không được tính</b> vào macro. Ma trận nhầm lẫn 3×3 đọc từ <a href="#metrics-L58">metrics.py dòng 58</a>; từng lớp ở <a href="#metrics-L81">dòng 81</a>; macro-F1 ở <a href="#metrics-L107">dòng 107</a>; kappa ở <a href="#metrics-L66">dòng 66</a>.</p>
+  </div>
+  <div class="formula">precision = TP / (TP + FP) &nbsp;·&nbsp; recall = TP / (TP + FN) &nbsp;·&nbsp; F1 = 2PR / (P + R)<br>accuracy = (TP + TN) / tổng<br>macro-F1 = trung bình F1 các lớp có support &gt; 0<br>kappa = (p<sub>o</sub> − p<sub>e</sub>) / (1 − p<sub>e</sub>)</div>
+  <div class="two">
+    <div>
+      <h3>Gemini</h3>
+      <div class="tablewrap"><table class="num">
+        <thead><tr><th>gold \ máy</th><th>positive</th><th>mixed</th><th>negative</th></tr></thead>
+        <tbody>
+          <tr><td>positive (85)</td><td>85</td><td>0</td><td>0</td></tr>
+          <tr><td>mixed (15)</td><td>3</td><td>12</td><td>0</td></tr>
+          <tr><td>negative (0)</td><td>0</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <h3>Baseline từ khoá</h3>
+      <div class="tablewrap"><table class="num">
+        <thead><tr><th>gold \ máy</th><th>positive</th><th>mixed</th><th>negative</th></tr></thead>
+        <tbody>
+          <tr><td>positive (85)</td><td>84</td><td>1</td><td>0</td></tr>
+          <tr><td>mixed (15)</td><td>12</td><td>3</td><td>0</td></tr>
+          <tr><td>negative (0)</td><td>0</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+  <p class="muted">Ma trận dựng lại từ <code>reports/evaluation/eval_perclass.csv</code> (support, predicted, precision, recall khớp). Accuracy: Gemini 97/100 = <b>0,970</b>, baseline 87/100 = <b>0,870</b>. Macro-F1 trên hai lớp có support: Gemini (0,9827 + 0,8889)/2 = <b>0,9358</b>; baseline (0,9282 + 0,3158)/2 = <b>0,6220</b>.</p>
+  <div class="text">
+    <p>Kappa của Gemini: gold 85/15/0, máy đoán 88/12/0 nên <code>p<sub>e</sub> = (85·88 + 15·12)/100² = 0,766</code>; <code>p<sub>o</sub> = 0,97</code>; kappa = (0,97 − 0,766)/(1 − 0,766) = <b>0,872</b>. Baseline: <code>p<sub>e</sub> = (85·96 + 15·4)/100² = 0,822</code>; kappa = (0,87 − 0,822)/(1 − 0,822) = <b>0,270</b>. Kappa trừ phần trùng do ngẫu nhiên, nên baseline đoán “positive” gần hết vẫn bị điểm thấp dù accuracy 0,87.</p>
+    <p><b>Macro vs micro:</b> sentiment dùng macro (mỗi lớp nặng như nhau, chỉ lớp có support &gt; 0). Khía cạnh dùng micro trên cặp <code>(khen/chê, khía cạnh)</code> — <a href="#metrics-L25">aspect_pairs</a> — nên khía cạnh xuất hiện nhiều đóng góp nhiều hơn. Micro-F1 khía cạnh: Gemini <b>0,904</b>, baseline <b>0,602</b> (<code>eval_summary.csv</code>).</p>
+  </div>
+</section>
+
+<section class="block">
+  <h2>10. Khoảng tin cậy: Wilson cho tỷ lệ, bootstrap cho F1/kappa</h2>
+  <div class="text">
+    <p>Một con số 0,970 trên 100 review không nói nó chắc tới đâu. Với tỷ lệ như accuracy, dùng khoảng Wilson vì công thức vẫn hợp lý khi mẫu nhỏ hoặc tỷ lệ sát 0/1 (<a href="#metrics-L118">metrics.py dòng 118</a>). Với F1 và kappa, không có công thức khoảng đơn giản, nên dùng bootstrap: bốc lại có hoàn lại 100 dòng, tính lại chỉ số, lặp 2.000 lần rồi lấy phân vị 2,5% và 97,5% (<a href="#metrics-L133">dòng 133</a>). Số lần và seed lấy từ <a href="#sydney_yaml-L75">yaml dòng 75</a> và <a href="#sydney_yaml-L60">dòng 60</a>.</p>
+  </div>
+  <div class="formula">Wilson: tâm = (p̂ + z²/2n) / (1 + z²/n)<br>nửa rộng = z·√(p̂(1−p̂)/n + z²/4n²) / (1 + z²/n), z = 1,96<br>bootstrap: lấy phân vị 2,5% và 97,5% của B lần tính lại chỉ số</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Chỉ số (Gemini / baseline)</th><th>Giá trị</th><th>Khoảng tin cậy 95%</th></tr></thead>
+    <tbody>
+      <tr><td>Accuracy Gemini</td><td>0,970</td><td>[0,9155; 0,9897]</td></tr>
+      <tr><td>Accuracy baseline</td><td>0,870</td><td>[0,7902; 0,9224]</td></tr>
+      <tr><td>Macro-F1 Gemini</td><td>0,936</td><td>[0,8512; 1,0000]</td></tr>
+      <tr><td>Kappa Gemini</td><td>0,872</td><td>[0,7058; 1,0000]</td></tr>
+      <tr><td>Micro-F1 khía cạnh Gemini</td><td>0,904</td><td>[0,8777; 0,9292]</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>reports/evaluation/eval_summary.csv</code>. Accuracy dùng Wilson; F1/kappa dùng 2.000 lần bootstrap với <code>seed = 42</code>, nên chạy lại ra cùng khoảng. Khoảng của macro-F1 và kappa chạm trần 1,0 vì với 100 mẫu và ít lỗi, cận trên không loại được khả năng khớp hoàn toàn.</p>
+</section>
+
+<section class="block">
+  <h2>11. LLM có đầu ra cấu trúc, cache và tính tái lập</h2>
+  <div class="text">
+    <p>LLM không được trả văn bản tự do. Hai mô hình pydantic — <a href="#llm-L67">ReviewInfo</a> cho một review và <a href="#llm-L77">ReviewBatch</a> cho cả lô — định nghĩa đúng các trường: <code>sentiment</code> chỉ nhận <code>positive/mixed/negative</code>, hai danh sách khía cạnh tách khen/chê, và <code>language</code>. JSON schema của <code>ReviewBatch</code> được gửi kèm yêu cầu (<a href="#llm-L270">llm.py dòng 270</a>); kết quả được <code>model_validate_json(..., strict=True)</code> kiểm lại (<a href="#llm-L275">dòng 275</a>). Lô thiếu/trùng/ngoài ID bị từ chối, không vào cache.</p>
+    <p>Mỗi review đã có nhãn được ghi nối vào cache JSONL (<a href="#llm-L186">append_to_cache</a>). Lần chạy sau chỉ gọi API cho review còn thiếu; cache đủ thì không gọi mạng. Cache có <code>CACHE_SCHEMA_VERSION</code>; đổi cấu trúc là cache cũ bị từ chối thay vì trộn lẫn. Nếu thiếu key mà cache chưa đủ, <code>run</code> báo lỗi chứ <b>không sinh nhãn giả</b> (<a href="#llm-L349">dòng 349</a>).</p>
+  </div>
+  <div class="formula">nhãn(review) = f(review, prompt, schema) ; f chỉ chạy khi review chưa có trong cache<br>cùng cache + cùng mẫu (seed 42) → cùng nhãn</div>
+  <div class="cards">
+    <div class="card"><span class="who">Mẫu chính thức</span><span class="big">1.000</span><span>review; coverage chấm điểm 100/100; 14,0% có lời chê.</span></div>
+    <div class="card"><span class="who">Khía cạnh bị chê nhiều nhất</span><span class="big">50,0%</span><span>tiện nghi (amenities), 88/176 lượt khía cạnh bị chê.</span></div>
+  </div>
+  <p class="muted">Nguồn: <code>data/processed/kpi_metrics.csv</code>, <code>reports/evaluation/eval_summary.csv</code>, cache <code>data/processed/llm_cache_pydantic.jsonl</code>. Hai KPI có mẫu số khác nhau: 14,0% tính trên 1.000 review; 50,0% tính trên 176 lượt khía cạnh bị chê, không phải 176 review.</p>
+</section>
+
+<section class="block">
+  <h2>12. Tương quan không phải nhân quả</h2>
+  <div class="text">
+    <p>Dữ liệu cho thấy căn ảo <b>đi cùng</b> việc đòi khách ở dài và để trống đăng ký. Nó không chứng minh luật NSW gây ra căn ảo, cũng không chứng minh căn ảo là vi phạm. Muốn nói nhân quả phải có thiết kế khác (biến động ngoại sinh, so sánh trước/sau có nhóm đối chứng), pipeline này không có. Khi vấn đáp, dùng “khớp với”, không dùng “gây ra”.</p>
+    <p>Các liên hệ quan sát được: tỷ lệ đòi ≥ 90 đêm theo nhóm ở <a href="#kpi-L173">kpi.py dòng 173</a>; tỷ lệ thiếu <code>license</code> ở <a href="#kpi-L200">dòng 200</a>. Trang <a href="#cau-chuyen">Câu chuyện</a> có bảng “được nói / không được nói”.</p>
+  </div>
+  <div class="formula">tỷ lệ đòi ≥ 90 đêm(nhóm) = số căn có minimum_nights ≥ 90 / số căn có minimum_nights hợp lệ<br>tỷ lệ thiếu đăng ký = số căn license trống hoặc rỗng / tổng listing</div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Nhóm</th><th>Đòi ≥ 90 đêm</th><th>n</th></tr></thead>
+    <tbody>
+      <tr><td>B_ghost</td><td>47,06%</td><td>918</td></tr>
+      <tr><td>D_dormant</td><td>55,41%</td><td>1.913</td></tr>
+      <tr><td>D_never</td><td>60,60%</td><td>1.528</td></tr>
+      <tr><td>H_healthy</td><td>1,14%</td><td>11.907</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>kpi_phantom.csv</code>, mốc 06/2026. Ô <code>license</code> trống ở 1.269/20.573 căn (6,17%); trong đó 1.244 căn (98,03%) đòi ≥ 90 đêm và <b>không căn nào</b> đòi 21–89 đêm. Đây là mô tả phân bố, không phải bằng chứng nhân quả. Căn ghi <code>Exempt</code> không bị tính là thiếu đăng ký.</p>
 </section>

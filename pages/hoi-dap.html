@@ -1,8 +1,74 @@
 <section class="head">
   <h1>Hỏi đáp</h1>
-  <p class="lead">Câu hỏi vấn đáp gom từ chú giải từng file. Phần câu hỏi tổng quát đang viết (xem HANDOFF.md).</p>
+  <p class="lead">Mười lăm câu tổng quát hay bị hỏi nhất, trả lời theo trạng thái tag <code>final</code>. Bên dưới là câu hỏi gom tự động từ chú giải từng file và bảng nhận xét code.</p>
   <div class="btns"><button class="b" type="button" data-qa="open">Mở hết</button><button class="b" type="button" data-qa="close">Đóng hết</button></div>
 </section>
+
+<section class="block">
+  <h2>Câu hỏi tổng quát</h2>
+  <div class="qa-list">
+    <details class="qa"><summary>“Căn ảo” là gì, vì sao chia bảy nhóm chứ không gắn một cờ?</summary><div class="ans">
+      <p>“Căn ảo” là cách gọi ba nhóm quan sát được là không phục vụ khách: <code>B_ghost</code> (khoá lịch, không review trong 365 ngày), <code>D_dormant</code> (review cuối cũ hơn 365 ngày) và <code>D_never</code> (0 review và đã xuất hiện ở mốc cách ≥ 150 ngày). Chia bảy nhóm thay vì một cờ vì mỗi nhóm cần một cách xử lý khác nhau: <code>B_booked</code> kín lịch nhưng có khách, <code>N_new</code> chưa đủ dữ liệu, <code>L_low</code> mở nhiều nhưng ít khách. Mốc 16/06/2026: 918 + 1.913 + 1.528 = 4.359/20.573 = <b>21,19%</b>. Luật ở <a href="#seg_rules-L50">segments/rules.py dòng 50</a>, ngưỡng ở <a href="#sydney_yaml-L81">sydney.yaml dòng 81–85</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao mẫu của đề là 8,4% còn cả thành phố là 21,2%?</summary><div class="ans">
+      <p>Hai phạm vi, hai câu hỏi. Mẫu 1.000 căn của đề gồm các căn còn sống ở cả bốn mốc (875 nguyên căn, 125 phòng riêng), nên khoẻ hơn mặt bằng chung: 84/1.000 = <b>8,4%</b>, H_healthy chiếm 84,6%. Cả thành phố cùng luật: 4.359/20.573 = <b>21,19%</b>, H_healthy chỉ 57,9%. Không lấy số này trừ số kia và không suy mẫu ra thành phố. Xem <a href="#kpi-L140">phantom_listing_rate</a> và mục 8 của <a href="#ly-thuyet">Lý thuyết</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>Có thể nói “căn ảo tăng từ 13,1% lên 21,2% sau bốn mốc” không?</summary><div class="ans">
+      <p>Không. Bốn mốc là bốn ảnh chụp, không phải một chuỗi thời gian. Hai mốc 2025 không có cột giá và chưa tách được <code>D_never</code> (mọi căn 0 review vào <code>N_new</code>); mốc 21/03/2026 thiếu 4.645 căn so với ba mốc kia nên tỷ lệ 6,5% là bẫy. Chỉ mốc 16/06/2026 so được đầy đủ. Muốn nói “ở lại/đi về đâu” phải theo cùng <code>id</code>, tức ma trận chuyển nhóm (mục 6 Lý thuyết).</p>
+    </div></details>
+
+    <details class="qa"><summary>Mốc 21/03/2026 có gì đáng ngờ?</summary><div class="ans">
+      <p>Chỉ có 13.563 căn; báo cáo gap ghi 4.645 căn vắng ở mốc này. <code>minimum_nights</code> lớn nhất chỉ 7 và gần như không căn nào kín lịch (0,18%). Đây là dấu hiệu bản chụp bị lọc, không phải thị trường đổi. Trong 4.645 căn vắng, 3.569 (76,8%) giải thích được vì ở mốc cuối chúng đòi &gt; 7 đêm hoặc kín lịch; 1.076 chưa rõ (<code>segments_gap_summary_full.csv</code>). Vì vậy bước 6b loại mốc này khỏi hình “biến mất”.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao hai mốc 2025 có 0 căn D_never?</summary><div class="ans">
+      <p><code>D_never</code> cần một mốc cũ cách ≥ 150 ngày để biết id “đã từng xuất hiện”. Với mốc 09/2025 và 12/2025, không có mốc nào đủ cũ, nên <a href="#seg_rules-L96">seen_before_ids</a> trả <code>None</code> và mọi căn 0 review rơi vào <code>N_new</code>. Đây là giới hạn dữ liệu, không phải nhóm bị mất. Vì vậy không so D_never giữa bốn mốc.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao KPI không xoá mọi dòng bị QA gắn cờ?</summary><div class="ans">
+      <p>QA chỉ gắn cờ, không xoá. KPI phi giá dùng <code>qa_has_error_excl_price</code>: bỏ dòng vi phạm lỗi lõi nhưng giữ dòng chỉ vướng cờ giá. Nếu xoá cả dòng thiếu giá, KPI về lịch, host, điểm đánh giá sẽ mất oan dữ liệu. Ở mốc 06/2026: 1.000 → 978 sau khi bỏ lỗi → 928 sau khi bỏ thêm cảnh báo (<a href="#qa_rules-L45">cờ tổng</a>, <a href="#qa_rules-L110">has_price_data</a>, <a href="#kpi-L849">KPI lọc</a>).</p>
+    </div></details>
+
+    <details class="qa"><summary>IQR là gì, vì sao chọn k = 3 thay vì 1,5?</summary><div class="ans">
+      <p>IQR = Q3 − Q1, độ rộng 50% giá ở giữa. Hàng rào là Q1 − k·IQR và Q3 + k·IQR. Với phân phối chuẩn, k = 1,5 tương đương ±2,70σ (bắt khoảng 0,7% đuôi), còn k = 3 tương đương ±4,72σ, gần như chỉ bắt giá nhập sai. Nhóm chọn k = 3 (<a href="#sydney_yaml-L14">yaml dòng 14</a>, <a href="#qa_rules-L180">code dòng 180</a>) và chỉ gắn <b>cảnh báo</b>. Số thật: 52/1.000 dòng ở mốc 06/2026, 51/1.000 ở mốc 03/2026.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao phải tách giá ngắn ngày và thuê ≥ 90 đêm?</summary><div class="ans">
+      <p>Vì gộp hai chế độ là bẫy Simpson. Giá/đêm thuê dài thấp hơn hẳn ngắn ngày; nếu tính chung một trung vị hàng xóm, trung vị bị kéo xuống và tỷ số căn ngắn ngày bị thổi lên. Tách ra: ngắn ngày D_dormant <b>1,3203×</b>, D_never <b>1,8549×</b>, H_healthy <b>0,9639×</b>; ≥ 90 đêm D_dormant 0,9583×, D_never 1,0706×, H_healthy 0,9761×. Ở khung dài, phần lớn “hàng xóm” cũng là căn ảo nên khung đó không dùng để nói rẻ/đắt. Code ở <a href="#kpi-L262">kpi.py dòng 262</a>, ngưỡng ở <a href="#sydney_yaml-L86">yaml dòng 86–87</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>LLM chấm sentiment tốt tới đâu, so với baseline ra sao?</summary><div class="ans">
+      <p>Gold 100 review nhãn tay: 85 positive, 15 mixed, 0 negative. Gemini đạt accuracy <b>0,970</b> so với baseline từ khoá <b>0,870</b>; macro-F1 <b>0,936</b> so với <b>0,622</b>; Cohen’s kappa <b>0,872</b> so với <b>0,270</b>. Kappa quan trọng hơn accuracy ở đây: baseline đoán gần hết là positive nên accuracy cao nhưng kappa thấp. Số từ <code>reports/evaluation/eval_summary.csv</code>, code chấm ở <a href="#metrics-L66">kappa</a> và <a href="#metrics-L107">macro-F1</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao macro-F1 bỏ lớp negative, có phải che điểm yếu?</summary><div class="ans">
+      <p>Không. Lớp negative có support = 0 (không review nào trong 100 nhãn tay là negative), nên F1 của nó không có nghĩa. <a href="#metrics-L107">macro_f1</a> chỉ lấy trung bình các lớp có <code>support &gt; 0</code> và trả kèm số lớp đã dùng (2). Thiếu lớp vẫn được ghi cảnh báo trong <a href="#evaluate-L135">evaluate.py</a>, không im lặng. Nếu sau này bổ sung nhãn negative, lớp đó tự vào macro.</p>
+    </div></details>
+
+    <details class="qa"><summary>Vì sao cần khoảng tin cậy, và Wilson khác bootstrap thế nào?</summary><div class="ans">
+      <p>100 review là mẫu nhỏ; một con số 0,970 có thể dao động. Wilson dùng cho tỷ lệ như accuracy, vẫn hợp lý khi mẫu nhỏ hoặc sát 0/1 (<a href="#metrics-L118">metrics.py dòng 118</a>). F1 và kappa không có công thức khoảng đơn giản nên dùng bootstrap: bốc lại 100 dòng 2.000 lần rồi lấy phân vị 2,5%/97,5% (<a href="#metrics-L133">dòng 133</a>). Accuracy Gemini: 0,970, CI [0,9155; 0,9897]; baseline 0,870, CI [0,7902; 0,9224].</p>
+    </div></details>
+
+    <details class="qa"><summary>LLM có bịa nhãn không? Cache và tái lập thế nào?</summary><div class="ans">
+      <p>Không. Đầu ra bị buộc theo pydantic <a href="#llm-L67">ReviewInfo</a>/<a href="#llm-L77">ReviewBatch</a>: sentiment chỉ nhận ba giá trị, khía cạnh tách khen/chê, JSON được validate <code>strict=True</code>; lô thiếu/trùng/ngoài ID bị từ chối. Nhãn đã có ghi vào cache JSONL (<a href="#llm-L186">append_to_cache</a>), lần sau chỉ gọi API cho review còn thiếu. Thiếu key mà cache chưa đủ thì báo lỗi, không sinh nhãn giả (<a href="#llm-L349">run</a>). Cùng cache + cùng seed 42 cho cùng kết quả.</p>
+    </div></details>
+
+    <details class="qa"><summary>Có kết luận luật NSW gây ra căn ảo không?</summary><div class="ans">
+      <p>Không. Dữ liệu chỉ cho thấy căn ảo <b>đi cùng</b> việc đòi ≥ 90 đêm và để trống <code>license</code>: B_ghost 47,06%, D_dormant 55,41%, D_never 60,60% đòi ≥ 90 đêm, H_healthy 1,14%; 1.269 căn thiếu đăng ký, 98,03% trong đó đòi ≥ 90 đêm. Đây là tương quan, không phải nhân quả. Khi vấn đáp dùng “khớp với”, không dùng “gây ra”; xem <a href="#cau-chuyen">Câu chuyện</a> và <a href="#kpi-L173">long_stay_90_rate</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>Một lệnh chạy cả pipeline gồm những bước nào, vì sao thứ tự đó?</summary><div class="ans">
+      <p><code>python run_pipeline.py --config configs/sydney.yaml</code> chạy: 1 tải/lọc, 2 QA, 3 chia nhóm, 4 LLM, 4b so sánh theo nhóm, 4c chấm LLM, 5 KPI, 5b KPI căn ảo, 6 vẽ hình, 6b hình căn ảo. Chia nhóm phải trước 4b vì 4b cần nhóm căn; LLM phải trước KPI vì KPI đọc cache LLM. Bước 5b chỉ chạy khi chia nhóm scope <code>full</code>. Cờ <code>--skip-download</code>, <code>--skip-llm</code>, <code>--segments-scope</code> để chạy thiếu phần. Xem <a href="#run_pipeline-L151">dòng 151</a>, <a href="#run_pipeline-L160">dòng 160</a>, <a href="#run_pipeline-L180">dòng 180</a>, <a href="#run_pipeline-L196">dòng 196</a>.</p>
+    </div></details>
+
+    <details class="qa"><summary>CI kiểm gì trước khi cho merge?</summary><div class="ans">
+      <p>Ba cổng trong <a href="#f-ci">.github/workflows/ci.yml</a>: <code>ruff check</code> + <code>ruff format --check</code> (lint), <code>mypy</code> (kiểu), và <code>pytest</code> trên hai phiên bản Python 3.10.22 và 3.12. Mọi job cài từ <code>requirements.lock.txt</code> đã ghim; test phải đạt coverage ≥ 95% (cấu hình trong <a href="#pyproject-L29">pyproject</a>). Ở tag <code>final</code>, bộ test là 453 test pass, coverage 97,92%.</p>
+    </div></details>
+  </div>
+</section>
+
 <section class="block">{{auto_qa}}</section>
 <section class="block">
   <h2>Nhận xét code</h2>

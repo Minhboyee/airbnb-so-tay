@@ -11,7 +11,7 @@ Giao diện và cách tương tác lấy theo [chesslab-so-tay](https://github.c
 
 ## Trạng thái
 
-Chưa xong. Xem [`HANDOFF.md`](HANDOFF.md) để biết phần nào đã làm, phần nào còn thiếu và cách làm tiếp.
+Đủ chú giải cho 25/25 file (mọi dòng code), trang Lý thuyết và Hỏi đáp đã viết; `python build.py` báo 0 vấn đề. Ghi chú lịch sử và số liệu đã kiểm chứng ở [`HANDOFF.md`](HANDOFF.md).
 
 ## Cách dựng
 
