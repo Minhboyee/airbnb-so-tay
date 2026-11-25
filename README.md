@@ -35,6 +35,7 @@ Mở `index.html` bằng trình duyệt là xem được, không cần server (�
 | `FORMAT.md` | Định dạng file chú giải và giọng văn. **Đọc trước khi viết chú giải.** |
 | `notes/<id>.md` | Chú giải cho từng file code (khối dòng → giải thích HTML, luồng, nhận xét, hỏi đáp). |
 | `pages/*.html` | Các trang viết tay: `cau-chuyen`, `luong`, phần mở đầu của `buoc-*`, `kiem-thu`, `ly-thuyet`, `hoi-dap`. Có thể chèn `{{diagram:tên}}` và `{{fig:đường/dẫn.png|chú thích}}`. |
+| `preview.py` | Sinh `pages/du-lieu.html` (tab Dữ liệu): đọc `data/raw`, `data/processed` và các bảng kết quả của repo nhóm, chạy lại QA và chia nhóm trong bộ nhớ, lấy vài dòng mỗi bảng. Chạy trước `build.py` khi dữ liệu đổi; cần dữ liệu thô ở máy (bị gitignore). |
 | `diagrams.py` | Sơ đồ SVG bấm được (mỗi ô có `href` tới dòng code). |
 | `base.css` | CSS gốc lấy từ chesslab-so-tay. |
 | `extra.css` | CSS thêm cho sơ đồ, hình, thẻ, máy phân nhóm. |

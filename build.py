@@ -78,7 +78,7 @@ STEPS: list[tuple[str, str, str, list[str]]] = [
     ("buoc-6", "6 · Hình", "Bước 6 — Vẽ hình", ["viz", "viz_phantom"]),
 ]
 
-PAGES_BEFORE = [("cau-chuyen", "Câu chuyện"), ("luong", "Luồng chính")]
+PAGES_BEFORE = [("cau-chuyen", "Câu chuyện"), ("luong", "Luồng chính"), ("du-lieu", "Dữ liệu")]
 PAGES_AFTER = [("kiem-thu", "Kiểm thử"), ("ly-thuyet", "Lý thuyết"), ("hoi-dap", "Hỏi đáp")]
 
 STEP_OF = {fid: sid for sid, _, _, fids in STEPS for fid in fids}

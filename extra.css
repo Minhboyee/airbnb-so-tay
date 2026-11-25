@@ -118,3 +118,28 @@ details.qa summary::after { position: absolute; right: 20px; top: 14px; }
 @media (max-width: 640px) { .code { font-size: 13px; } }
 /* cột đọc căn giữa: lề trái phải bằng nhau (taste-skill, equal edges) */
 main .view:not(.file) { margin-inline: auto; width: 100%; }
+
+/* ---- tab Dữ liệu: bảng xem trước ---- */
+.dp table.dt { font-size: 14px; width: auto; min-width: 100%; }
+.dp table.dt th { font: 600 13px var(--f-code); color: var(--soft); white-space: nowrap; background: var(--step-2); }
+.dp table.dt td { white-space: nowrap; padding: 8px 14px; font-variant-numeric: tabular-nums; }
+.dp table.dt td.na { color: var(--soft); font-style: italic; }
+.dp table.dt td.flag { font: 13px var(--f-code); color: var(--soft); }
+.dp table.dt td.flag.on { color: var(--neg); font-weight: 700; }
+.dp table.wide-last td:last-child, .dp table.wide-2 td:nth-child(2) { white-space: normal; min-width: 320px; max-width: 520px; }
+.dp table.seg td:last-child { font: 600 13px var(--f-code); }
+.dmeta { font: 13px var(--f-code); color: var(--soft); margin: 0; }
+.dgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.dgrid > div { display: grid; gap: 12px; min-width: 0; }
+details.cols summary { cursor: pointer; font-size: 14px; color: var(--accent); }
+details.cols div { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+details.cols code { font-size: 13px; }
+pre.json { margin: 0; background: var(--step); border-radius: 12px; padding: 14px 18px; font: 13px/1.6 var(--f-code); overflow-x: auto; }
+#du-lieu .block { gap: 16px; }
+#du-lieu .block h3 { margin-top: 12px; }
+@media (max-width: 760px) { .dgrid { grid-template-columns: minmax(0, 1fr); } }
+main #du-lieu { max-width: 1180px; }
+#du-lieu .head, #du-lieu p.text { max-width: 76ch; }
+/* class num của bảng trùng class tô số của Pygments: giữ màu chữ thường */
+table.num { color: var(--ink); }
+@media (max-width: 640px) { .dp table.wide-last td:last-child, .dp table.wide-2 td:nth-child(2) { min-width: 220px; } }

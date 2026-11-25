@@ -373,6 +373,31 @@ details.qa summary::after { position: absolute; right: 20px; top: 14px; }
 /* cột đọc căn giữa: lề trái phải bằng nhau (taste-skill, equal edges) */
 main .view:not(.file) { margin-inline: auto; width: 100%; }
 
+/* ---- tab Dữ liệu: bảng xem trước ---- */
+.dp table.dt { font-size: 14px; width: auto; min-width: 100%; }
+.dp table.dt th { font: 600 13px var(--f-code); color: var(--soft); white-space: nowrap; background: var(--step-2); }
+.dp table.dt td { white-space: nowrap; padding: 8px 14px; font-variant-numeric: tabular-nums; }
+.dp table.dt td.na { color: var(--soft); font-style: italic; }
+.dp table.dt td.flag { font: 13px var(--f-code); color: var(--soft); }
+.dp table.dt td.flag.on { color: var(--neg); font-weight: 700; }
+.dp table.wide-last td:last-child, .dp table.wide-2 td:nth-child(2) { white-space: normal; min-width: 320px; max-width: 520px; }
+.dp table.seg td:last-child { font: 600 13px var(--f-code); }
+.dmeta { font: 13px var(--f-code); color: var(--soft); margin: 0; }
+.dgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.dgrid > div { display: grid; gap: 12px; min-width: 0; }
+details.cols summary { cursor: pointer; font-size: 14px; color: var(--accent); }
+details.cols div { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+details.cols code { font-size: 13px; }
+pre.json { margin: 0; background: var(--step); border-radius: 12px; padding: 14px 18px; font: 13px/1.6 var(--f-code); overflow-x: auto; }
+#du-lieu .block { gap: 16px; }
+#du-lieu .block h3 { margin-top: 12px; }
+@media (max-width: 760px) { .dgrid { grid-template-columns: minmax(0, 1fr); } }
+main #du-lieu { max-width: 1180px; }
+#du-lieu .head, #du-lieu p.text { max-width: 76ch; }
+/* class num của bảng trùng class tô số của Pygments: giữ màu chữ thường */
+table.num { color: var(--ink); }
+@media (max-width: 640px) { .dp table.wide-last td:last-child, .dp table.wide-2 td:nth-child(2) { min-width: 220px; } }
+
 </style>
 </head>
 <body>
@@ -383,6 +408,7 @@ main .view:not(.file) { margin-inline: auto; width: 100%; }
     <nav class="tabs" aria-label="Các phần">
 <a href="#cau-chuyen">Câu chuyện</a>
 <a href="#luong">Luồng chính</a>
+<a href="#du-lieu">Dữ liệu</a>
 <a href="#buoc-0">0 · Điều phối</a>
 <a href="#buoc-1">1 · Tải &amp; lọc</a>
 <a href="#buoc-2">2 · QA</a>
@@ -627,6 +653,121 @@ main .view:not(.file) { margin-inline: auto; width: 100%; }
     </tbody>
   </table></div>
   <p class="muted">Thư mục <code>data/processed/sydney/</code> bị gitignore (<code>data/processed/*/</code>), nên các bảng trong đó chỉ có sau khi chạy pipeline; các CSV ngay dưới <code>data/processed/</code> thì đã commit.</p>
+</section>
+</div>
+<div class="view" id="du-lieu" data-view hidden><section class="head">
+  <span class="kicker">Xem trước dữ liệu</span>
+  <h1>Dữ liệu trông như thế nào</h1>
+  <p class="lead">Mỗi bảng dưới đây chỉ lấy vài dòng và vài cột để xem hình dạng. Đi theo đúng thứ tự pipeline: file tải về, mẫu của đề, bảng sau bước 1, rồi bảng sau khi QA gắn cờ, chia nhóm, LLM gán nhãn và tính KPI.</p>
+  <p class="muted">Ô có chữ cắt bằng dấu … thì rê chuột để xem đủ. Cột tên người (chủ nhà, người viết review) không đưa lên trang.</p>
+</section>
+
+<section class="block">
+  <h2>1. File tải về từ Inside Airbnb</h2>
+  <p class="text">Mỗi mốc có 4 file: ba bảng nén <code>.csv.gz</code> và bản đồ ranh giới khu. Đây là toàn bộ thành phố, chưa lọc gì. Thư mục <code>data/raw/</code> bị gitignore theo yêu cầu đề, nên chỉ có ở máy đã tải (<a href="#download-L1">download.py</a>).</p>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>Mốc</th><th>listings</th><th>calendar</th><th>reviews</th><th>Dung lượng (3 file nén)</th></tr></thead><tbody><tr><td>2025-09-12</td><td>17.730</td><td>6.471.450</td><td>709.866</td><td>99 MB</td></tr><tr><td>2025-12-12</td><td>20.436</td><td>7.459.152</td><td>753.799</td><td>108 MB</td></tr><tr><td>2026-03-21</td><td>13.563</td><td>4.950.495</td><td>660.888</td><td>90 MB</td></tr><tr><td>2026-06-16</td><td>20.573</td><td>7.509.145</td><td>816.528</td><td>115 MB</td></tr></tbody></table></div>
+  <h3>listings.csv.gz</h3>
+  <p class="text">Một dòng là một căn, chụp vào ngày của mốc. Cột giá ở hai mốc 2025 trống hoàn toàn.</p>
+  <p class="dmeta">mốc 2026-06-16 · 20.573 dòng × 90 cột · 12,6 MB</p>
+  <div class="tablewrap dp"><table class="dt "><thead><tr><th>id</th><th>name</th><th>neighbourhood_cleansed</th><th>room_type</th><th>price</th><th>minimum_nights</th><th>availability_365</th><th>number_of_reviews</th><th>last_review</th><th>license</th></tr></thead><tbody><tr><td>1164589</td><td>Pittwater Boat House</td><td>Pittwater</td><td>Entire home/apt</td><td>$496.50</td><td>1.0</td><td>311</td><td>563</td><td>2026-06-08</td><td>PID-STRA-20737</td></tr><tr><td>1218594</td><td title="BONDI HAVEN- CHIC 2 BEDROOM APARTMENT">BONDI HAVEN- CHIC 2 BEDROOM A…</td><td>Waverley</td><td>Entire home/apt</td><td>$810.50</td><td>2.0</td><td>48</td><td>173</td><td>2026-04-15</td><td>PID-STRA-23744</td></tr><tr><td>1243792</td><td title="Great studio next to Carriageworks">Great studio next to Carriage…</td><td>Sydney</td><td>Entire home/apt</td><td>$200.00</td><td>2.0</td><td>90</td><td>622</td><td>2026-06-07</td><td>PID-STRA-6881-2</td></tr><tr><td>1469185</td><td title="Refuge Cove On Pittwater With Views">Refuge Cove On Pittwater With…</td><td>Pittwater</td><td>Entire home/apt</td><td>$329.35</td><td>2.0</td><td>245</td><td>79</td><td>2026-01-07</td><td>PID-STRA-4479</td></tr><tr><td>1769186</td><td>A Unique Potts Point Hideaway</td><td>Sydney</td><td>Entire home/apt</td><td>$146.50</td><td>3.0</td><td>356</td><td>133</td><td>2026-06-02</td><td>PID-STRA-10324</td></tr></tbody></table></div>
+  <details class="cols"><summary>Xem đủ 90 cột</summary><div><code>id</code> <code>listing_url</code> <code>scrape_id</code> <code>last_scraped</code> <code>source</code> <code>name</code> <code>description</code> <code>neighborhood_overview</code> <code>picture_url</code> <code>host_id</code> <code>host_url</code> <code>host_profile_id</code> <code>host_profile_url</code> <code>host_name</code> <code>host_since</code> <code>hosts_time_as_user_years</code> <code>hosts_time_as_user_months</code> <code>hosts_time_as_host_years</code> <code>hosts_time_as_host_months</code> <code>host_location</code> <code>host_about</code> <code>host_response_time</code> <code>host_response_rate</code> <code>host_acceptance_rate</code> <code>host_is_superhost</code> <code>host_thumbnail_url</code> <code>host_picture_url</code> <code>host_neighbourhood</code> <code>host_listings_count</code> <code>host_total_listings_count</code> <code>host_verifications</code> <code>host_has_profile_pic</code> <code>host_identity_verified</code> <code>neighbourhood</code> <code>neighbourhood_cleansed</code> <code>neighbourhood_group_cleansed</code> <code>latitude</code> <code>longitude</code> <code>property_type</code> <code>room_type</code> <code>accommodates</code> <code>bathrooms</code> <code>bathrooms_text</code> <code>bedrooms</code> <code>beds</code> <code>amenities</code> <code>price</code> <code>price_quote_checkin_date</code> <code>price_quote_checkout_date</code> <code>price_quote_total_price</code> <code>price_quote_price_per_night</code> <code>price_quote_raw</code> <code>minimum_nights</code> <code>maximum_nights</code> <code>minimum_minimum_nights</code> <code>maximum_minimum_nights</code> <code>minimum_maximum_nights</code> <code>maximum_maximum_nights</code> <code>minimum_nights_avg_ntm</code> <code>maximum_nights_avg_ntm</code> <code>calendar_updated</code> <code>has_availability</code> <code>availability_30</code> <code>availability_60</code> <code>availability_90</code> <code>availability_365</code> <code>calendar_last_scraped</code> <code>number_of_reviews</code> <code>number_of_reviews_ltm</code> <code>number_of_reviews_l30d</code> <code>availability_eoy</code> <code>number_of_reviews_ly</code> <code>estimated_occupancy_l365d</code> <code>estimated_revenue_l365d</code> <code>first_review</code> <code>last_review</code> <code>review_scores_rating</code> <code>review_scores_accuracy</code> <code>review_scores_cleanliness</code> <code>review_scores_checkin</code> <code>review_scores_communication</code> <code>review_scores_location</code> <code>review_scores_value</code> <code>license</code> <code>instant_bookable</code> <code>calculated_host_listings_count</code> <code>calculated_host_listings_count_entire_homes</code> <code>calculated_host_listings_count_private_rooms</code> <code>calculated_host_listings_count_shared_rooms</code> <code>reviews_per_month</code></div></details>
+  <h3>calendar.csv.gz</h3>
+  <p class="text">Một dòng là một ngày của một căn, 365 ngày tới tính từ ngày chụp. <code>available</code> là <code>t</code> hoặc <code>f</code>: còn trống hay không.</p>
+  <p class="dmeta">7.509.145 dòng × 5 cột · 17,9 MB</p>
+  <div class="tablewrap dp"><table class="dt "><thead><tr><th>listing_id</th><th>date</th><th>available</th><th>minimum_nights</th><th>maximum_nights</th></tr></thead><tbody><tr><td>11156</td><td>2026-06-28</td><td>f</td><td>90</td><td>180</td></tr><tr><td>11156</td><td>2026-06-29</td><td>f</td><td>90</td><td>180</td></tr><tr><td>11156</td><td>2026-06-30</td><td>t</td><td>90</td><td>180</td></tr><tr><td>11156</td><td>2026-07-01</td><td>t</td><td>90</td><td>180</td></tr><tr><td>11156</td><td>2026-07-02</td><td>t</td><td>90</td><td>180</td></tr></tbody></table></div>
+  <h3>reviews.csv.gz</h3>
+  <p class="text">Một dòng là một review, từ trước tới ngày chụp. File nặng nhất vì chứa toàn văn bình luận.</p>
+  <p class="dmeta">816.528 dòng × 6 cột · 84,9 MB</p>
+  <div class="tablewrap dp"><table class="dt wide-last"><thead><tr><th>listing_id</th><th>id</th><th>date</th><th>comments</th></tr></thead><tbody><tr><td>11156</td><td>19220</td><td>2009-12-05</td><td title="Colleen was friendly and very helpful regarding directions, maps and suggestions for places to go.
+&lt;br/&gt;Her flat is centrally located and it&#x27;s easy to walk about the city from there or catch a bus/taxi right outside of her door. The train is only minutes away too.
+&lt;br/&gt;The &#x27;guest&#x27; has his/her own bedroom with a single bed and shares the bathroom. 
+&lt;br/&gt;If I&#x27;m ever back in Sydney, I would certainly consider staying at Colleen&#x27;s again. It was an enjoyable experience.
+&lt;br/&gt;">Colleen was friendly and very helpful regarding directions, maps and suggestions for plac…</td></tr><tr><td>11156</td><td>32592</td><td>2010-03-31</td><td title="Great place, centrally located, easy walk to train station, bus station across the street.  Walking distance to great bars, clubs, and restaurants.  Very good price.
+&lt;br/&gt;">Great place, centrally located, easy walk to train station, bus station across the street…</td></tr><tr><td>11156</td><td>42280</td><td>2010-05-14</td><td>Colleen is very friendly and helpful. The apartment is nice and located conveniently. </td></tr><tr><td>11156</td><td>140942</td><td>2010-11-17</td><td title="Dear Colleen!
+&lt;br/&gt;My friend Diemut from Germany enjoyed it a lot to stay with you. She was pleased about your openness, friendliness and your support according to discover Sydney. --- So if somebody wants to experience Sydney go to Colleen!!! I wish you a lot of guests who are as &#x27;wunderbar&#x27; (wonderful) as you are. 
+&lt;br/&gt;
+&lt;br/&gt;Sincerely
+&lt;br/&gt;
+&lt;br/&gt;Sigrid
+&lt;br/&gt; ">Dear Colleen!
+&lt;br/&gt;My friend Diemut from Germany enjoyed it a lot to stay with you. She w…</td></tr></tbody></table></div>
+  <h3>neighbourhoods.geojson</h3>
+  <p class="text">38 khu (LGA) của Sydney, dùng để nối căn với khu. Ví dụ: Ashfield, Auburn, Bankstown, Blacktown, Botany Bay, Burwood…</p>
+</section>
+
+<section class="block">
+  <h2>2. Mẫu của đề</h2>
+  <p class="text">Đề giao sẵn danh sách ID trong <code>data/samples/</code>. Bước 1 chỉ giữ đúng các căn và review có trong danh sách này.</p>
+  <div class="dgrid">
+    <div><h3>listing_ids.csv</h3><p class="dmeta">1.000 căn · 8 vùng phân tích A01–A08</p><div class="tablewrap dp"><table class="dt "><thead><tr><th>listing_id</th><th>analysis_area</th></tr></thead><tbody><tr><td>79912</td><td>A03</td></tr><tr><td>411828</td><td>A06</td></tr><tr><td>619474</td><td>A07</td></tr><tr><td>783928</td><td>A07</td></tr></tbody></table></div></div>
+    <div><h3>review_ids.csv</h3><p class="dmeta">5.000 review · mau_llm đánh x: 1.000 · nhan_tay đánh x: 100</p><div class="tablewrap dp"><table class="dt "><thead><tr><th>review_id</th><th>listing_id</th><th>mau_llm</th><th>nhan_tay</th></tr></thead><tbody><tr><td>6778680</td><td>619474</td><td>x</td><td>x</td></tr><tr><td>30080164</td><td>3988362</td><td>x</td><td>x</td></tr><tr><td>12210836</td><td>1243792</td><td>x</td><td class="na">trống</td></tr><tr><td>245827</td><td>79912</td><td class="na">trống</td><td class="na">trống</td></tr></tbody></table></div></div>
+  </div>
+  <h3>hand_labels.csv</h3>
+  <p class="text">100 review do nhóm gán nhãn tay, làm đáp án để chấm LLM (<a href="#f-evaluate">evaluate.py</a>).</p>
+  <p class="dmeta">100 dòng · positive 85 · mixed 15 · negative 0</p>
+  <div class="tablewrap dp"><table class="dt wide-2"><thead><tr><th>review_id</th><th>comments</th><th>sentiment</th><th>aspects_positive</th><th>aspects_negative</th></tr></thead><tbody><tr><td>6778680</td><td title="I stayed at Hugh&#x27;s place with two good friends for 6 nights. We had a great time! Hugh was an outstanding host, giving us plenty of useful tips and suggestions.The location was fantastic, at walking distance from the Opera House and right next to Kings Cross underground station. The apartment was clean and comfortable and had absolutely everything we needed, including a full kitchen and a washing/drying machine. I would certainly stay there again.">I stayed at Hugh&#x27;s place with two good friends for 6 nights. We had a…</td><td>positive</td><td>host;location;cleanliness;amenities</td><td class="na">trống</td></tr><tr><td>30080164</td><td title="Mal&#x27;s house is much close to Bondi beach and with a relaxable garden. The inside is clean and well decorated with pacific island style. It is a enjoyable two nights there.">Mal&#x27;s house is much close to Bondi beach and with a relaxable garden.…</td><td>positive</td><td>location;cleanliness</td><td class="na">trống</td></tr><tr><td>55369160</td><td title="We had a fantastic stay at Di&#x27;s apartment.  The location was great and the apartment itself was exactly as listed and very clean.  From the moment of booking Di was very quick to respond and his communication was great.  He was extremely welcoming and offered valuable advice and assistance if needed.  Also, his WiFi was very fast.  We would definitely choose to stay at Di&#x27;s apartment again. ">We had a fantastic stay at Di&#x27;s apartment.  The location was great an…</td><td>positive</td><td>location;cleanliness;host;amenities</td><td class="na">trống</td></tr><tr><td>77556447</td><td title="Susy greeted is warmly and shared some info about the cottage and surroundings. We felt very welcome. The space suited us perfectly for our one night stopover before catching our flight the next morning. So close to the airport! Yet the planes were not too annoying and didn&#x27;t interrupt sleep at all. Plenty of room and a few supplies for coffee and breakfast. Nicely furnished and decorated and private from the main house. Susy was easily available and even poked her head out as we left early to wish us a good trip!  ">Susy greeted is warmly and shared some info about the cottage and sur…</td><td>positive</td><td>host;location;amenities;noise</td><td class="na">trống</td></tr></tbody></table></div>
+</section>
+
+<section class="block">
+  <h2>3. Sau bước 1: bảng đã lọc theo mẫu</h2>
+  <p class="text">Bước 1 lọc file thô theo danh sách ID của đề rồi ghi CSV thường vào <code>data/processed/sydney/&lt;mốc&gt;/</code>. Mỗi mốc còn đúng 1.000 căn, 365.000 ngày lịch và 5.000 review. Bảng listings thêm cột <code>analysis_area</code>, <code>snapshot</code>.</p>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>Mốc</th><th>listings</th><th>calendar</th><th>reviews</th></tr></thead><tbody><tr><td>2025-09-12</td><td>1.000</td><td>365.000</td><td>5.000</td></tr><tr><td>2025-12-12</td><td>1.000</td><td>365.000</td><td>5.000</td></tr><tr><td>2026-03-21</td><td>1.000</td><td>365.000</td><td>5.000</td></tr><tr><td>2026-06-16</td><td>1.000</td><td>365.000</td><td>5.000</td></tr></tbody></table></div>
+  <p class="dmeta">listings mốc 2026-06-16 · 1.000 dòng × 92 cột</p>
+  <div class="tablewrap dp"><table class="dt "><thead><tr><th>id</th><th>snapshot</th><th>analysis_area</th><th>room_type</th><th>price</th><th>minimum_nights</th><th>availability_365</th><th>number_of_reviews</th></tr></thead><tbody><tr><td>1164589</td><td>2026-06-16</td><td>A08</td><td>Entire home/apt</td><td>$496.50</td><td>1.0</td><td>311</td><td>563</td></tr><tr><td>1218594</td><td>2026-06-16</td><td>A04</td><td>Entire home/apt</td><td>$810.50</td><td>2.0</td><td>48</td><td>173</td></tr><tr><td>1243792</td><td>2026-06-16</td><td>A02</td><td>Entire home/apt</td><td>$200.00</td><td>2.0</td><td>90</td><td>622</td></tr><tr><td>1469185</td><td>2026-06-16</td><td>A08</td><td>Entire home/apt</td><td>$329.35</td><td>2.0</td><td>245</td><td>79</td></tr></tbody></table></div>
+</section>
+
+<section class="block">
+  <h2>4. Bước 2: QA gắn cờ</h2>
+  <p class="text">QA không xoá dòng nào. Nó thêm cột <code>qa_*</code> kiểu True/False vào từng bảng; KPI về sau tự lọc theo cờ (<a href="#qa_rules-L578">apply_rules</a>). Dưới đây là listings mốc 2026-06-16 sau khi gắn cờ, chọn 2 dòng giá không dùng được, 2 dòng giá ngoại lệ và 1 dòng sạch.</p>
+  <p class="dmeta">8 cột cờ được thêm · listings còn 1.000 dòng, không dòng nào bị xoá</p>
+  <div class="tablewrap dp"><table class="dt flags"><thead><tr><th>id</th><th>price</th><th>minimum_nights</th><th>qa_price_unusable</th><th>qa_price_outlier</th><th>qa_has_error</th><th>qa_has_warning</th></tr></thead><tbody><tr><td>1925052</td><td class="na">trống</td><td>6.0</td><td class="flag on">True</td><td class="flag">False</td><td class="flag on">True</td><td class="flag">False</td></tr><tr><td>7211024</td><td class="na">trống</td><td>1.0</td><td class="flag on">True</td><td class="flag">False</td><td class="flag on">True</td><td class="flag">False</td></tr><tr><td>18507709</td><td>$1,706.00</td><td>1.0</td><td class="flag">False</td><td class="flag on">True</td><td class="flag">False</td><td class="flag on">True</td></tr><tr><td>24331869</td><td>$1,692.20</td><td>1.0</td><td class="flag">False</td><td class="flag on">True</td><td class="flag">False</td><td class="flag on">True</td></tr><tr><td>1164589</td><td>$496.50</td><td>1.0</td><td class="flag">False</td><td class="flag">False</td><td class="flag">False</td><td class="flag">False</td></tr></tbody></table></div>
+  <h3>Số dòng bật mỗi cờ ở mốc này</h3>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>qa_price_unusable</th><th>qa_price_outlier</th><th>qa_duplicate_key</th><th>qa_cross_snapshot_duplicate</th><th>qa_contract_violation</th><th>qa_has_error_excl_price</th><th>qa_has_error</th><th>qa_has_warning</th></tr></thead><tbody><tr><td>22</td><td>52</td><td>0</td><td>0</td><td>0</td><td>0</td><td>22</td><td>52</td></tr></tbody></table></div>
+  <h3>reports/qa_report.csv</h3>
+  <p class="text">Một dòng mỗi luật mỗi mốc (60 dòng cả file). Đây là các luật của mốc 2026-06-16.</p>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>table</th><th>rule</th><th>severity</th><th>action</th><th>n_rows</th><th>n_flagged</th><th>pct_flagged</th></tr></thead><tbody><tr><td>listings</td><td>price_unusable</td><td>error</td><td>flag</td><td>1000</td><td>22</td><td>2.2</td></tr><tr><td>listings</td><td>price_outlier</td><td>warning</td><td>flag</td><td>1000</td><td>52</td><td>5.2</td></tr><tr><td>listings</td><td>duplicate_key</td><td>error</td><td>flag</td><td>1000</td><td>0</td><td>0.0</td></tr><tr><td>listings</td><td>cross_snapshot_duplicate</td><td>error</td><td>flag</td><td>1000</td><td>0</td><td>0.0</td></tr><tr><td>listings</td><td>contract_violation</td><td>error</td><td>flag</td><td>1000</td><td>0</td><td>0.0</td></tr><tr><td>reviews</td><td>duplicate_key</td><td>error</td><td>flag</td><td>5000</td><td>0</td><td>0.0</td></tr><tr><td>reviews</td><td>cross_snapshot_duplicate</td><td>error</td><td>flag</td><td>5000</td><td>0</td><td>0.0</td></tr><tr><td>reviews</td><td>orphan_fk</td><td>error</td><td>flag</td><td>5000</td><td>0</td><td>0.0</td></tr><tr><td>reviews</td><td>contract_violation</td><td>error</td><td>flag</td><td>5000</td><td>0</td><td>0.0</td></tr><tr><td>reviews</td><td>review_empty</td><td>error</td><td>flag</td><td>5000</td><td>0</td><td>0.0</td></tr><tr><td>calendar</td><td>duplicate_key</td><td>error</td><td>flag</td><td>365000</td><td>0</td><td>0.0</td></tr><tr><td>calendar</td><td>orphan_fk</td><td>error</td><td>flag</td><td>365000</td><td>0</td><td>0.0</td></tr><tr><td>calendar</td><td>contract_violation</td><td>error</td><td>flag</td><td>365000</td><td>0</td><td>0.0</td></tr></tbody></table></div>
+</section>
+
+<section class="block">
+  <h2>5. Bước 3: chia 7 nhóm</h2>
+  <p class="text">Chạy trên cả thành phố (file thô), mỗi căn nhận đúng một cột <code>segment</code>. Mỗi nhóm một căn làm ví dụ, kèm các cột luật dùng để xếp (<a href="#seg_rules-L50">classify</a>).</p>
+  <p class="dmeta">mốc 2026-06-16 · 20.573 căn</p>
+  <div class="tablewrap dp"><table class="dt seg"><thead><tr><th>id</th><th>availability_365</th><th>number_of_reviews</th><th>number_of_reviews_ltm</th><th>last_review</th><th>segment</th></tr></thead><tbody><tr><td>2121015</td><td>0</td><td>0</td><td>0</td><td class="na">trống</td><td>B_ghost</td></tr><tr><td>44545</td><td>0</td><td>91</td><td>9</td><td>2026-06-05</td><td>B_booked</td></tr><tr><td>11156</td><td>363</td><td>193</td><td>0</td><td>2020-03-13</td><td>D_dormant</td></tr><tr><td>1383673</td><td>90</td><td>0</td><td>0</td><td class="na">trống</td><td>D_never</td></tr><tr><td>8506494</td><td>132</td><td>0</td><td>0</td><td class="na">trống</td><td>N_new</td></tr><tr><td>1451160</td><td>359</td><td>40</td><td>1</td><td>2026-01-02</td><td>L_low</td></tr><tr><td>15253</td><td>199</td><td>676</td><td>58</td><td>2026-06-14</td><td>H_healthy</td></tr></tbody></table></div>
+  <h3>data/processed/segments_counts_full.csv</h3>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>segment</th><th>label_vi</th><th>n</th><th>share</th><th>is_phantom</th></tr></thead><tbody><tr><td>B_ghost</td><td>Khoá lịch, không review</td><td>918</td><td>0.0446</td><td class="flag on">True</td></tr><tr><td>B_booked</td><td>Kín lịch, vẫn có review</td><td>1159</td><td>0.0563</td><td class="flag">False</td></tr><tr><td>D_dormant</td><td>Ngủ đông</td><td>1913</td><td>0.093</td><td class="flag on">True</td></tr><tr><td>D_never</td><td>Chưa từng có review</td><td>1528</td><td>0.0743</td><td class="flag on">True</td></tr><tr><td>N_new</td><td>Mới / chưa đủ dữ liệu</td><td>1525</td><td>0.0741</td><td class="flag">False</td></tr><tr><td>L_low</td><td>Mở nhiều, ít review</td><td>1623</td><td>0.0789</td><td class="flag">False</td></tr><tr><td>H_healthy</td><td>Khoẻ mạnh</td><td>11907</td><td>0.5788</td><td class="flag">False</td></tr></tbody></table></div>
+</section>
+
+<section class="block">
+  <h2>6. Bước 4: LLM gán nhãn review</h2>
+  <p class="text">Gemini đọc từng review và trả JSON theo khuôn pydantic. Mỗi kết quả là một dòng trong <code>data/processed/llm_cache_pydantic.jsonl</code>; chạy lại thì đọc cache, không gọi API (<a href="#llm-L158">load_cache</a>).</p>
+  <p class="dmeta">1.000 dòng cache · 6 khía cạnh: location, cleanliness, host, value, amenities, noise</p>
+  <div class="tablewrap dp"><table class="dt wide-2"><thead><tr><th>review_id</th><th>comments</th><th>sentiment</th><th>positive_aspects</th><th>negative_aspects</th><th>has_complaint</th></tr></thead><tbody><tr><td>42960209</td><td title="Excellent property, super chic and designery and in the perfect spot situated on Llankelly with all the eateries. Chris was also very communicative throughout the process, as were Tia and Wanda at Regents Court who were the caretakers of Chris&#x27; property while he was away. Excellent work. ">Excellent property, super chic and designery and in the perfect spot situated o…</td><td>positive</td><td>location, host</td><td></td><td class="flag">False</td></tr><tr><td>232446970</td><td title="This is a remarkable location and a beautiful serene locale to spend a night or two.  You may want to take a torch (the end of the path has no lighting) and a spare roll of toilet paper and tea bags (coffee is kindly provided) as well as all your provisions because once you arrive it is a long way back for that item you may have forgotten.  The bed is very comfortable and the kayaks are a lot of fun to take out and the view is really something special.">This is a remarkable location and a beautiful serene locale to spend a night or…</td><td>mixed</td><td>location, amenities</td><td>amenities</td><td class="flag on">True</td></tr><tr><td>215308941</td><td title="Wow unless you know Bondi you wouldnt realise what a great spot this is.. a stones throw from Hall and Curlewis street coffee shops, popular bars and tasty cafes. The detail in the apartment is so good, with a leafy Parisian outlook this is a very chic little pied a terre. Parking at night is scarce so grab a spot early. Thanks Ritchie">Wow unless you know Bondi you wouldnt realise what a great spot this is.. a sto…</td><td>mixed</td><td>location, amenities</td><td>amenities</td><td class="flag on">True</td></tr></tbody></table></div>
+  <p class="text">Một dòng cache gốc:</p>
+  <pre class="json">{
+  &quot;schema_version&quot;: 3,
+  &quot;aspect_vocabulary&quot;: [&quot;location&quot;, &quot;cleanliness&quot;, &quot;host&quot;, &quot;value&quot;, &quot;amenities&quot;, &quot;noise&quot;],
+  &quot;review_id&quot;: &quot;42960209&quot;,
+  &quot;listing_id&quot;: &quot;1769186&quot;,
+  &quot;date&quot;: &quot;2015-08-16&quot;,
+  &quot;language&quot;: &quot;en&quot;,
+  &quot;sentiment&quot;: &quot;positive&quot;,
+  &quot;positive_aspects&quot;: [&quot;location&quot;, &quot;host&quot;],
+  &quot;negative_aspects&quot;: [],
+  &quot;complaint_aspects&quot;: &quot;&quot;,
+  &quot;has_complaint&quot;: false
+}</pre>
+  <h3>Chấm với nhãn tay (reports/evaluation/eval_per_review.csv)</h3>
+  <p class="text">Mỗi review trong 100 nhãn tay có một dòng cho từng phương pháp. Dưới đây là các review Gemini đoán sai cảm xúc (3 trên 100).</p>
+  <div class="tablewrap dp"><table class="dt wide-last"><thead><tr><th>review_id</th><th>gold_sentiment</th><th>predicted_sentiment</th><th>missing_aspects</th><th>extra_aspects</th><th>comment_excerpt</th></tr></thead><tbody><tr><td>741368443</td><td>mixed</td><td>positive</td><td>negative:amenities</td><td>positive:amenities;positive:host</td><td title="What a huge, spacious apartment in a great location. There was everything we needed. Bathrooms were a bit dated, which made it look a bit unclean but I dont think it was at all. Bed linen and towels were immaculate, lovely toilettries. Communications prior to the stay were perfect and clear. We woul">What a huge, spacious apartment in a great location. There …</td></tr><tr><td>953246324195869579</td><td>mixed</td><td>positive</td><td class="na">trống</td><td class="na">trống</td><td title="We really felt welcome at this place. Nice touch to have a little snack and some water out for us. Really nice coffee maker with beans included. &lt;br/&gt;The location is absolutely perfect. Great coffee, food, bars right outside your door and incredibly convenient to catch the very frequent bus between ">We really felt welcome at this place. Nice touch to have a …</td></tr><tr><td>1275000939097185861</td><td>mixed</td><td>positive</td><td>negative:location</td><td class="na">trống</td><td title="We had a lovely stay, and we’re grateful to Hiram for his hospitality. &lt;br/&gt;The apartment was perfect for our family, with ample storage, beautiful views, and thoughtful touches like a starter kit of coffee and essentials. The kids especially enjoyed the streaming options like Netflix and Disney+—a ">We had a lovely stay, and we’re grateful to Hiram for his h…</td></tr></tbody></table></div>
+</section>
+
+<section class="block">
+  <h2>7. Bước 5: KPI</h2>
+  <p class="text">Hai file KPI cùng một khuôn dài: mỗi dòng là một chỉ số ở một mốc, một phạm vi, kèm <code>n_obs</code> là mẫu số. Đây là các dòng <code>scope = overall</code> của mốc 2026-06-16.</p>
+  <h3>data/processed/kpi_metrics.csv</h3>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>snapshot</th><th>scope</th><th>group_name</th><th>kpi_name</th><th>value</th><th>n_obs</th></tr></thead><tbody><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>availability_rate</td><td>50.7595</td><td>365000</td></tr><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>high_rated_listing_share</td><td>32.8205</td><td>975</td></tr><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>high_utilization_listing_rate</td><td>22.8</td><td>1000</td></tr><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>long_stay_restriction_rate</td><td>4.4</td><td>1000</td></tr><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>professional_host_presence</td><td>52.0325</td><td>738</td></tr></tbody></table></div>
+  <h3>data/processed/kpi_phantom.csv</h3>
+  <div class="tablewrap dp"><table class="dt num"><thead><tr><th>snapshot</th><th>scope</th><th>group_name</th><th>kpi_name</th><th>value</th><th>n_obs</th></tr></thead><tbody><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>missing_registration_rate</td><td>6.1683</td><td>20573</td></tr><tr><td>2026-06-16</td><td>overall</td><td>all</td><td>phantom_listing_rate</td><td>21.188</td><td>20573</td></tr></tbody></table></div>
 </section>
 </div>
 <div class="view file" id="buoc-0" data-view hidden><div class="intro"><section class="head">
