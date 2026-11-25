@@ -69,6 +69,42 @@
   </div>
 </section>
 
+<section class="block">
+  <h2>Số cần thuộc</h2>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Số</th><th>Nghĩa</th><th>Nguồn trong repo</th></tr></thead>
+    <tbody>
+      <tr><td>8,4% (84/1.000)</td><td>Căn ảo trên mẫu đề, 16/06/2026: 1 + 58 + 25</td><td><code>segments_counts_sample.csv</code></td></tr>
+      <tr><td>21,2% (4.359/20.573)</td><td>Căn ảo cả thành phố, cùng ngày: 918 + 1.913 + 1.528</td><td><code>segments_counts_full.csv</code>, <code>kpi_phantom.csv</code></td></tr>
+      <tr><td>84,6% vs 57,9%</td><td>H_healthy trong mẫu vs cả thành phố</td><td>như trên</td></tr>
+      <tr><td>4.645 / 3.569 / 1.076</td><td>Tháng 3: thiếu / giải thích được / chưa rõ</td><td><code>segments_gap_summary_full.csv</code></td></tr>
+      <tr><td>65,4% và 67,1%</td><td>D_dormant giữ nguyên, từ 09/2025 và từ 12/2025 tới 06/2026</td><td><code>segments_transitions_full.csv</code></td></tr>
+      <tr><td>36,5% · 32,2% · 31,1% · 15,9%</td><td>Pittwater, Woollahra, Warringah, khu Sydney</td><td><code>kpi_phantom.csv</code></td></tr>
+      <tr><td>6,17% (1.269); 98,0% đòi 90+</td><td>Ô license trống, và trong đó đòi ≥ 90 đêm</td><td><code>kpi_phantom.csv</code></td></tr>
+      <tr><td>1,32× · 1,85× · 0,96×</td><td>Giá ngắn ngày so hàng xóm: D_dormant, D_never, H_healthy</td><td><code>kpi_phantom.csv</code></td></tr>
+      <tr><td>14,0%; 50% (88/176)</td><td>Review có chê; tiện nghi trong các lượt chê</td><td><code>kpi_metrics.csv</code></td></tr>
+      <tr><td>0,970 vs 0,870</td><td>Accuracy sentiment Gemini vs baseline trên 100 nhãn tay (85 positive, 15 mixed, 0 negative)</td><td><code>reports/evaluation/eval_summary.csv</code></td></tr>
+      <tr><td>453 test, 97,92%</td><td>Bộ test offline, coverage nhánh (ngưỡng 95%)</td><td>chạy lại <code>pytest</code> ở tag <code>final</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Các số superhost (12,4% căn ảo vs 33,4% cả thành phố) và “khoảng 4.067 căn Exempt” trong kịch bản thuyết trình được tính từ file thô, <b>không có trong CSV đã commit</b>, nên sổ tay không tự kiểm được. Nếu dùng khi vấn đáp, nói rõ là số tính ngoài pipeline.</p>
+</section>
+
+<section class="block">
+  <h2>Tài liệu cũ đã lệch so với tag <code>final</code></h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tài liệu cũ nói</th><th>Ở tag <code>final</code></th></tr></thead>
+    <tbody>
+      <tr><td><code>run_phantom</code> chưa nối vào một lệnh (PR #27 chưa merge)</td><td>Đã nối: bước 5b trong <a href="#run_pipeline-L181">run_pipeline.py dòng 181</a>, chạy khi scope là <code>full</code>. Bước 6b vẽ 8 hình căn ảo.</td></tr>
+      <tr><td>Không công bố F1 vì gold thiếu lớp negative</td><td>Có công bố: thiếu một lớp chỉ là cảnh báo; macro-F1 lấy trung bình các lớp có support &gt; 0 (Gemini 0,936, baseline 0,622). Xem <a href="#f-evaluate">evaluate.py</a>.</td></tr>
+      <tr><td>Bốn cohort LLM bổ sung đã gỡ khỏi pipeline (báo cáo <code>a5539a7</code>)</td><td>Được khôi phục (commit <code>d224e3a</code>) làm phân tích mở rộng 4.000/5.000 review, không thay KPI chính thức.</td></tr>
+      <tr><td>Giá ngắn ngày 1,42× / 1,98× / 1,01×</td><td>1,32× / 1,85× / 0,96× sau khi tách trung vị theo chế độ lưu trú.</td></tr>
+      <tr><td>QA “19 luật” / tên luật <code>price_missing</code>, <code>price_above_cap</code></td><td>Gộp thành 7 cờ theo dòng; luật con ghi trong cột <code>detail</code> (commit <code>7d84dee</code>). Thêm cờ trùng giữa các mốc (<code>5e5eb69</code>).</td></tr>
+      <tr><td>Tag <code>final</code> chưa gắn</td><td>Đã gắn ở commit <code>e5bf1cb</code>.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
 <section class="block">{{auto_qa}}</section>
 <section class="block">
   <h2>Nhận xét code</h2>

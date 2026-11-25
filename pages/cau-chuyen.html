@@ -1,64 +1,47 @@
 <section class="head">
   <span class="kicker">Nhóm 06 · UET.DSE2049 2 · Inside Airbnb Sydney</span>
   <h1>Những căn còn trên sàn, nhưng chẳng đón ai.</h1>
-  <p class="lead">Mở Airbnb, chọn Sydney: bản đồ đầy chấm. Có những chấm khách bấm vào thì lịch đóng cả năm, hoặc cả năm không ai viết review. Căn vẫn đứng đó. Nhóm gọi chúng là <b>căn ảo</b>. Việc của pipeline là đếm cho đúng, và không để mẫu 1.000 căn của đề đánh lừa.</p>
-  <p>Sổ tay này có hai phần. Ba tab đầu (<a href="#cau-chuyen">Câu chuyện</a>, <a href="#luong">Luồng chính</a>) kể nhóm muốn nói gì và dữ liệu chạy qua đâu. Các tab <b>0 → 6</b> hiện <b>toàn bộ code ở tag <code>final</code></b>; bấm vào đoạn code nào thì giải thích mở ngay dưới đoạn đó, pane bên phải cho biết mình đang ở bước nào của file. Cuối cùng là <a href="#ly-thuyet">Lý thuyết</a> và <a href="#hoi-dap">Hỏi đáp</a> để ôn vấn đáp.</p>
+  <p class="lead">Mở Airbnb ở Sydney, bản đồ dày đặc chấm. Một phần trong số đó là những căn đã thôi đón khách: lịch khoá cả năm, hoặc rất lâu rồi không ai viết review, vậy mà căn vẫn hiện trên bản đồ. Nhóm gọi chúng là <b>căn ảo</b> và tìm cách đếm xem có bao nhiêu.</p>
+  <p class="muted">Trang này kể câu chuyện bằng lời thường. Dữ liệu chạy qua những bước nào thì xem ở <a href="#luong">Luồng chính</a>; code từng bước nằm ở các tab 0 đến 6.</p>
 </section>
 
 <section class="block">
-  <h2>Câu hỏi của hồ sơ</h2>
+  <h2>Căn ảo trông như thế nào</h2>
+  <p class="text">Hình dung ba căn trên bản đồ Sydney:</p>
+  <div class="cards">
+    <div class="card ph"><span class="who"><span class="segtag ph">B_ghost</span> khoá lịch</span><span>Lịch 365 ngày tới đóng kín, và cả năm qua không có review nào. Khách bấm vào chỉ thấy toàn ngày bận.</span></div>
+    <div class="card ph"><span class="who"><span class="segtag ph">D_dormant</span> ngủ đông</span><span>Từng có khách, có review. Nhưng review gần nhất đã cách đây hơn một năm, sau đó im hẳn.</span></div>
+    <div class="card ph"><span class="who"><span class="segtag ph">D_never</span> chưa từng có khách</span><span>Không có review nào, dù căn đã nằm trên sàn ít nhất 150 ngày, đủ lâu để không thể đổ cho “mới đăng”.</span></div>
+  </div>
   <div class="text">
-    <p>Bên đặt hàng là chính quyền thành phố Sydney. Họ muốn biết: <b>trên sàn Sydney, phần nào đang treo mà không phục vụ khách?</b> Nếu đếm mọi listing như nguồn cung ngắn hạn đang hoạt động, họ sẽ thấy thị trường đông hơn thực tế.</p>
-    <p>Từ đó ra năm câu hỏi nhỏ, mỗi câu ứng với một phần code:</p>
-  </div>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Câu hỏi</th><th>Trả lời bằng</th><th>Code</th></tr></thead>
-    <tbody>
-      <tr><td>Có bao nhiêu căn trông như bỏ hoang?</td><td>Luật 7 nhóm, ba nhóm là “ảo”</td><td><a href="#buoc-3">Bước 3</a>, <a href="#kpi-L140">phantom_listing_rate</a></td></tr>
-      <tr><td>Chúng ở khu nào, sau vài tháng ra sao?</td><td>Tỷ lệ theo khu; ma trận đổi nhóm</td><td><a href="#kpi-L152">theo khu</a>, <a href="#seg_transitions-L33">transition_matrix</a></td></tr>
-      <tr><td>Vì sao chúng như vậy: bị bỏ, hay đòi khách ở dài, hay liên quan đăng ký?</td><td>Tỷ lệ đòi ≥ 90 đêm, ô <code>license</code> trống, giá so hàng xóm</td><td><a href="#kpi-L173">90+ đêm</a>, <a href="#kpi-L200">license</a>, <a href="#kpi-L262">giá</a></td></tr>
-      <tr><td>Khách than phiền gì, căn ảo có khác căn khoẻ không?</td><td>LLM gán nhãn 1.000 review, nối với nhóm căn</td><td><a href="#buoc-4">Bước 4</a>, <a href="#buoc-4bc">4b·4c</a></td></tr>
-      <tr><td>Tin LLM được tới đâu?</td><td>So với 100 nhãn tay và baseline từ khoá</td><td><a href="#f-evaluate">evaluate.py</a></td></tr>
-    </tbody>
-  </table></div>
-</section>
-
-<section class="block">
-  <h2>Bốn tấm ảnh, không phải một thước phim</h2>
-  <p class="text">Inside Airbnb (giấy phép CC BY 4.0) tải lại toàn bộ listing vào một ngày, như chụp một tấm ảnh. Đề giao 4 mốc. Mỗi mốc có 3 bảng: <code>listings</code>, <code>calendar</code> (365 ngày tới, còn trống hay không), <code>reviews</code>. Số căn dưới đây là <b>cả thành phố</b> (scope <code>full</code>), lấy từ <code>segments_gap_audit_full.csv</code>.</p>
-  <div class="timeline">
-    <div class="card"><span class="who">Mốc 1</span><span class="d">12/09/2025</span><span>17.730 căn. Cột giá trống 100%. Chưa tách được D_never.</span></div>
-    <div class="card"><span class="who">Mốc 2</span><span class="d">12/12/2025</span><span>20.436 căn. Vẫn không có giá. Vẫn chưa tách được D_never.</span></div>
-    <div class="card warn"><span class="who">Mốc 3 · đáng ngờ</span><span class="d">21/03/2026</span><span>Chỉ 13.563 căn. <code>minimum_nights</code> lớn nhất là 7, gần như không căn nào kín lịch (0,18%). Đây là bẫy.</span></div>
-    <div class="card"><span class="who">Mốc 4 · ngày chốt số</span><span class="d">16/06/2026</span><span>20.573 căn. Mọi con số chính của nhóm tính ở mốc này.</span></div>
-  </div>
-  <div class="note-box">
-    <b>Hai phạm vi, đừng trộn</b>
-    <span><b>Mẫu của đề</b> (scope <code>sample</code>): đúng 1.000 listing và 5.000 review có ID trong <code>data/samples/</code>, đi qua bước 1 → QA → KPI thường. <b>Cả thành phố</b> (scope <code>full</code>): mọi listing trong file thô, chỉ dùng cho bước 3 (chia nhóm), KPI căn ảo và hình căn ảo. File thô nằm ở <code>data/raw/</code>, bị gitignore đúng yêu cầu đề.</span>
+    <p>Ba căn này vẫn được tính là listing, nhưng không phục vụ khách. Nếu thành phố đếm mọi listing như nguồn phòng ngắn hạn đang hoạt động, họ sẽ thấy thị trường đông hơn thực tế. Câu hỏi nhóm trả lời là: <b>trên sàn Sydney, bao nhiêu phần đang treo mà không đón khách?</b></p>
+    <p>Dữ liệu chỉ có lịch trống và review, nên nhóm chỉ nói được căn trông như bỏ hoang. Chủ nhà có gian lận hay không thì dữ liệu này không trả lời được.</p>
   </div>
 </section>
 
 <section class="block" id="bay-nhom">
-  <h2>Bảy cái tên, chỉ ba tên là ảo</h2>
-  <p class="text">Không gắn một cờ “ảo / không ảo” rồi xong. Mỗi căn vào <b>đúng một</b> trong 7 nhóm, luật đọc từ trên xuống, <b>khớp trước thì thắng</b> (<a href="#seg_rules-L84">rules.py dòng 84</a>). Thứ tự là “thang bằng chứng”: lịch đóng là quan sát mạnh nhất nên xét trước, rồi tới lịch sử review, cuối cùng mới tới mức mở lịch.</p>
+  <h2>Đếm thế nào cho khỏi nhầm</h2>
+  <div class="text">
+    <p>Có những căn nhìn qua giống căn ảo mà thật ra không phải. Một căn kín lịch nhưng tháng trước vẫn có khách viết review là căn đang đắt khách. Một căn chưa có review nhưng mới đăng tuần trước thì chưa đủ thời gian để kết luận gì.</p>
+    <p>Vì vậy nhóm chia mọi căn vào <b>7 nhóm</b>. Luật xét lần lượt từ trên xuống, căn khớp điều kiện nào trước thì nhận nhãn đó và dừng (<a href="#seg_rules-L84">rules.py</a>). Lịch kín được xét đầu tiên vì đó là dấu hiệu rõ nhất, sau đó mới tới review.</p>
+  </div>
   <div class="tablewrap"><table class="num segtable">
-    <thead><tr><th>Nhóm</th><th>Điều kiện (xét theo thứ tự)</th><th>Cả TP 06/2026</th><th>Mẫu 06/2026</th></tr></thead>
+    <thead><tr><th>Nhóm</th><th>Nghĩa là</th><th>Số căn cả TP, 16/06/2026</th></tr></thead>
     <tbody>
-      <tr><td><span class="segtag ph">B_ghost</span></td><td><code>availability_365 ≤ 0</code> và <b>không</b> có review trong 365 ngày</td><td>918</td><td>1</td></tr>
-      <tr><td><span class="segtag">B_booked</span></td><td><code>availability_365 ≤ 0</code> và <b>có</b> review trong 365 ngày</td><td>1.159</td><td>15</td></tr>
-      <tr><td><span class="segtag ph">D_dormant</span></td><td>Có review, nhưng review cuối cũ hơn 365 ngày</td><td>1.913</td><td>58</td></tr>
-      <tr><td><span class="segtag ph">D_never</span></td><td>0 review và id đã xuất hiện ở mốc cách ≥ 150 ngày</td><td>1.528</td><td>25</td></tr>
-      <tr><td><span class="segtag">N_new</span></td><td>0 review, chưa đủ cũ để kết luận</td><td>1.525</td><td>0</td></tr>
-      <tr><td><span class="segtag">L_low</span></td><td>Mở ≥ 180 ngày và 1–3 review trong 12 tháng</td><td>1.623</td><td>55</td></tr>
-      <tr><td><span class="segtag">H_healthy</span></td><td>Phần còn lại</td><td>11.907</td><td>846</td></tr>
-      <tr class="end"><td>Tổng</td><td>Ba nhóm ảo: 918 + 1.913 + 1.528 = 4.359</td><td>20.573</td><td>1.000</td></tr>
+      <tr><td><span class="segtag ph">B_ghost</span></td><td>Kín lịch, không review trong 365 ngày</td><td>918</td></tr>
+      <tr><td><span class="segtag">B_booked</span></td><td>Kín lịch, nhưng vẫn có review gần đây: đang có khách</td><td>1.159</td></tr>
+      <tr><td><span class="segtag ph">D_dormant</span></td><td>Có review, nhưng review cuối cũ hơn 365 ngày</td><td>1.913</td></tr>
+      <tr><td><span class="segtag ph">D_never</span></td><td>0 review, đã có mặt từ ít nhất 150 ngày trước</td><td>1.528</td></tr>
+      <tr><td><span class="segtag">N_new</span></td><td>0 review, còn mới, chưa kết luận được</td><td>1.525</td></tr>
+      <tr><td><span class="segtag">L_low</span></td><td>Mở lịch nhiều mà cả năm chỉ 1 đến 3 review</td><td>1.623</td></tr>
+      <tr><td><span class="segtag">H_healthy</span></td><td>Còn lại: căn hoạt động bình thường</td><td>11.907</td></tr>
+      <tr class="end"><td>Tổng</td><td>Căn ảo = 918 + 1.913 + 1.528 = 4.359</td><td>20.573</td></tr>
     </tbody>
   </table></div>
-  <p class="muted">Nguồn: <code>data/processed/segments_counts_full.csv</code>, <code>segments_counts_sample.csv</code>. Ngưỡng 0, 365, 150, 180, 3 nằm trong <code>configs/sydney.yaml</code> mục <a href="#sydney_yaml-L78">segments</a>, không viết cứng trong hàm.</p>
 
   <div class="panel" id="seg-form">
-    <h3>Thử luật: một căn rơi vào nhóm nào?</h3>
-    <p class="muted">Bản sao đúng logic <a href="#seg_rules-L50">classify()</a> với ngưỡng của Sydney. Đổi số rồi xem điều kiện nào khớp trước.</p>
+    <h3>Thử xếp một căn</h3>
+    <p class="muted">Nhập thông số của một căn, máy chạy đúng luật <a href="#seg_rules-L50">classify()</a> với ngưỡng của Sydney và cho biết căn rơi vào nhóm nào.</p>
     <div class="controls">
       <label class="ctl" for="sg-avail">availability_365 <input type="number" id="sg-avail" value="0" min="0" max="365"></label>
       <label class="ctl" for="sg-nrev">number_of_reviews <input type="number" id="sg-nrev" value="12" min="0"></label>
@@ -75,131 +58,79 @@
       <button class="b" type="button" data-preset="250,20,2,60,yes">Mở nhiều, 2 review</button>
     </div>
     <div class="msg" id="seg-out"></div>
-    <p class="muted">Thử “Khoá lịch, review cũ”: căn này thoả cả điều kiện B_ghost lẫn D_dormant, nhưng B_ghost đứng trước nên thắng. Đổi thứ tự luật thì đổi nhãn, tổng căn ảo có thể không đổi nhưng thành phần đổi. Thử “0 review, mốc 09/2025”: không có mốc nào cũ hơn 150 ngày nên <code>seen_before</code> là <code>None</code> và căn rơi vào N_new. Đó là lý do hai mốc 2025 có 0 căn D_never.</p>
+    <p class="muted">Bấm “Khoá lịch, review cũ”: căn này khớp cả B_ghost lẫn D_dormant, nhưng B_ghost đứng trước nên được chọn. Bấm “0 review, mốc 09/2025”: ở mốc đầu tiên chưa có mốc nào cũ hơn 150 ngày để biết căn đã đăng bao lâu, nên căn vào N_new.</p>
   </div>
 </section>
 
 <section class="block">
-  <h2>Cùng luật, cùng ngày, hai tỷ lệ</h2>
+  <h2>Kết quả: 8,4% hay 21,2%?</h2>
   <div class="cards">
-    <div class="card"><span class="who">Mẫu đề giao · 1.000 căn · 16/06/2026</span><span class="big">8,4%</span><span>84 căn: 1 B_ghost + 58 D_dormant + 25 D_never. Đây là số đề bắt có, vì phân tích phải làm trên mẫu được giao.</span></div>
-    <div class="card ph"><span class="who">Cả thành phố · 20.573 căn · cùng ngày</span><span class="big">21,2%</span><span>4.359 căn (21,19%). Cùng luật, chạy trên file thô. Đây là phần nhóm làm thêm, trả lời câu hỏi khác.</span></div>
+    <div class="card"><span class="who">Mẫu đề giao · 1.000 căn</span><span class="big">8,4%</span><span>84 căn ảo. Đề yêu cầu phân tích trên mẫu này.</span></div>
+    <div class="card ph"><span class="who">Cả thành phố · 20.573 căn</span><span class="big">21,2%</span><span>4.359 căn ảo. Nhóm chạy thêm cùng luật trên toàn bộ dữ liệu.</span></div>
   </div>
   <div class="text">
-    <p>Hai số không mâu thuẫn và không lấy số này trừ số kia. Mẫu 1.000 căn <b>không phải lát cắt ngẫu nhiên</b> của Sydney: nó gồm các căn còn sống ở cả 4 mốc, 875 nguyên căn và 125 phòng riêng. Ở mốc cuối, mẫu có 84,6% căn khoẻ mạnh, cả thành phố chỉ 57,9%. B_ghost gần như biến mất trong mẫu (1 so với 918).</p>
-    <p>Câu nói gọn khi vấn đáp: <b>“Trên mẫu đề là 8,4%. Trên cả thành phố, cùng luật, là 21,2%. Mẫu không đại diện.”</b></p>
+    <p>Cùng một luật, cùng ngày 16/06/2026, ra hai con số, và cả hai đều đúng. Chúng lệch nhau vì mẫu 1.000 căn của đề không được chọn ngẫu nhiên: đó là những căn còn có mặt ở cả bốn mốc, nên khoẻ hơn hẳn mặt bằng. Trong mẫu, 84,6% căn hoạt động bình thường; cả thành phố chỉ có 57,9%. Căn khoá lịch gần như vắng mặt trong mẫu (1 căn, so với 918 căn ngoài thành phố).</p>
+    <p>Nếu chỉ báo 8,4%, người nghe sẽ tưởng Sydney ít căn ảo hơn thực tế. Nên khi trình bày luôn nói cả cặp:</p>
   </div>
-  <div class="tablewrap"><table class="num">
-    <thead><tr><th>Tỷ lệ căn ảo</th><th>09/2025</th><th>12/2025</th><th>03/2026</th><th>06/2026</th></tr></thead>
-    <tbody>
-      <tr><td>Cả thành phố</td><td>13,1%</td><td>12,0%</td><td>6,5% (bẫy)</td><td>21,2%</td></tr>
-      <tr><td>Mẫu 1.000 căn</td><td>3,6%</td><td>4,1%</td><td>7,6%</td><td>8,4%</td></tr>
-    </tbody>
-  </table></div>
-  <p class="muted">Không đọc hàng trên thành “căn ảo tăng gấp đôi”: hai mốc 2025 chưa tách được D_never (mọi căn 0 review vào N_new), còn mốc 03/2026 bị lọc thiếu căn. Chỉ mốc 06/2026 là so được đầy đủ.</p>
+  <div class="note-box"><b>Câu để nói</b><span>“Trên mẫu đề là 8,4%. Trên cả thành phố, cùng luật, là 21,2%. Mẫu không đại diện cho thành phố.”</span></div>
   {{fig:figures/phantom/01_segments_latest.png|Bảy nhóm ở mốc 16/06/2026: cả thành phố so với mẫu 1.000 căn.}}
 </section>
 
 <section class="block">
-  <h2>Bằng chứng: ai, ở đâu, đi về đâu</h2>
+  <h2>Căn ảo nằm ở đâu, có gì khác</h2>
   <div class="text">
-    <p><b>Căn ngủ đông không phải nhiễu một quý.</b> Theo dõi cùng một id qua các mốc: 65,4% căn D_dormant ở 09/2025 vẫn D_dormant ở 06/2026 (67,1% nếu tính từ 12/2025); khoảng 16% không còn trong dữ liệu (<code>BIEN_MAT</code>). H_healthy giữ khoảng 69%. Ma trận bỏ mốc tháng 3 có chủ đích (<a href="#sydney_yaml-L91">transitions trong yaml</a>).</p>
+    <p><b>Tập trung ở các khu ven biển.</b> Pittwater có 36,5% căn ảo, Woollahra 32,2%, Warringah 31,1%. Khu trung tâm Sydney, nơi đông căn nhất, chỉ 15,9%. Hình chỉ xếp hạng khu có từ 300 căn trở lên, vì khu quá nhỏ dễ cho tỷ lệ cực đoan.</p>
   </div>
-  <div class="figs">
-    {{fig:figures/phantom/02_segment_transitions.png|Đổi nhóm 09/2025 → 06/2026, chuẩn hoá theo hàng (mỗi hàng cộng 100%).}}
-    {{fig:figures/phantom/05_review_return.png|Ai có review trở lại: cùng ma trận, nhìn theo câu hỏi “căn ngủ đông có tỉnh lại không”.}}
-  </div>
+  {{fig:figures/phantom/03_phantom_rate_by_area.png|Tỷ lệ căn ảo theo khu, chỉ khu có từ 300 căn.}}
   <div class="text">
-    <p><b>Căn ảo không rải đều.</b> Chỉ xếp hạng khu có ít nhất 300 căn (khu nhỏ dễ ra tỷ lệ cực đoan): Pittwater 36,5% (918 căn), Woollahra 32,2% (615), Warringah 31,1% (881); khu Sydney (5.014 căn, đông nhất) chỉ 15,9%; Auburn thấp nhất 12,3% (667). Mosman 36,2% nhưng chỉ 271 căn nên không xếp hạng.</p>
-    <p><b>Căn ảo hay đòi khách ở dài.</b> Tỷ lệ đòi tối thiểu ≥ 90 đêm: B_ghost 47,1%, D_dormant 55,4%, D_never 60,6%, trong khi H_healthy chỉ 1,1%. 1.269 căn (6,17%) để trống ô <code>license</code>; 1.244 trong số đó (98,0%) đòi ≥ 90 đêm, và <b>không căn nào</b> đòi 21–89 đêm. Căn ghi <code>Exempt</code> không bị tính là thiếu.</p>
+    <p><b>Đã ngủ đông thì thường ngủ luôn.</b> Theo dõi cùng một căn qua các mốc: khoảng hai phần ba căn ngủ đông ở tháng 9/2025 vẫn ngủ đông tới tháng 6/2026.</p>
+    <p><b>Hay đòi khách ở dài.</b> Từ 47% đến 61% căn ảo (tuỳ nhóm) đòi khách thuê tối thiểu 90 đêm; ở căn khoẻ, tỷ lệ này khoảng 1%. Có 1.269 căn để trống ô số đăng ký (6,17%), và 98% trong số đó cũng là căn đòi từ 90 đêm. Dữ liệu chỉ cho thấy hai điều này đi cùng nhau, chưa đủ để nói cái nào gây ra cái nào.</p>
   </div>
-  <div class="figs">
-    {{fig:figures/phantom/03_phantom_rate_by_area.png|Tỷ lệ căn ảo theo khu, chỉ khu ≥ 300 căn.}}
-    {{fig:figures/phantom/04_long_stay_and_registration.png|Đòi ≥ 90 đêm theo nhóm, và ô license trống phân theo số đêm tối thiểu.}}
-  </div>
+  {{fig:figures/phantom/04_long_stay_and_registration.png|Tỷ lệ đòi từ 90 đêm theo nhóm, và ô số đăng ký trống chia theo số đêm tối thiểu.}}
   <div class="text">
-    <p><b>Giá so với hàng xóm phải tách hai chế độ.</b> Lấy giá căn chia trung vị giá cùng khu, cùng loại phòng, cùng chế độ lưu trú, cùng mốc. Ở căn ngắn ngày (≤ 20 đêm): D_dormant 1,32×, D_never 1,85×, H_healthy 0,96×, tức căn ảo niêm yết đắt hơn hàng xóm. Ở căn ≥ 90 đêm, tỷ số gần 1 vì ba nhóm ảo chiếm khoảng 90% căn có giá: “hàng xóm” phần lớn là chính chúng, nên khung này không nói được rẻ hay đắt.</p>
-  </div>
-  <div class="note-box warn">
-    <b>Số giá trong tài liệu cũ đã lỗi thời</b>
-    <span>Kế hoạch, kịch bản thuyết trình và bản báo cáo <code>a5539a7</code> ghi 1,42× / 1,98× / 1,01×. Commit <code>5e5eb69</code> đổi cách tính (trung vị hàng xóm tính riêng trong từng chế độ lưu trú), nên số ở tag <code>final</code> là <b>1,3203× / 1,8549× / 0,9639×</b> (<code>kpi_phantom.csv</code>, khớp báo cáo PDF trong repo bản <code>14c7963</code>). Khi vấn đáp, dùng số mới.</span>
-  </div>
-  {{fig:figures/phantom/06_price_vs_neighbours.png|Giá so trung vị hàng xóm, hai khung: ngắn ngày và ≥ 90 đêm.}}
-  <div class="text">
-    <p><b>Review nói gì.</b> Gemini đọc 1.000 review của mẫu: 14,0% có lời chê (140/1.000); khía cạnh bị chê nhiều nhất là tiện nghi, 50% trong 176 lượt khía cạnh bị chê. Hai KPI này có <b>mẫu số khác nhau</b>. Nối review với nhóm căn thì nhóm ảo rất mỏng: chỉ 12 review, đều thuộc D_dormant. Không suy ra cho cả Sydney.</p>
-  </div>
-  <div class="figs">
-    {{fig:figures/08_llm_complaint_kpis.png|Hai KPI LLM trên 1.000 review chính thức.}}
-    {{fig:figures/phantom/08_llm_complaints_by_segment.png|Khía cạnh bị chê theo nhóm căn; nhóm có ít review thì không tô màu.}}
+    <p><b>Niêm yết đắt hơn hàng xóm.</b> Trong các căn cho thuê ngắn ngày, nhóm so giá mỗi căn với giá trung vị của các căn cùng khu, cùng loại phòng. Căn chưa từng có khách đắt gấp 1,85 lần, căn ngủ đông gấp 1,32 lần, còn căn khoẻ gần ngang hàng xóm (0,96 lần).</p>
+    <p><b>Khách than gì.</b> Đề yêu cầu có phần dùng mô hình ngôn ngữ. Nhóm cho Gemini đọc 1.000 review của mẫu: 14% có lời chê, và trong các lời chê thì tiện nghi bị nhắc nhiều nhất (một nửa số lượt). Đem kết quả của Gemini so với 100 review do người gán nhãn tay, Gemini đúng 97 trên 100.</p>
   </div>
 </section>
 
 <section class="block">
-  <h2>Ba chỗ bỏ qua là đổ cả câu chuyện</h2>
-  <div class="cards">
-    <div class="card"><span class="who">Bẫy 1</span><b>Tấm ảnh tháng 3 bị cắt</b><span>21/03/2026 thiếu 4.645 căn so với ba mốc kia. 3.569 căn (76,8%) giải thích được vì ở mốc cuối chúng đòi &gt; 7 đêm hoặc kín lịch, đúng kiểu bộ lọc của bản chụp. 1.076 căn chưa rõ. Không dùng tháng 3 để nói “căn ảo giảm” hay “căn biến mất”.</span></div>
-    <div class="card"><span class="who">Bẫy 2</span><b>Hai mốc đầu không có giá</b><span>Cột <code>price</code> trống 100% ở 09/2025 và 12/2025, cả file thô lẫn mẫu. QA tắt luật giá ở hai mốc này (<a href="#qa_rules-L110">has_price_data</a>) để không gắn hàng nghìn cờ “thiếu giá” giả. Không nói về xu hướng giá qua 4 mốc.</span></div>
-    <div class="card"><span class="who">Bẫy 3</span><b>Mẫu 1.000 căn khoẻ bất thường</b><span>8,4% là số thật trên mẫu, 21,2% là số thật trên cả thành phố. Ai chỉ nghe 8,4% sẽ tưởng Sydney “sạch” hơn thực tế. Luôn nói thành cặp.</span></div>
+  <h2>Dữ liệu có ba cái bẫy</h2>
+  <p class="text">Inside Airbnb không ghi liên tục. Họ chụp lại toàn bộ listing vào một ngày, và đề giao bốn lần chụp như vậy:</p>
+  <div class="timeline">
+    <div class="card"><span class="who">Mốc 1</span><span class="d">12/09/2025</span><span>17.730 căn. Không có giá.</span></div>
+    <div class="card"><span class="who">Mốc 2</span><span class="d">12/12/2025</span><span>20.436 căn. Không có giá.</span></div>
+    <div class="card warn"><span class="who">Mốc 3</span><span class="d">21/03/2026</span><span>Chỉ 13.563 căn. Bản chụp bị thiếu.</span></div>
+    <div class="card"><span class="who">Mốc 4</span><span class="d">16/06/2026</span><span>20.573 căn. Mốc dùng cho mọi số chính.</span></div>
   </div>
-  {{fig:figures/phantom/07_march_2026_gap.png|Bẫy tháng 3: 4.645 căn vắng, 3.569 giải thích được, 1.076 chưa rõ.}}
+  <div class="cards">
+    <div class="card"><span class="who">Bẫy 1</span><b>Tháng 3 bị cắt bớt</b><span>Bản chụp 21/03/2026 hụt 4.645 căn và gần như không có căn kín lịch, nên tỷ lệ căn ảo tụt còn 6,5%. Con số thấp đó đến từ bản chụp thiếu, nên không dùng được để nói căn ảo giảm. Nhóm giải thích được 3.569 căn bị hụt, còn 1.076 căn chưa rõ lý do.</span></div>
+    <div class="card"><span class="who">Bẫy 2</span><b>Hai mốc 2025 không có giá</b><span>Cột giá trống hoàn toàn ở tháng 9 và tháng 12/2025. Bước kiểm tra chất lượng tắt luật về giá ở hai mốc này (<a href="#qa_rules-L110">has_price_data</a>), và nhóm không nói gì về giá thay đổi qua thời gian.</span></div>
+    <div class="card"><span class="who">Bẫy 3</span><b>Không so tỷ lệ qua bốn mốc</b><span>Muốn biết căn 0 review đã đăng đủ lâu chưa, cần một mốc cũ hơn 150 ngày. Hai mốc 2025 chưa có mốc như vậy, nên chưa tách được nhóm D_never và tỷ lệ lúc đó thấp hơn thật. Chỉ mốc 06/2026 là đủ.</span></div>
+  </div>
+  {{fig:figures/phantom/07_march_2026_gap.png|Tháng 3: 4.645 căn vắng mặt, 3.569 giải thích được, 1.076 chưa rõ.}}
 </section>
 
 <section class="block">
   <h2>Nói sao cho đúng</h2>
   <div class="two">
     <div class="text">
-      <h3>Được nói</h3>
+      <h3>Nên nói</h3>
       <ul>
-        <li>“Căn ảo” là nhãn theo luật quan sát: lịch, review, ngày xuất hiện.</li>
-        <li>Căn ảo <b>đi cùng</b> việc đòi ≥ 90 đêm và ô license trống.</li>
-        <li>Dữ liệu <b>khớp với</b> bối cảnh luật NSW (trần 180 ngày/năm cho thuê ngắn ngày không có chủ ở cùng; một lượt thuê ngắn ngày không quá 3 tháng).</li>
-        <li>Review là <b>dấu vết</b> của khách, không phải số lượt ở thật.</li>
+        <li>Căn ảo là nhãn đặt theo những gì quan sát được: lịch trống và review.</li>
+        <li>Căn ảo thường đi cùng việc đòi ở từ 90 đêm và để trống số đăng ký.</li>
+        <li>Số liệu khớp với bối cảnh luật NSW: cho thuê ngắn ngày không có chủ ở cùng bị giới hạn 180 ngày mỗi năm.</li>
+        <li>Review là dấu vết khách để lại, không phải số lượt ở thật.</li>
       </ul>
     </div>
     <div class="text">
-      <h3>Không được nói</h3>
+      <h3>Tránh nói</h3>
       <ul>
-        <li>Căn ảo là căn giả, gian lận, hay vi phạm luật.</li>
-        <li>Luật NSW <b>gây ra</b> căn ảo (chỉ là tương quan).</li>
-        <li>Lịch kín nghĩa là đã có người thuê (dữ liệu không phân biệt khách đặt với chủ tự chặn).</li>
-        <li>“Kịch bản khoảng 79 triệu AUD” là tiền đã mất: đó là phép tính giả định dùng giá niêm yết của chính căn ảo, dễ thổi phồng, không có trong pipeline.</li>
+        <li>Căn ảo là căn giả, gian lận hay vi phạm luật.</li>
+        <li>Luật NSW gây ra căn ảo.</li>
+        <li>Lịch kín nghĩa là đã có người thuê. Dữ liệu không phân biệt khách đặt với chủ tự khoá.</li>
+        <li>Căn ảo làm thất thoát “79 triệu AUD”. Đó là phép tính giả định ngoài pipeline, dùng giá niêm yết của chính căn ảo.</li>
       </ul>
     </div>
   </div>
-</section>
-
-<section class="block">
-  <h2>Số cần thuộc</h2>
-  <div class="tablewrap"><table class="num">
-    <thead><tr><th>Số</th><th>Nghĩa</th><th>Nguồn trong repo</th></tr></thead>
-    <tbody>
-      <tr><td>8,4% (84/1.000)</td><td>Căn ảo trên mẫu đề, 16/06/2026: 1 + 58 + 25</td><td><code>segments_counts_sample.csv</code></td></tr>
-      <tr><td>21,2% (4.359/20.573)</td><td>Căn ảo cả thành phố, cùng ngày: 918 + 1.913 + 1.528</td><td><code>segments_counts_full.csv</code>, <code>kpi_phantom.csv</code></td></tr>
-      <tr><td>84,6% vs 57,9%</td><td>H_healthy trong mẫu vs cả thành phố</td><td>như trên</td></tr>
-      <tr><td>4.645 / 3.569 / 1.076</td><td>Tháng 3: thiếu / giải thích được / chưa rõ</td><td><code>segments_gap_summary_full.csv</code></td></tr>
-      <tr><td>65,4% và 67,1%</td><td>D_dormant giữ nguyên, từ 09/2025 và từ 12/2025 tới 06/2026</td><td><code>segments_transitions_full.csv</code></td></tr>
-      <tr><td>36,5% · 32,2% · 31,1% · 15,9%</td><td>Pittwater, Woollahra, Warringah, khu Sydney</td><td><code>kpi_phantom.csv</code></td></tr>
-      <tr><td>6,17% (1.269); 98,0% đòi 90+</td><td>Ô license trống, và trong đó đòi ≥ 90 đêm</td><td><code>kpi_phantom.csv</code></td></tr>
-      <tr><td>1,32× · 1,85× · 0,96×</td><td>Giá ngắn ngày so hàng xóm: D_dormant, D_never, H_healthy</td><td><code>kpi_phantom.csv</code></td></tr>
-      <tr><td>14,0%; 50% (88/176)</td><td>Review có chê; tiện nghi trong các lượt chê</td><td><code>kpi_metrics.csv</code></td></tr>
-      <tr><td>0,970 vs 0,870</td><td>Accuracy sentiment Gemini vs baseline trên 100 nhãn tay (85 positive, 15 mixed, 0 negative)</td><td><code>reports/evaluation/eval_summary.csv</code></td></tr>
-      <tr><td>453 test, 97,92%</td><td>Bộ test offline, coverage nhánh (ngưỡng 95%)</td><td>chạy lại <code>pytest</code> ở tag <code>final</code></td></tr>
-    </tbody>
-  </table></div>
-  <p class="muted">Các số superhost (12,4% căn ảo vs 33,4% cả thành phố) và “khoảng 4.067 căn Exempt” trong kịch bản thuyết trình được tính từ file thô, <b>không có trong CSV đã commit</b>, nên sổ tay không tự kiểm được. Nếu dùng khi vấn đáp, nói rõ là số tính ngoài pipeline.</p>
-</section>
-
-<section class="block">
-  <h2>Tài liệu cũ đã lệch so với tag <code>final</code></h2>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Tài liệu cũ nói</th><th>Ở tag <code>final</code></th></tr></thead>
-    <tbody>
-      <tr><td><code>run_phantom</code> chưa nối vào một lệnh (PR #27 chưa merge)</td><td>Đã nối: bước 5b trong <a href="#run_pipeline-L181">run_pipeline.py dòng 181</a>, chạy khi scope là <code>full</code>. Bước 6b vẽ 8 hình căn ảo.</td></tr>
-      <tr><td>Không công bố F1 vì gold thiếu lớp negative</td><td>Có công bố: thiếu một lớp chỉ là cảnh báo; macro-F1 lấy trung bình các lớp có support &gt; 0 (Gemini 0,936, baseline 0,622). Xem <a href="#f-evaluate">evaluate.py</a>.</td></tr>
-      <tr><td>Bốn cohort LLM bổ sung đã gỡ khỏi pipeline (báo cáo <code>a5539a7</code>)</td><td>Được khôi phục (commit <code>d224e3a</code>) làm phân tích mở rộng 4.000/5.000 review, không thay KPI chính thức.</td></tr>
-      <tr><td>Giá ngắn ngày 1,42× / 1,98× / 1,01×</td><td>1,32× / 1,85× / 0,96× sau khi tách trung vị theo chế độ lưu trú.</td></tr>
-      <tr><td>QA “19 luật” / tên luật <code>price_missing</code>, <code>price_above_cap</code></td><td>Gộp thành 7 cờ theo dòng; luật con ghi trong cột <code>detail</code> (commit <code>7d84dee</code>). Thêm cờ trùng giữa các mốc (<code>5e5eb69</code>).</td></tr>
-      <tr><td>Tag <code>final</code> chưa gắn</td><td>Đã gắn ở commit <code>e5bf1cb</code>.</td></tr>
-    </tbody>
-  </table></div>
+  <p class="muted">Bảng số cần thuộc và danh sách chỗ tài liệu cũ đã lệch so với code nằm ở trang <a href="#hoi-dap">Hỏi đáp</a>.</p>
 </section>
