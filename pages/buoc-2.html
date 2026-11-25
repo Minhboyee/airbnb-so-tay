@@ -1,0 +1,39 @@
+<section class="head">
+  <span class="kicker">Mức 2B · qa.py → qa_constraints.py, qa_rules.py</span>
+  <h1>Bước 2 — Kiểm tra chất lượng (QA)</h1>
+  <p class="lead">Hai tầng. Tầng một kiểm <b>ràng buộc mẫu của đề</b>: sai là dữ liệu sai tập, dừng pipeline. Tầng hai <b>gắn cờ từng dòng</b> và không xoá dòng nào; KPI ở bước 5 mới quyết định bỏ dòng nào.</p>
+</section>
+<section class="block">
+  {{diagram:step2}}
+  <div class="two">
+    <div class="tablewrap"><table>
+      <thead><tr><th>7 cờ theo dòng</th><th>Bắt cái gì</th></tr></thead>
+      <tbody>
+        <tr><td><code>price_unusable</code></td><td>Thiếu giá, sai kiểu, ≤ 0, &gt; 10.000 AUD</td></tr>
+        <tr><td><code>price_outlier</code></td><td>Ngoại lệ IQR, k = 3 (chỉ cảnh báo)</td></tr>
+        <tr><td><code>duplicate_key</code></td><td>Trùng <code>(id, last_scraped)</code>; review/calendar trùng khoá</td></tr>
+        <tr><td><code>cross_snapshot_duplicate</code></td><td>Bản sao cũ của listing từ mốc trước; review xung đột giữa mốc</td></tr>
+        <tr><td><code>orphan_fk</code></td><td>Review/calendar không có listing cha</td></tr>
+        <tr><td><code>contract_violation</code></td><td><code>minimum_nights</code> &gt; 365, ngoài khung toạ độ, điểm ngoài [0, 5], cột t/f lạ, min &gt; max nights, calendar thiếu ngày, review sau ngày chụp</td></tr>
+        <tr><td><code>review_empty</code></td><td>Review không có nội dung</td></tr>
+      </tbody>
+    </table></div>
+    <div class="panel">
+      <h3>3 cờ tổng và cách KPI dùng</h3>
+      <ul>
+        <li><code>qa_has_error</code>: vi phạm ít nhất một luật mức lỗi.</li>
+        <li><code>qa_has_error_excl_price</code>: như trên nhưng bỏ qua luật giá. <b>KPI phi giá giữ dòng có cờ này bằng False.</b></li>
+        <li><code>qa_has_warning</code>: bất thường thống kê (cảnh báo).</li>
+      </ul>
+      <p class="muted">Lý do: dòng chỉ vướng cờ giá thì không bị loại oan khỏi KPI về lịch, host, điểm đánh giá. Ở mốc cuối: 1.000 listing, bỏ lỗi còn 978, bỏ thêm cảnh báo còn 928 (<code>qa_report.csv</code>).</p>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Thử luật ngoại lệ IQR</h3>
+    <p class="muted">Bản sao <a href="#qa_rules-L180">_check_price_outlier_iqr</a>: Q1, Q3 theo nội suy tuyến tính như <code>pandas.quantile</code>; ngoài [Q1 − k·IQR, Q3 + k·IQR] thì gắn cờ. Sửa danh sách giá (AUD) hoặc kéo k.</p>
+    <textarea class="in" id="iqr-in" aria-label="Danh sách giá">180, 220, 250, 260, 290, 310, 330, 343, 360, 400, 450, 520, 610, 900, 2400, 9800</textarea>
+    <div class="controls"><label class="ctl" for="iqr-k">k <input type="range" id="iqr-k" min="1" max="5" step="0.5" value="3"> <span class="readout" id="iqr-k-v"></span></label></div>
+    <div class="msg" id="iqr-out"></div>
+    <p class="muted">Với k = 1,5 (quy tắc boxplot thông thường) sẽ có nhiều giá cao hợp lý bị gắn cờ; nhóm chọn k = 3 để chỉ bắt giá rất lạ. Đây chỉ là cảnh báo, không loại khỏi KPI phi giá.</p>
+  </div>
+</section>

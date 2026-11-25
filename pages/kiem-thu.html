@@ -1,0 +1,31 @@
+<section class="head">
+  <span class="kicker">tests/ · pytest · ruff · mypy</span>
+  <h1>Kiểm thử</h1>
+  <p class="lead">Bộ test chạy hoàn toàn offline: HTTP bị thay bằng <code>FakeRequests</code>, Gemini bị giả lập, file <code>csv.gz</code> sinh tại chỗ. Ở tag <code>final</code>, chạy lại khi làm sổ tay: <b>453 test pass, coverage nhánh 97,92%</b> (ngưỡng CI 95%, xem <a href="#f-pyproject">pyproject.toml</a>).</p>
+</section>
+<section class="block">
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>File test</th><th>Số test</th><th>Kiểm gì</th><th>Code liên quan</th></tr></thead>
+    <tbody>
+      <tr><td><code>test_config.py</code></td><td>10</td><td>Đọc đúng mẫu yaml của đề, báo lỗi rõ khi thiếu khoá</td><td><a href="#f-config">config.py</a></td></tr>
+      <tr><td><code>test_config_contract.py</code></td><td>17</td><td>Hợp đồng của mọi file <code>configs/*.yaml</code> (mốc, tham số QA/KPI/LLM)</td><td><a href="#f-sydney_yaml">sydney.yaml</a></td></tr>
+      <tr><td><code>test_download_impl.py</code></td><td>32</td><td>Tải file, đọc ID dạng chuỗi, lọc theo ID chính thức (HTTP giả)</td><td><a href="#f-download">download.py</a></td></tr>
+      <tr><td><code>test_run_orchestration.py</code></td><td>6</td><td>URL, đường dẫn, thứ tự từng mốc của <code>download.run()</code></td><td><a href="#download-L505">download.run</a></td></tr>
+      <tr><td><code>test_qa_constraints.py</code></td><td>24</td><td>Ràng buộc mẫu, KPI trước/sau, <code>build_report</code></td><td><a href="#f-qa_constraints">qa_constraints.py</a>, <a href="#f-qa">qa.py</a></td></tr>
+      <tr><td><code>test_qa_rules.py</code></td><td>36</td><td>Bảy cờ theo dòng, nhánh thiếu cột/bảng, chạy end-to-end</td><td><a href="#f-qa_rules">qa_rules.py</a></td></tr>
+      <tr><td><code>test_segments.py</code></td><td>29</td><td>Luật 7 nhóm, đổi nhóm, mốc gap, trên bảng tổng hợp nhỏ</td><td><a href="#buoc-3">segments/</a></td></tr>
+      <tr><td><code>test_llm.py</code></td><td>31</td><td>Prompt, kiểm pydantic, cache, thiếu key (Gemini giả lập)</td><td><a href="#f-llm">llm.py</a></td></tr>
+      <tr><td><code>test_label_additional_reviews.py</code></td><td>4</td><td>Tập review bổ sung, cache tách biệt</td><td><a href="#f-label_additional">label_additional_reviews.py</a></td></tr>
+      <tr><td><code>test_llm_segments.py</code></td><td>26</td><td>Nối review LLM với nhóm căn, bảng cohort</td><td><a href="#f-llm_segments">llm_segments.py</a></td></tr>
+      <tr><td><code>test_baseline.py</code></td><td>8</td><td>Baseline trên ví dụ tự tạo (không dùng gold để thiết kế luật)</td><td><a href="#f-baseline">baseline.py</a></td></tr>
+      <tr><td><code>test_evaluate.py</code></td><td>22</td><td>Metric, coverage, chẩn đoán thiếu lớp, artifact</td><td><a href="#f-evaluate">evaluate.py</a>, <a href="#f-metrics">metrics.py</a></td></tr>
+      <tr><td><code>test_kpi.py</code></td><td>53</td><td>Từng KPI, lọc QA, KPI LLM, KPI căn ảo</td><td><a href="#f-kpi">kpi.py</a></td></tr>
+      <tr><td><code>test_viz.py</code></td><td>34</td><td>Vẽ hình từ CSV fixture, kiểm cột</td><td><a href="#f-viz">viz.py</a></td></tr>
+      <tr><td><code>test_viz_phantom.py</code></td><td>29</td><td>8 hình căn ảo từ CSV mẫu (số giả), bỏ hình khi thiếu file</td><td><a href="#f-viz_phantom">viz_phantom.py</a></td></tr>
+      <tr><td><code>test_pipeline_cli.py</code></td><td>35</td><td>E2E: chạy <code>run_pipeline.py</code> bằng tiến trình con thật, proxy trỏ cổng chết nên lỡ gọi mạng là fail nhanh</td><td><a href="#f-run_pipeline">run_pipeline.py</a></td></tr>
+      <tr><td><code>test_repo_hygiene.py</code></td><td>57</td><td>Mã hoá file, import được, không commit thứ cấm, cấu hình CI</td><td><a href="#f-ci">ci.yml</a></td></tr>
+      <tr class="end"><td>Tổng</td><td>453</td><td colspan="2">Số test đếm bằng <code>pytest --collect-only</code> (gồm các trường hợp parametrize)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted"><code>scripts/check_assignment_data.py</code> không có test và không nằm trong mypy/coverage, chỉ ruff kiểm.</p>
+</section>

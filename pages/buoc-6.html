@@ -1,0 +1,18 @@
+<section class="head">
+  <span class="kicker">Mức 2F · viz.py, viz_phantom.py</span>
+  <h1>Bước 6 — Vẽ hình</h1>
+  <p class="lead">Hai module vẽ, cùng một quy tắc: <b>chỉ đọc CSV do pipeline ghi, không gõ số tay</b>. File có mà sai cột thì dừng, vì vẽ tiếp sẽ ra hình sai. <code>viz.py</code> vẽ 8 hình KPI; <code>viz_phantom.py</code> vẽ 8 hình câu chuyện căn ảo, thiếu file đầu vào nào thì bỏ đúng hình đó.</p>
+</section>
+<section class="block">
+  {{diagram:step6}}
+  <div class="figs">
+    {{fig:figures/01_availability_rate_by_snapshot.png|01 · Tỷ lệ ngày còn trống qua 4 mốc.}}
+    {{fig:figures/02_long_stay_restriction_rate_by_snapshot.png|02 · Tỷ lệ căn đòi tối thiểu ≥ 7 đêm.}}
+    {{fig:figures/03_high_utilization_listing_rate_by_snapshot.png|03 · Tỷ lệ căn công suất ước tính cao.}}
+    {{fig:figures/04_professional_host_presence_by_snapshot.png|04 · Tỷ lệ host có nhiều listing.}}
+    {{fig:figures/05_high_rated_listing_share_by_snapshot.png|05 · Tỷ lệ căn rating cao.}}
+    {{fig:figures/06_availability_by_neighbourhood_latest.png|06 · Ngày còn trống theo khu, mốc cuối.}}
+    {{fig:figures/07_commercialized_by_area_latest.png|07 · Tỷ lệ thương mại hoá theo analysis_area.}}
+  </div>
+  <p class="muted">Hình 08 và 8 hình căn ảo có ở <a href="#cau-chuyen">trang Câu chuyện</a>.</p>
+</section>

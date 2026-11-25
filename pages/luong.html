@@ -1,0 +1,88 @@
+<section class="head">
+  <span class="kicker">Mức 0 · toàn cảnh</span>
+  <h1>Luồng chính: một lệnh, mười bước con</h1>
+  <p class="lead">Toàn bộ pipeline chạy bằng <code>python run_pipeline.py --config configs/sydney.yaml</code>. File <a href="#f-run_pipeline">run_pipeline.py</a> chỉ điều phối: mỗi bước nằm trong một module riêng và được gọi theo đúng thứ tự dưới đây. Bấm vào ô nào trong sơ đồ để nhảy tới trang và code của bước đó.</p>
+</section>
+
+<section class="block">
+  {{diagram:overview}}
+  <div class="steps-grid">
+    <a class="stepcard" href="#buoc-0"><span class="n">0 · Điều phối</span><b>Một lệnh chạy hết</b><code>run_pipeline.py · config.py · sydney.yaml · ci.yml</code><span>Đọc config, gọi các bước, quyết định bước nào bỏ qua.</span></a>
+    <a class="stepcard" href="#buoc-1"><span class="n">1 · Tải & lọc</span><b>Đúng tập ID của nhóm</b><code>download.py</code><span>Tải 3 bảng × 4 mốc, kiểm raw, lọc 1.000 listing / 5.000 review.</span></a>
+    <a class="stepcard" href="#buoc-2"><span class="n">2 · QA</span><b>Gắn cờ, không xoá</b><code>qa.py · qa_constraints.py · qa_rules.py</code><span>Sai ràng buộc mẫu thì dừng; còn lại gắn 7 cờ theo dòng.</span></a>
+    <a class="stepcard" href="#buoc-3"><span class="n">3 · 7 nhóm căn</span><b>Ai là căn ảo</b><code>segments/</code><span>Luật khớp trước thì thắng, ma trận đổi nhóm, kiểm mốc tháng 3.</span></a>
+    <a class="stepcard llm" href="#buoc-4"><span class="n">4 · LLM</span><b>Gemini đọc review</b><code>llm.py</code><span>Lô 10 review, kiểm bằng pydantic, cache JSONL.</span></a>
+    <a class="stepcard llm" href="#buoc-4bc"><span class="n">4b · 4c</span><b>Nối nhóm căn, chấm LLM</b><code>llm_segments.py · evaluate.py</code><span>Chê gì theo nhóm; so với 100 nhãn tay và baseline.</span></a>
+    <a class="stepcard" href="#buoc-5"><span class="n">5 · KPI</span><b>Đếm cho đúng mẫu số</b><code>kpi.py</code><span>KPI thường trên mẫu đã QA, 2 KPI LLM, KPI căn ảo cả thành phố.</span></a>
+    <a class="stepcard" href="#buoc-6"><span class="n">6 · Hình</span><b>Vẽ từ CSV</b><code>viz.py · viz_phantom.py</code><span>8 hình KPI và 8 hình câu chuyện, không gõ số tay.</span></a>
+  </div>
+</section>
+
+<section class="block">
+  <h2>Ba nguyên tắc của repo</h2>
+  <div class="cards">
+    <div class="card"><b>1. run_pipeline.py chỉ điều phối</b><span>Không có phép tính nào trong file điều phối. Muốn hiểu một con số, đi vào module của bước đó. Nhờ vậy mỗi module test riêng được.</span></div>
+    <div class="card"><b>2. QA chỉ gắn cờ</b><span>QA không xoá dòng. Bảng đã gắn cờ được truyền thẳng trong RAM sang KPI (<a href="#run_pipeline-L180">dòng 180</a>), và KPI mới loại dòng lỗi. Dòng chỉ vướng cờ giá không bị loại oan khỏi KPI về lịch, host, điểm đánh giá.</span></div>
+    <div class="card"><b>3. Không sinh dữ liệu giả</b><span>Thiếu <code>GEMINI_API_KEY</code> và cache thì bỏ qua LLM, in lý do (<a href="#run_pipeline-L91">run_llm_stage</a>). Các bước 4b, 4c và 2 KPI LLM tự bỏ qua theo.</span></div>
+  </div>
+</section>
+
+<section class="block">
+  <h2>Mức 1 · Từng bước đọc gì, ghi gì</h2>
+  <p class="text">Đúng thứ tự trong <a href="#run_pipeline-L117">main()</a>. Chú ý LLM (4) chạy <b>trước</b> KPI (5) vì KPI đọc cache LLM; chia nhóm (3) chạy trước LLM vì bước 4b cần nhóm căn.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Bước</th><th>Module</th><th>Đầu vào</th><th>Việc làm</th><th>Đầu ra</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#run_pipeline-L131">1</a></td><td><a href="#f-download">download.py</a></td><td>URL Inside Airbnb; <code>listing_ids.csv</code>, <code>review_ids.csv</code></td><td>Tải 3 bảng + geojson mỗi mốc, kiểm cột khoá, lọc đúng ID của nhóm</td><td><code>data/raw/sydney/&lt;mốc&gt;/*.csv.gz</code>; <code>data/processed/sydney/&lt;mốc&gt;/{listings,calendar,reviews}.csv</code></td></tr>
+      <tr><td><a href="#run_pipeline-L138">2</a></td><td><a href="#f-qa">qa.py</a> + <a href="#f-qa_constraints">qa_constraints</a> + <a href="#f-qa_rules">qa_rules</a></td><td>Bảng đã lọc của 4 mốc</td><td>Kiểm ràng buộc mẫu (sai thì dừng); gắn cờ <code>qa_*</code> từng dòng</td><td><code>reports/qa_report.csv</code>; bảng có cờ (RAM)</td></tr>
+      <tr><td><a href="#run_pipeline-L147">3</a></td><td><a href="#f-seg_init">segments/</a></td><td>listings (full: raw; sample: processed)</td><td>Mỗi căn đúng 1 trong 7 nhóm, đổi nhóm giữa mốc, kiểm mốc 2026-03-21</td><td><code>segments_*_{full,sample}.csv</code></td></tr>
+      <tr><td><a href="#run_pipeline-L158">4</a></td><td><a href="#f-llm">llm.py</a></td><td>1.000 review <code>mau_llm=x</code> (bỏ review rỗng hoặc dưới 15 ký tự); key hoặc cache</td><td>Gửi lô 10 review cho Gemini, nhận nhãn có cấu trúc, lưu cache</td><td><code>llm_cache_pydantic.jsonl</code></td></tr>
+      <tr><td><a href="#run_pipeline-L161">4b</a></td><td><a href="#f-llm_segments">llm_segments.py</a></td><td>Cache LLM + nhóm căn</td><td>Nối review → listing → nhóm; % review chê từng khía cạnh theo nhóm</td><td><code>llm_segment_aspects*.csv</code></td></tr>
+      <tr><td><a href="#run_pipeline-L173">4c</a></td><td><a href="#f-evaluate">evaluate.py</a>, <a href="#f-baseline">baseline.py</a>, <a href="#f-metrics">metrics.py</a></td><td><code>hand_labels.csv</code> (100 nhãn tay) + cache</td><td>Chấm baseline và LLM: accuracy, F1, kappa, CI</td><td><code>reports/evaluation/</code>, <code>figures/evaluation/</code></td></tr>
+      <tr><td><a href="#run_pipeline-L176">5</a></td><td><a href="#f-kpi">kpi.py</a></td><td>Bảng đã QA; cache LLM</td><td>KPI trên dòng không lỗi lõi; 2 KPI LLM (+ 2 scope mở rộng)</td><td><code>kpi_metrics.csv</code></td></tr>
+      <tr><td><a href="#run_pipeline-L181">5b</a></td><td><a href="#kpi-L980">kpi.run_phantom</a></td><td><code>segments_full.csv</code> + <code>data/raw</code></td><td>KPI căn ảo (chỉ khi scope full)</td><td><code>kpi_phantom.csv</code></td></tr>
+      <tr><td><a href="#run_pipeline-L188">6</a></td><td><a href="#f-viz">viz.py</a></td><td><code>kpi_metrics.csv</code></td><td>Vẽ 8 hình KPI</td><td><code>figures/01..08_*.png</code></td></tr>
+      <tr><td><a href="#run_pipeline-L194">6b</a></td><td><a href="#f-viz_phantom">viz_phantom.py</a></td><td>CSV của bước 3, 4b, 5b</td><td>Vẽ 8 hình căn ảo; thiếu file thì bỏ hình đó</td><td><code>figures/phantom/*.png</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="block">
+  <h2>Cờ chạy và những nhánh bỏ qua</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Cờ / điều kiện</th><th>Hệ quả</th></tr></thead>
+    <tbody>
+      <tr><td><code>--skip-download</code></td><td>Bỏ bước 1, đọc <code>data/processed/</code> có sẵn. Thiếu file thì dừng với đường dẫn cụ thể (<a href="#run_pipeline-L82">dòng 82</a>).</td></tr>
+      <tr><td><code>--skip-llm</code></td><td>Không gọi Gemini, không tạo cache giả. KPI và đánh giá vẫn đọc cache hiện có.</td></tr>
+      <tr><td><code>--segments-scope full|sample</code></td><td><code>full</code> đọc <code>data/raw</code> (cả thành phố) và bật bước 5b; <code>sample</code> đọc 1.000 căn đã lọc, bỏ 5b. Bỏ cờ thì lấy <code>segments.scope</code> trong yaml (đang là <code>full</code>).</td></tr>
+      <tr><td>Mốc trong yaml khác mốc được giao</td><td>Bỏ đối chiếu số lượng của đề (<a href="#run_pipeline-L125">dòng 125</a>), không dừng oan.</td></tr>
+      <tr><td>Mẫu chọn theo seed (thành phố khác)</td><td>Bỏ đối chiếu 875/125, 50/30/25/25 (<a href="#run_pipeline-L140">dòng 140</a>).</td></tr>
+      <tr><td>Config không có mục <code>segments</code></td><td>Bỏ bước 3, 4b, 5b, 6b.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">CI (<a href="#f-ci">ci.yml</a>): ruff check/format → mypy → pytest trên Python 3.10 và 3.12, coverage nhánh ≥ 95%, test chạy offline. Ở tag <code>final</code>: 453 test pass, coverage 97,92% (chạy lại khi làm sổ tay này).</p>
+</section>
+
+<section class="block">
+  <h2>Bản đồ file: ai ghi, ai đọc</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>File</th><th>Ai ghi</th><th>Ai đọc</th></tr></thead>
+    <tbody>
+      <tr><td><code>data/raw/sydney/&lt;mốc&gt;/*.csv.gz</code>, geojson</td><td>download.py (từ Inside Airbnb)</td><td>download.py (lọc); segments (scope full); kpi.run_phantom</td></tr>
+      <tr><td><code>data/samples/listing_ids.csv</code>, <code>review_ids.csv</code></td><td>trích từ workbook của đề (một lần)</td><td>download.py; llm.py (cột <code>mau_llm</code>); llm_segments.py</td></tr>
+      <tr><td><code>data/processed/sydney/&lt;mốc&gt;/*.csv</code></td><td>download.py</td><td>run_pipeline (đưa vào QA); segments (scope sample); llm.py (reviews); kpi khi gọi riêng</td></tr>
+      <tr><td><code>reports/qa_report.csv</code></td><td>qa.py</td><td>người đọc</td></tr>
+      <tr><td><code>data/processed/segments_*_&lt;scope&gt;.csv</code></td><td>segments/report.py</td><td>viz_phantom.py</td></tr>
+      <tr><td><code>data/processed/sydney/segments_&lt;scope&gt;.csv</code></td><td>segments/report.py</td><td>llm_segments.py; kpi.run_phantom</td></tr>
+      <tr><td><code>data/processed/llm_cache_pydantic.jsonl</code></td><td>llm.py</td><td>llm_segments; evaluate; kpi</td></tr>
+      <tr><td><code>data/processed/llm_cache_additional_v4*.jsonl</code></td><td>scripts/label_additional_reviews.py</td><td>llm_segments.run_cohorts; kpi (KPI mở rộng)</td></tr>
+      <tr><td><code>data/samples/hand_labels.csv</code></td><td>nhóm gán tay (100 review)</td><td>evaluate.py</td></tr>
+      <tr><td><code>data/processed/sydney/llm_segment_aspects*.csv</code></td><td>llm_segments.py</td><td>viz_phantom.py (hình 08)</td></tr>
+      <tr><td><code>reports/evaluation/</code>, <code>figures/evaluation/</code></td><td>evaluate.py, eval_report.py</td><td>người đọc</td></tr>
+      <tr><td><code>data/processed/kpi_metrics.csv</code></td><td>kpi.run</td><td>viz.py</td></tr>
+      <tr><td><code>data/processed/kpi_phantom.csv</code></td><td>kpi.run_phantom</td><td>viz_phantom.py</td></tr>
+      <tr><td><code>figures/*.png</code>, <code>figures/phantom/*.png</code></td><td>viz.py, viz_phantom.py</td><td>báo cáo <code>reports/Bao_cao_*.pdf</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Thư mục <code>data/processed/sydney/</code> bị gitignore (<code>data/processed/*/</code>), nên các bảng trong đó chỉ có sau khi chạy pipeline; các CSV ngay dưới <code>data/processed/</code> thì đã commit.</p>
+</section>

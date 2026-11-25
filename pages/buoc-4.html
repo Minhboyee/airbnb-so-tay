@@ -1,0 +1,36 @@
+<section class="head">
+  <span class="kicker">Mức 2D · src/llm.py · gemini-3.1-flash-lite · 6 khía cạnh</span>
+  <h1>Bước 4 — LLM gán nhãn review</h1>
+  <p class="lead">Gemini đọc 1.000 review được đề đánh dấu <code>mau_llm = x</code>, trả về nhãn có cấu trúc: cảm xúc, khía cạnh được khen, khía cạnh bị chê. Mọi nhãn được kiểm bằng pydantic rồi ghi vào cache JSONL đã commit, nên chạy lại không cần API key.</p>
+</section>
+<section class="block">
+  {{diagram:step4}}
+  <div class="two">
+    <div class="tablewrap"><table>
+      <thead><tr><th>Mỗi review nhận về</th><th>Giá trị</th></tr></thead>
+      <tbody>
+        <tr><td><code>sentiment</code></td><td>positive / mixed / negative</td></tr>
+        <tr><td><code>positive_aspects</code></td><td>danh sách khía cạnh được khen</td></tr>
+        <tr><td><code>negative_aspects</code></td><td>danh sách khía cạnh bị chê</td></tr>
+        <tr><td><code>language</code></td><td>mã ngôn ngữ</td></tr>
+        <tr><td><code>has_complaint</code></td><td>tính thêm: sentiment là negative/mixed, hoặc có khía cạnh bị chê</td></tr>
+        <tr><td><code>complaint_aspects</code></td><td>tính thêm: các khía cạnh bị chê nối bằng “;”</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>6 khía cạnh</th><th>Phạm vi</th></tr></thead>
+      <tbody>
+        <tr><td><code>location</code></td><td>vị trí, đi lại, quán ăn gần, an toàn khu vực (không gồm view từ căn)</td></tr>
+        <tr><td><code>cleanliness</code></td><td>sạch/bẩn, mùi, côn trùng, phòng tắm, ga gối</td></tr>
+        <tr><td><code>host</code></td><td>liên lạc, phản hồi, đón tiếp, hướng dẫn</td></tr>
+        <tr><td><code>value</code></td><td>đáng tiền, rẻ/đắt so với trải nghiệm</td></tr>
+        <tr><td><code>amenities</code></td><td>bếp, wifi, máy giặt, điều hoà, nội thất, giường, an ninh toà nhà</td></tr>
+        <tr><td><code>noise</code></td><td>ồn/yên tĩnh, nguồn ồn</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="note-box warn">
+    <b>Thiếu key và thiếu cache</b>
+    <span><code>run_pipeline.py</code> in thông báo bỏ qua; bước 4b, 4c và 2 KPI LLM tự bỏ qua. Không bao giờ tạo nhãn giả. Bốn cohort bổ sung (4 × 1.000 review, <a href="#f-label_additional">label_additional_reviews.py</a>) chỉ để so sánh thăm dò.</span>
+  </div>
+</section>

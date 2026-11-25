@@ -1,0 +1,23 @@
+<section class="head">
+  <span class="kicker">Mức 2F · src/kpi.py</span>
+  <h1>Bước 5 — KPI</h1>
+  <p class="lead">Ba nhóm chỉ số, ba mẫu số khác nhau. KPI thường tính trên <b>mẫu 1.000 căn đã qua QA</b>. Hai KPI LLM tính trên <b>review</b>. KPI căn ảo (5b) tính trên <b>cả thành phố</b>, đọc file thô và kết quả chia nhóm. Mọi dòng ghi ra có cột <code>n_obs</code> để biết mẫu số.</p>
+</section>
+<section class="block">
+  {{diagram:step5}}
+  <div class="tablewrap"><table>
+    <thead><tr><th>KPI (<code>kpi_metrics.csv</code>)</th><th>Định nghĩa ngắn</th><th>Mốc cuối</th></tr></thead>
+    <tbody>
+      <tr><td><code>availability_rate</code></td><td>% ngày còn trống trong calendar</td><td>50,76% (n = 365.000)</td></tr>
+      <tr><td><code>long_stay_restriction_rate</code></td><td>% căn đòi <code>minimum_nights</code> ≥ 7</td><td>4,40% (n = 1.000)</td></tr>
+      <tr><td><code>high_utilization_listing_rate</code></td><td>% căn có occupancy ước tính ≥ 180 ngày</td><td>22,80%</td></tr>
+      <tr><td><code>professional_host_presence</code></td><td>% host có &gt; 1 listing</td><td>52,03% (n = 738 host)</td></tr>
+      <tr><td><code>high_rated_listing_share</code></td><td>% căn có rating ≥ 4,9</td><td>32,82% (n = 975)</td></tr>
+      <tr><td><code>commercialized_listing_rate</code></td><td>% căn vừa là Entire home/apt vừa thuộc host có <td>theo <code>analysis_area</code> A01–A08</td>gt; 1 listing, theo <code>analysis_area</code> A01–A08</td><td>A05 70,63%, A08 38,10%</td></tr>
+      <tr><td><code>availability_rate</code> theo khu</td><td>theo <code>neighbourhood_cleansed</code>, khu ≥ 10 căn</td><td>hình 06</td></tr>
+      <tr><td><code>complaint_bearing_review_rate</code></td><td>% review có <code>has_complaint</code></td><td>14,0% (n = 1.000 review)</td></tr>
+      <tr><td><code>top_complaint_aspect_share</code></td><td>khía cạnh bị chê nhiều nhất / tổng lượt chê</td><td>amenities 50% (n = 176 lượt)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Có thêm scope <code>llm_additional_4000</code> (14,18%) và <code>llm_combined_5000</code> (14,14%): cùng định nghĩa trên review bổ sung, chỉ để đối chiếu, không thay KPI chính thức. Định nghĩa chi tiết từng KPI xem trong code bên dưới.</p>
+</section>

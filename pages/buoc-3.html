@@ -1,0 +1,20 @@
+<section class="head">
+  <span class="kicker">Mức 2C · src/segments/</span>
+  <h1>Bước 3 — Chia listing thành 7 nhóm</h1>
+  <p class="lead">Lõi của câu chuyện. <code>load.py</code> đọc listings của từng mốc, <code>rules.py</code> gán đúng một nhóm cho mỗi căn, <code>transitions.py</code> theo dõi căn đổi nhóm giữa các mốc và soi mốc tháng 3, <code>report.py</code> ghi CSV. Thứ tự gọi nằm ở <a href="#f-seg_init">__init__.py</a>.</p>
+</section>
+<section class="block">
+  {{diagram:step3}}
+  <div class="two">
+    <div class="text">
+      <h3>Ý nghĩa “căn ảo”</h3>
+      <p>Ô viền đỏ: còn hiện trên sàn nhưng gần như không phục vụ khách (B_ghost, D_dormant, D_never). Từ ba nhóm này ra các KPI <code>phantom_listing_rate</code>, <code>long_stay_90_rate</code>, tỷ lệ thiếu số đăng ký, giá so hàng xóm (bước 5b).</p>
+      <p><b>B_booked không phải căn ảo</b>: lịch kín nhưng vẫn có review gần đây, nhiều khả năng đang có khách.</p>
+    </div>
+    <div class="text">
+      <h3>Mốc 2026-03-21</h3>
+      <p>Bản chụp này bị lọc thiếu căn (<code>gap_snapshot</code>), nên căn “vắng” ở mốc đó không được kết luận là chủ rời sàn. Ma trận đổi nhóm dùng cặp (09/2025 → 06/2026) và (12/2025 → 06/2026).</p>
+      <p>Thử luật trực tiếp ở <a href="#bay-nhom">trang Câu chuyện</a>.</p>
+    </div>
+  </div>
+</section>

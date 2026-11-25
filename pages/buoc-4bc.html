@@ -1,0 +1,35 @@
+<section class="head">
+  <span class="kicker">Mức 2E · llm_segments.py · evaluate.py</span>
+  <h1>Bước 4b và 4c — LLM theo nhóm căn, chấm LLM bằng nhãn tay</h1>
+  <p class="lead">4b nối nhãn review với nhóm căn của listing để hỏi “căn ảo bị chê gì”. 4c trả lời “tin LLM được tới đâu”: so nhãn Gemini và một baseline từ khoá với 100 review nhóm tự gán tay.</p>
+</section>
+<section class="block">
+  {{diagram:step4bc}}
+  <div class="two">
+    <div class="text">
+      <h3>Định dạng nhãn tay</h3>
+      <p><code>hand_labels.csv</code>: <code>review_id, comments, sentiment, aspects_positive, aspects_negative, language, ghi_chu</code>. Khía cạnh cách nhau bằng dấu chấm phẩy. Nhãn tay dùng cùng 6 khía cạnh và cùng tách khen/chê như LLM, nên so trực tiếp được.</p>
+      <p>Bộ hiện có: 85 positive, 15 mixed, <b>0 negative</b>.</p>
+    </div>
+    <div class="panel">
+      <h3>Cổng an toàn của 4c</h3>
+      <ul>
+        <li>Không có file nhãn tay: bỏ qua, in lý do.</li>
+        <li>Nhãn tay &lt; 100 (<code>min_gold_size</code>) hoặc cache chưa phủ hết: chỉ ghi báo cáo chẩn đoán, không công bố accuracy/F1.</li>
+        <li>Gold thiếu một lớp sentiment: chỉ cảnh báo, vẫn chấm; macro-F1 lấy trung bình các lớp có support &gt; 0.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tablewrap"><table class="num">
+    <thead><tr><th>Chỉ số trên 100 nhãn tay</th><th>Baseline từ khoá</th><th>Gemini</th></tr></thead>
+    <tbody>
+      <tr><td>Sentiment accuracy (Wilson 95%)</td><td>0,870 [0,790; 0,922]</td><td>0,970 [0,915; 0,990]</td></tr>
+      <tr><td>Sentiment macro-F1 (bootstrap 95%)</td><td>0,622 [0,462; 0,763]</td><td>0,936 [0,851; 1,000]</td></tr>
+      <tr><td>Cohen’s kappa</td><td>0,270 [−0,019; 0,534]</td><td>0,872 [0,706; 1,000]</td></tr>
+      <tr><td>Aspect micro-F1</td><td>0,602 [0,533; 0,667]</td><td>0,904 [0,878; 0,929]</td></tr>
+      <tr><td>Aspect precision / recall</td><td>0,934 / 0,444</td><td>0,949 / 0,864</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Nguồn: <code>reports/evaluation/eval_summary.csv</code>. Bộ nhãn tay đã được dùng để rà prompt, nên đây là độ đồng thuận nội bộ, không phải kiểm chứng độc lập.</p>
+  {{fig:figures/evaluation/eval_confusion_matrices.png|Ma trận nhầm lẫn sentiment: hàng là nhãn tay, cột là dự đoán.}}
+</section>

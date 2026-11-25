@@ -1,0 +1,292 @@
+Mức 0 · Toàn cảnh pipeline Inside Airbnb — Sydney (Nhóm 06)                                                      một lệnh: python run_pipeline.py –config configs/sydney.yaml
+
+
+
+                      Inside Airbnb
+                    (4 mốc × 3 bảng:
+              listings, calendar, reviews)                                                                                               4. LLM gán nhãn
+                                                             1. Tải & lọc           2. QA            3. Chia 7 nhóm căn
+                                                                                                                                                  llm.py
+                                                              download.py           qa.py                   segments/
+                                                                                                                                                (Gemini)
+               ID chính thức của nhóm
+                 data/samples/*.csv
+              1000 listing · 5000 review
+                                                                             reports/qa_report.csv
+
+                                                                6. Vẽ hình                             4c. Chấm LLM
+                                                                                     5. KPI                                            4b. LLM × nhóm căn
+                                                                  viz.py                                   evaluate.py
+                                                                                      kpi.py                                                llm_segments.py
+                                                              viz_phantom.py                            (so với nhãn tay)
+
+
+
+                                                                  figures/        data/processed/
+                                                                                  kpi_metrics.csv     reports/evaluation/
+                                                               16 hình PNG
+                                                                                  kpi_phantom.csv
+
+
+Cách đọc:                                                                                   Nguyên tắc của repo:
+dữ liệu vào     bước xử lý   bước dùng LLM / nhãn          kết quả ghi ra                   (1) run_pipeline.py chỉ điều phối, mỗi bước nằm ở một module riêng.
+                                                                                            (2) QA chỉ gắn cờ, không xoá dòng; bảng đã gắn cờ được truyền thẳng (trong RAM) sang
+Nét liền = thứ tự chạy. Nét đứt = file kết quả được ghi.
+                                                                                            KPI, nơi mới loại dòng lỗi.
+                                                                                            (3) Thiếu GEMINI_API_KEY và cache ⇒ bỏ qua LLM, không sinh dữ liệu giả.
+Mức 1 · Từng bước: đọc gì, ghi gì                                                                                                           thứ tự đúng trong main() của run_pipeline.py
+
+
+Bước    Module                    Đầu vào                                   Việc làm                                            Đầu ra
+1       src/download.py           URL Inside Airbnb; listing_ids.csv,       Tải 3 bảng + geojson mỗi mốc, kiểm cột khoá, lọc    data/raw/sydney/<mốc>/*.csv.gz;
+                                  review_ids.csv                            đúng ID của nhóm                                    data/processed/sydney/<mốc>/{listings,calendar,reviews}.csv
+2       src/qa.py             +   Bảng đã lọc của 4 mốc                     Kiểm ràng buộc mẫu (sai thì dừng); gắn cờ qa_*      reports/qa_report.csv; bảng có cột qa_has_error,
+        qa_constraints.py                                                   từng dòng (không xoá)                               qa_has_warning (trong RAM)
+        + qa_rules.py
+3       src/segments/             listings (scope full: raw; sample: pro-   Gán mỗi căn đúng 1 trong 7 nhóm, theo dõi đổi       segments_*_{full,sample}.csv (counts, transitions,
+                                  cessed)                                   nhóm giữa mốc, kiểm mốc 2026-03-21 bị thiếu căn     gap)
+4       src/llm.py                1000       review         mau_llm=x;      Gửi lô 10 review cho Gemini, nhận nhãn có cấu       llm_cache_pydantic.jsonl
+                                  GEMINI_API_KEY (hoặc cache)               trúc, lưu cache
+4b      src/llm_segments.py       Cache LLM + nhóm căn của listing          Nối review → listing → nhóm; đếm % review bị chê    llm_segment_aspects*.csv
+                                                                            từng khía cạnh theo nhóm
+4c      src/evaluate.py,          hand_labels.csv (100 nhãn tay) + cache    Chấm baseline từ khoá và LLM: accuracy, F1,         reports/evaluation/, figures/evaluation/
+        baseline.py,              LLM                                       kappa, bootstrap
+        metrics.py
+5       src/kpi.py                Bảng đã qua QA; cache LLM                 Tính KPI trên các dòng không lỗi lõi; 2 KPI LLM     kpi_metrics.csv
+5b      src/kpi.py                segments_full.csv + data/raw              KPI “căn ảo” (chỉ chạy khi scope full)              kpi_phantom.csv
+        (run_phantom)
+6       src/viz.py                kpi_metrics.csv                           Vẽ 8 hình KPI                                       figures/01..08_*.png
+6b      src/viz_phantom.py        CSV của bước 3, 4b, 5b                    Vẽ 8 hình “căn ảo”; thiếu file thì bỏ qua hình đó   figures/phantom/*.png
+
+
+Cờ chạy: –skip-download (dùng data/processed có sẵn) · –skip-llm (không gọi LLM, không tạo cache giả) · –segments-scope full|sample.
+CI (.github/workflows/ci.yml): ruff check/format → mypy → pytest (Python 3.10 và 3.12, coverage ≥ 95%, test chạy offline).
+Mức 2A · Bước 1 — Tải và lọc dữ liệu                                                                                                                                          src/download.py
+
+
+
+                                                                                                                                        Lọc theo
+                                                                                                                           có
+                                                                                                                                      ID chính thức
+                                                    có          [SKIP]                                                               (source=group)
+                                                              dùng file cũ
+                                                                                                                                                            data/processed/
+                                                                                   verify_raw()
+           Với mỗi mốc × 4 file            Đã có file                                                           ID nhóm có                                   sydney/<mốc>/
+                                                                                đủ 3 bảng + geojson,
+            download_file()             đúng dung lượng?                                                     trong thành phố?                         listings · calendar · reviews
+                                                                                     có cột khoá
+                                                                                                                                                              + cột snapshot
+                                                              Tải vào .part
+                                                                                                                                     Chọn mẫu theo
+                                                              thử lại ≤3 lần
+                                                   chưa                                                                                 seed=42
+                                                                rồi đổi tên                                             không
+                                                                                                                                     (source=seed)
+
+
+Quy tắc lọc từng bảng                                          Bẫy dữ liệu đã xử lý                                             Đối chiếu số lượng của đề
+• listings: giữ id thuộc nhóm, gắn analysis_area chính thức    • ID dài 18–19 chữ số: luôn đọc dtype=str.                       (qa.expected, chỉ cảnh báo ở bước 1)
+của đề.                                                        • Comment review có ký tự \r: ghi CSV với CRLF để đọc lại        1000 listing/mốc · 875 Entire + 125 Private
+• reviews: lọc theo review_id (cột id), không theo             đúng số dòng.                                                    số căn 0 review: 50/30/25/25
+listing_id.                                                    • Mất mạng mà file đã có: dùng bản local, không dừng             20 căn thiếu giá ở mốc cuối
+• calendar: đọc theo chunk 200k dòng, chỉ 5 cột cần; price     pipeline.                                                        calendar = 1000 × 365 dòng
+bị bỏ.                                                                                                                          8 khu vực, mỗi khu 120–130 căn
+                                                                                                                                tổng 5000 review (hợp qua 4 mốc)
+Mức 2B · Bước 2 — Kiểm tra chất lượng (QA)                                                                             qa.py → qa_constraints.py (dừng) và qa_rules.py (gắn cờ)
+
+
+
+                                                              không    QAConstraintError
+                                                                         dừng pipeline
+                                                                                                                                            qa_report.csv
+                   Bảng đã lọc                  Khớp ràng buộc               có      apply_rules()                                       nhật ký luật + KPI
+                                                                                                                Gộp 3 cờ tổng
+                    của mốc k                    mẫu của đề?                         7 cờ theo dòng                                        trước / sau lọc
+
+
+7 cờ theo dòng (luật con nằm trong cột detail của báo cáo):                            3 cờ tổng và cách KPI dùng
+price_unusable           thiếu giá, sai kiểu, ≤ 0, > 10000 AUD
+price_outlier            ngoại lệ IQR, k = 3
+                                                                                                             qa_has_error
+duplicate_key            trùng (id, last_scraped), review/calendar trùng khoá                          vi phạm ≥ 1 luật mức error
+cross_snapshot_duplicate bản sao cũ của listing từ mốc trước; review xung đột giữa
+                         mốc
+orphan_fk                review/calendar không có listing cha                                                                                        KPI phi giá
+                                                                                                       qa_has_error_excl_price
+                                                                                                                                                      giữ dòng có
+contract_violation       minimum_nights> 365, ngoài khung toạ độ Sydney, điểm                      như trên nhưng không tính luật giá
+                                                                                                                                                  excl_price = False
+                         review ngoài [0, 5], cột t/f lạ, min>max nights, calendar
+                         thiếu ngày, review sau ngày chụp
+review_empty             review không có nội dung                                                           qa_has_warning
+                                                                                                      bất thường thống kê (cảnh báo)
+
+
+                                                                                       Lý do: dòng chỉ vướng cờ giá thì không bị loại oan khỏi KPI về lịch, host, điểm đánh giá. QA
+                                                                                       không xoá dòng, KPI mới loại.
+Mức 2C · Bước 3 — Chia listing thành 7 nhóm                                                               src/segments/rules.py, hàm classify: điều kiện nào đúng trước thì thắng
+
+
+
+                                                                                                              không           B_ghost
+                                                                                                                       khoá lịch, không review
+                                           availability_365              có            Có review trong
+                                             ≤ 0 (kín lịch)?                             365 ngày?
+                                                                                                                             B_booked
+                                             không                                                              có     kín lịch, vẫn có review
+
+
+                                         Có review nhưng review                có      D_dormant
+                                            cuối > 365 ngày?                            ngủ đông
+
+
+
+                                             không                                                               có         D_never
+                                                                                                                        chưa từng có review
+                                                                    có                 Đã thấy ở mốc
+                                               0 review?
+                                                                                      cách ≥ 150 ngày?
+                                                                                                                             N_new
+                                             không                                                                     mới / chưa đủ dữ liệu
+                                                                                                               không
+
+
+
+                                           Mở ≥ 180 ngày và                   có         L_low
+                                          1–3 review/12 tháng?                      mở nhiều, ít review
+
+
+                                             không
+
+                                             H_healthy
+                                       khoẻ mạnh (phần còn lại)
+
+Ý nghĩa “căn ảo” (ô viền đỏ đậm): còn hiện trên sàn nhưng thực tế gần như không phục vụ khách (B_ghost, D_dormant, D_never). Từ nhóm này ra các KPI phantom_listing_rate,
+long_stay_90_rate, tỉ lệ thiếu số đăng ký, giá so hàng xóm.
+Mốc 2026-03-21 (gap_snapshot) bị lọc thiếu căn, nên căn “vắng” ở mốc đó không được kết luận là chủ nhà rời sàn. Ma trận đổi nhóm dùng cặp mốc (09-12 → 06-16) và (12-12 → 06-16).
+Mức 2D · Bước 4 — LLM gán nhãn review                                                                                             src/llm.py · model gemini-3.1-flash-lite · 6 khía cạnh
+
+
+
+                                                                      có       Dùng nhãn cũ
+                                                                               không gọi API
+                                                                                                               Kiểm tra bằng
+                       Mẫu 1000 review                                                                                                          llm_cache_pydantic.jsonl
+                                                       Review đã có                                              pydantic:
+                         mau_llm = x                                                                                                                    ghi nối thêm
+                                                       trong cache?                                          JSON, aspect hợp lệ,
+                    (bỏ review < 15 ký tự)                                                                                                            1 dòng / review
+                                                                                                                 không lặp
+                                                                                   Lô 10 review
+                                                                                    → Gemini
+                                                                  chưa
+                                                                                  nghỉ 4,2 giây/lô
+
+
+Mỗi review nhận về                                                         6 khía cạnh (llm.aspects trong config)
+sentiment               positive / mixed / negative                        location            vị trí, khu vực, đi lại, quán ăn/điểm tham quan gần; an toàn khu
+positive_aspects        list khía cạnh được khen                                               vực. Không gán cho view từ căn hộ
+negative_aspects        list khía cạnh bị chê                              cleanliness         sạch/bẩn, mùi, côn trùng, phòng tắm, ga gối khăn. Chỉ chê “cũ”
+                                                                                               thì tính amenities
+language                mã ngôn ngữ
+                                                                           host                liên lạc, phản hồi, đón tiếp, hướng dẫn (kể cả gọi tên riêng/đại từ).
+has_complaint           (tính thêm)                                                            Chỉ nhắc tên thì không tính
+complaint_aspects       (tính thêm)                                        value               đáng tiền, rẻ/đắt so với giá hoặc so với trải nghiệm. Không suy từ
+                                                                                               lời khen chung
+Quy tắc suy ra
+has_complaint = sentiment ∈ {negative, mixed} hoặc negative_aspects        amenities           bếp, wifi, máy giặt, điều hoà, TV, hồ bơi, đỗ xe, nội thất,
+khác rỗng.                                                                                     giường/nệm, khoá/an ninh toà nhà, mức đầy đủ trang bị
+complaint_aspects = negative_aspects nối bằng “;”.                         noise               ồn/yên tĩnh, nguồn ồn (tàu, xe, máy bay, hàng xóm, công trình)
+Một aspect được phép nằm ở cả hai list (vừa khen vừa chê).                 Prompt chèn sẵn định nghĩa + gợi ý ca khó cho từng aspect. Cache có schema_version=3 và danh sách aspect; khác phiên bản thì
+                                                                           bị từ chối, không trộn nhãn cũ với định nghĩa mới.
+
+Thiếu key / thiếu cache: run_pipeline.py in thông báo bỏ qua, các bước 4b, 4c và 2 KPI LLM tự bỏ qua; tuyệt đối không tạo nhãn giả. Có thêm 4 cohort bổ sung (4 × 1000 review,
+scripts/label_additional_reviews.py) chỉ để so sánh thăm dò.
+Mức 2E · Bước 4b và 4c — LLM theo nhóm căn, và chấm LLM bằng nhãn tay                                                                            llm_segments.py · evaluate.py
+
+
+
+                                  4b. Khía cạnh bị chê, theo nhóm căn
+
+
+                                                                       nhóm căn                 summarize()                llm_segment_aspects.csv
+                            Cache LLM         review_id
+                                                                       ở mốc cuối              đếm review chê                mẫu số = số review
+                            review_id        → listing_id
+                                                                  (segments_full.csv)        từng aspect / nhóm         của nhóm (không phải số căn)
+
+
+
+
+                                  4c. Chấm điểm
+                                                         Baseline
+                                                      regex từ khoá                                            reports/evaluation/
+                                                                                     score_method()
+                             Nhãn tay                (baseline.py)                                              eval_summary.csv
+                                                                                   accuracy sentiment
+                          hand_labels.csv                                                                       eval_aspects.csv
+                                                                                  micro P/R/F1 aspect
+                            100 review                LLM                                                        eval_errors.md
+                                                                                  kappa · bootstrap CI
+                                                     (cache)                                                   figures/evaluation/
+
+
+
+Định dạng nhãn tay (hand_labels.csv):                                                   Cổng an toàn của bước 4c
+review_id, comments, sentiment, aspects_positive, aspects_negative, language,           • Không có file nhãn tay: bỏ qua, in lý do.
+ghi_chu                                                                                 • Nhãn tay < 100 (min_gold_size) hoặc cache chưa phủ hết: chỉ ghi báo cáo chẩn đoán, không
+Aspect cách nhau bằng dấu chấm phẩy, ví dụ host;location;cleanliness;amenities. Nhãn    công bố accuracy/F1.
+tay dùng cùng 6 khía cạnh và cùng tách khen/chê như LLM, nên so sánh được trực tiếp.    • Gold thiếu một lớp sentiment: chỉ cảnh báo, vẫn chấm.
+Mức 2F · Bước 5 và 6 — KPI và biểu đồ                                                                                                                       kpi.py → viz.py, viz_phantom.py
+
+
+
+                                                                     Giữ dòng                     compute_regular_kpis                         kpi_metrics.csv
+                       Bảng listings, calendar
+                                                             qa_has_error_excl_price              mỗi KPI một hàm nhỏ                 snapshot, scope, group_name,
+                          đã gắn cờ QA
+                                                                     = False                        → (giá trị, n_obs)                   kpi_name, value, n_obs
+
+
+
+                                                                           Cache LLM                   2 KPI LLM
+                                                                     (chỉ review của nhóm)          compute_llm_kpis
+
+
+
+                                                                              segments_full.csv       run_phantom
+                                                                                                                                 kpi_phantom.csv
+                                                                                 + data/raw           (scope full)
+
+
+KPI chính (kpi_metrics.csv)                                                                        Hình ra figures/
+availability_rate                            % ngày còn trống (calendar)                           viz.py (8 hình): 01–05 đường KPI qua 4 mốc; 06 ngày trống theo khu; 07 tỷ lệ thương mại
+long_stay_restriction_rate                   % căn đòi đêm tối thiểu cao                           theo khu; 08 KPI phàn nàn LLM.
+high_utilization_listing_rate                % căn công suất cao                                   viz_phantom.py (8 hình, figures/phantom/):
+professional_host_presence                   % host có > 1 căn                                     01 phân 7 nhóm ở mốc cuối · 02 đổi nhóm sau ∼9 tháng · 03 tỉ lệ căn ảo theo khu · 04 đòi
+high_rated_listing_share                     % căn điểm cao                                        90+ đêm và thiếu số đăng ký · 05 ai có review trở lại · 06 giá so hàng xóm · 07 bẫy dữ liệu
+commercialized_listing_rate                  theo analysis_area                                    03/2026 · 08 review chê gì theo nhóm căn.
+availability_rate (theo khu)                 theo neighbourhood_cleansed, khu ≥ 10 căn             Quy tắc: chỉ đọc CSV do pipeline ghi, không gõ số tay; file có nhưng sai cột thì dừng, vì vẽ
+complaint_bearing_review_rate                % review có has_complaint                             tiếp sẽ ra hình sai.
+top_complaint_aspect_share                   aspect bị chê nhiều nhất và tỷ trọng
+Có thêm scope llm_additional_4000 và llm_combined_5000 (thăm dò, không thay KPI chính thức).
+Phụ lục · Bản đồ file                                                                                                                          ai ghi file nào, ai đọc file nào
+
+
+File                                             Ai ghi                               Ai đọc
+data/raw/sydney/<mốc>/*.csv.gz, geojson          download.py (từ Inside Airbnb)       download.py (lọc); segments (scope full); kpi.run_phantom
+data/samples/listing_ids.csv, review_ids.csv     trích từ workbook của đề (một lần)   download.py; llm.py (cột mau_llm); llm_segments.py
+data/processed/sydney/<mốc>/*.csv                download.py                          qa; segments (scope sample); llm.py; kpi khi gọi riêng
+reports/qa_report.csv                            qa.py                                người đọc (báo cáo QA)
+data/processed/segments_*_<scope>.csv            segments/report.py                   viz_phantom.py
+data/processed/sydney/segments_<scope>.csv       segments/report.py                   llm_segments.py; kpi.run_phantom
+data/processed/llm_cache_pydantic.jsonl          llm.py                               llm_segments; evaluate; kpi
+data/processed/llm_cache_additional_v4*.jsonl    scripts/label_additional_reviews.py llm_segments.run_cohorts; kpi (KPI mở rộng)
+data/samples/hand_labels.csv                     nhóm gán tay (100 review)            evaluate.py
+data/processed/sydney/llm_segment_aspects*.csv   llm_segments.py                      viz_phantom.py (hình 08)
+reports/evaluation/, figures/evaluation/         evaluate.py, eval_report.py          người đọc (báo cáo)
+data/processed/kpi_metrics.csv                   kpi.run                              viz.py
+data/processed/kpi_phantom.csv                   kpi.run_phantom                      viz_phantom.py
+figures/*.png, figures/phantom/*.png             viz.py, viz_phantom.py               báo cáo reports/Bao_cao_*.pdf
+

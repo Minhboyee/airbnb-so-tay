@@ -1,0 +1,20 @@
+<section class="head">
+  <span class="kicker">Bước 0 · điều phối</span>
+  <h1>Một lệnh chạy cả pipeline</h1>
+  <p class="lead"><code>run_pipeline.py</code> đọc config một lần, rồi gọi lần lượt 10 bước con. Nó không tính gì: mọi con số nằm ở module của từng bước. Trang này còn có cấu hình (<code>config.py</code>, <code>sydney.yaml</code>) và công cụ kiểm tra chất lượng mã (<code>pyproject.toml</code>, <code>ci.yml</code>).</p>
+</section>
+<section class="block">
+  <div class="text">
+    <h3>Đọc file này theo thứ tự nào</h3>
+    <ol>
+      <li><a href="#run_pipeline-L1">Docstring đầu file</a>: danh sách bước, đúng thứ tự chạy.</li>
+      <li><a href="#run_pipeline-L117">main()</a>: thân pipeline, mỗi bước một đoạn có comment số bước.</li>
+      <li><a href="#f-sydney_yaml">sydney.yaml</a>: mọi ngưỡng (giá 10.000 AUD, 365 ngày, 150 ngày, 300 căn…). Đổi thành phố chỉ sửa file này.</li>
+      <li><a href="#f-config">config.py</a>: kiểm khoá, đổi ngày về chuỗi, chép ngưỡng giá.</li>
+    </ol>
+  </div>
+  <div class="note-box">
+    <b>Câu hay bị hỏi: vì sao LLM chạy trước KPI?</b>
+    <span>Vì <code>kpi.run</code> đọc cache LLM để tính 2 KPI phàn nàn. Chạy LLM sau thì lần chạy đầu ra KPI LLM rỗng. Còn chia nhóm (bước 3) chạy trước LLM vì bước 4b cần nhóm căn của từng listing.</span>
+  </div>
+</section>
