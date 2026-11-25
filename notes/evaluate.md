@@ -4,12 +4,12 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 
 --- blocks
 === 1-14
-<p>Docstring chia việc rõ ràng, đúng như code:</p>
-<ul><li><b>Vị trí:</b> <code>run_pipeline.py</code> gọi <code>evaluate.run(config)</code> trong <code>run_evaluation_stage</code>, sau khi baseline và cache LLM đã có. Chạy riêng được bằng <code>python -m src.evaluate</code>.</li>
-<li><b>Vào:</b> file nhãn tay (mặc định <code>data/samples/hand_labels.csv</code>), cache LLM, mục <code>eval</code> trong config.</li>
-<li><b>Ra:</b> DataFrame tóm tắt + 4 CSV + <code>eval_errors.md</code> trong <code>reports/evaluation/</code>, và hình ma trận nhầm lẫn trong <code>figures/evaluation/</code>.</li>
-<li><b>Hai cổng:</b> gold quá ít hoặc cache LLM chưa phủ hết → chỉ ghi chẩn đoán, không công bố accuracy/F1. Gold thiếu lớp sentiment → vẫn chấm, chỉ cảnh báo. Đây là trạng thái ở tag <code>final</code>; tài liệu cũ nói "không công bố F1 vì thiếu lớp negative" đã lỗi thời.</li>
-<li><b>Phân công:</b> file này đọc dữ liệu và điều phối; công thức ở <code>metrics.py</code>; ghi báo cáo và vẽ hình ở <code>eval_report.py</code>. Không có vòng import.</li></ul>
+<p>Docstring ghi rõ:</p>
+<ul><li>Vị trí: <code>run_pipeline.py</code> gọi <code>evaluate.run(config)</code> trong <code>run_evaluation_stage</code>, sau khi baseline và cache LLM đã có. Chạy riêng được bằng <code>python -m src.evaluate</code>.</li>
+<li>Vào: file nhãn tay (mặc định <code>data/samples/hand_labels.csv</code>), cache LLM, mục <code>eval</code> trong config.</li>
+<li>Ra: DataFrame tóm tắt + 4 CSV + <code>eval_errors.md</code> trong <code>reports/evaluation/</code>, và hình ma trận nhầm lẫn trong <code>figures/evaluation/</code>.</li>
+<li>Hai cổng: gold quá ít hoặc cache LLM chưa phủ hết thì chỉ ghi chẩn đoán, không công bố accuracy/F1. Gold thiếu lớp sentiment thì vẫn chấm, chỉ cảnh báo. Đây là trạng thái ở tag <code>final</code>; tài liệu cũ nói "không công bố F1 vì thiếu lớp negative" đã lỗi thời.</li>
+<li>Phân công: file này đọc dữ liệu và điều phối; công thức ở <code>metrics.py</code>; ghi báo cáo và vẽ hình ở <code>eval_report.py</code>. Không có vòng import.</li></ul>
 
 === 16-20
 <p>Ba import chuẩn: <code>argparse</code> cho <code>main()</code>, <code>Path</code> cho đường dẫn, <code>Any</code> cho dict kết quả nhiều kiểu. <code>from __future__ import annotations</code> cho phép viết <code>Path | None</code>, <code>list[dict[str, Any]]</code> trên Python 3.10.</p>
@@ -34,7 +34,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Tách một ô khía cạnh như <code>"location; host ;location;"</code> thành danh sách. Ba bước trong một dòng: cắt theo <code>;</code>, <code>strip</code> từng mẩu và bỏ mẩu rỗng, gom vào <code>set</code> để bỏ trùng, rồi <code>sorted</code> để thứ tự ổn định. Test <code>test_parse_aspects_drops_duplicates_and_blanks</code> kiểm đúng ví dụ này ra <code>["host", "location"]</code>. Sắp xếp cũng làm chuỗi trong báo cáo dễ so.</p>
 
 === 51-55
-<p>Đọc nhãn tay và chặn dữ liệu hỏng trước khi chấm. <code>dtype=str, keep_default_na=False</code> là quyết định quan trọng: mọi cột đọc thành chuỗi, ô trống thành <code>""</code> chứ không phải <code>NaN</code>, và ID review dài 18–19 chữ số không bị đổi sang số thực. Nhờ vậy <code>aspects_positive</code> rỗng so sánh được bằng chuỗi, còn <code>review_id</code> khớp cache LLM.</p>
+<p>Đọc nhãn tay và chặn dữ liệu hỏng trước khi chấm. <code>dtype=str, keep_default_na=False</code> để mọi cột đọc thành chuỗi, ô trống thành <code>""</code> chứ không phải <code>NaN</code>, và ID review dài 18–19 chữ số không bị đổi sang số thực. Nhờ vậy <code>aspects_positive</code> rỗng so sánh được bằng chuỗi, còn <code>review_id</code> khớp cache LLM.</p>
 
 === 56-59
 <p><code>read_csv</code> trong <code>try</code>. File rỗng hoàn toàn làm pandas ném <code>EmptyDataError</code>; code đổi thành <code>ValueError</code> có thông báo tiếng Việt, thống nhất với các lỗi kiểm tra bên dưới.</p>
@@ -67,7 +67,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Danh sách lớp không có mẫu nào. Với gold thật là <code>["negative"]</code>; hàm này được dùng cho cảnh báo và cho cột <code>missing_gold_labels</code> của bảng chẩn đoán.</p>
 
 === 94-98
-<p>Bảng chẩn đoán: mỗi phương pháp một dòng, chỉ có support, coverage và phân bố nhãn dự đoán — <b>không</b> có accuracy/F1. Dùng khi pipeline chưa đủ điều kiện công bố số.</p>
+<p>Bảng chẩn đoán: mỗi phương pháp một dòng, chỉ có support, coverage và phân bố nhãn dự đoán, <b>không</b> có accuracy/F1. Dùng khi pipeline chưa đủ điều kiện công bố số.</p>
 
 === 99-100
 <p>Lấy support và danh sách lớp thiếu một lần, dùng lại cho mọi dòng.</p>
@@ -94,7 +94,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Cổng thứ hai, phần đầu: không có dòng LLM nào hoặc toàn bộ sentiment rỗng (cache thiếu hẳn, file rỗng). Không có dự đoán LLM thì không có gì để so, chỉ chẩn đoán.</p>
 
 === 130-131
-<p>Cổng thứ hai, phần sau: có dự đoán nhưng thiếu ít nhất một review, hoặc số dòng LLM khác số gold. Trong pipeline, <code>llm_predictions</code> luôn phát đúng một dòng cho mỗi gold id, nên vế <code>len(llm) != len(gold)</code> không bao giờ đúng; vế thực sự bắt lỗi là <code>llm["sentiment"].isna().any()</code>. Đây là lý do <code>eval_summary.csv</code> đã công bố luôn có coverage 1,000.</p>
+<p>Cổng thứ hai, phần sau: có dự đoán nhưng thiếu ít nhất một review, hoặc số dòng LLM khác số gold. Trong pipeline, <code>llm_predictions</code> luôn phát đúng một dòng cho mỗi gold id, nên vế <code>len(llm) != len(gold)</code> không bao giờ đúng; vế thực sự bắt lỗi là <code>llm["sentiment"].isna().any()</code>, nên <code>eval_summary.csv</code> đã công bố luôn có coverage 1,000.</p>
 
 === 132
 <p>Trả danh sách lý do. Rỗng nghĩa là đủ điều kiện chấm. <code>run</code> chỉ cần kiểm <code>if reasons:</code>.</p>
@@ -106,7 +106,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Trả danh sách một phần tử (nối tên các lớp thiếu bằng dấu phẩy) hoặc rỗng. Câu chữ được in ra console và chép vào mục "Cảnh báo" của <code>eval_errors.md</code>.</p>
 
 === 146-147
-<p>Dự đoán baseline. Điểm quan trọng để so sánh công bằng: chỉ truyền <code>review_id</code> và <code>comments</code>, không truyền nhãn tay. Baseline không thể "nhìn đáp án".</p>
+<p>Dự đoán baseline. Để so sánh công bằng, hàm chỉ truyền <code>review_id</code> và <code>comments</code>, không truyền nhãn tay. Baseline không thể "nhìn đáp án".</p>
 
 === 148
 <p>Gọi <code>predict_reviews</code> của <code>baseline.py</code>: regex cố định, không seed, không mạng, nên chạy lại cho cùng kết quả.</p>
@@ -127,7 +127,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Tương tự cho <code>language</code> rỗng: cache thiếu ngôn ngữ là lỗi dữ liệu, không phải "chưa có nhãn". Test <code>test_evaluation_rejects_invalid_cached_fields</code> kiểm cả hai trường.</p>
 
 === 171-180
-<p>Mỗi review một dòng. Có bản ghi: lấy sentiment, hai danh sách khía cạnh, language. Không có: sentiment <code>pd.NA</code>, hai danh sách rỗng, language <code>pd.NA</code> — dòng vẫn tồn tại để đếm coverage, thay vì biến mất khỏi bảng.</p>
+<p>Mỗi review một dòng. Có bản ghi: lấy sentiment, hai danh sách khía cạnh, language. Không có: sentiment <code>pd.NA</code>, hai danh sách rỗng, language <code>pd.NA</code>, dòng vẫn tồn tại để đếm coverage thay vì biến mất khỏi bảng.</p>
 
 === 181-184
 <p>Dựng DataFrame rồi đổi <code>pd.NA</code> thành <code>None</code> và ép <code>dtype=object</code>. Lý do: <code>pd.NA</code> trong cột object gây nhập nhằng khi so sánh; <code>None</code> thì <code>notna()</code> và <code>isna()</code> xử lý ổn định, còn <code>astype(str)</code> chỉ chạy trên dòng đã chấm.</p>
@@ -136,10 +136,10 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Làm y hệt cho cột <code>language</code>. Nếu để lẫn kiểu, phép so chuỗi ở <code>score_method</code> có thể so <code>"&lt;NA&gt;"</code> với <code>"en"</code> và làm sai <code>language_accuracy</code>.</p>
 
 === 188
-<p>Trả bảng LLM đủ 100 dòng (khi gold 100), kể cả dòng thiếu nhãn. Đây là điều kiện để cổng <code>diagnostic_reasons</code> phát hiện cache chưa phủ hết.</p>
+<p>Trả bảng LLM đủ 100 dòng (khi gold 100), kể cả dòng thiếu nhãn. Nhờ vậy cổng <code>diagnostic_reasons</code> phát hiện được cache chưa phủ hết.</p>
 
 === 191-197
-<p>Chấm <b>một</b> phương pháp, dùng chung cho baseline và LLM. Tham số <code>aspects</code> được nhận nhưng không dùng trong thân hàm — <code>per_aspect_scores</code> mới là chỗ cần; đây là tham số thừa, không ảnh hưởng kết quả.</p>
+<p>Chấm <b>một</b> phương pháp, dùng chung cho baseline và LLM. Hàm nhận tham số <code>aspects</code> nhưng không dùng trong thân hàm; <code>per_aspect_scores</code> mới là chỗ cần. Đây là tham số thừa, không ảnh hưởng kết quả.</p>
 
 === 198-202
 <p>Docstring nói rõ hai việc: chỉ chấm trên dòng đã có dự đoán (coverage), và trả kèm <code>per_class</code>/<code>matrix</code> để <code>run</code> tách ra ghi file riêng. Nhờ vậy bảng tóm tắt không phình bởi hai cột kiểu DataFrame/ndarray.</p>
@@ -151,25 +151,25 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Dựng ma trận 3×3, bảng từng lớp, và macro-F1 kèm số lớp dùng. Với gold thật: ma trận LLM [[85,0,0],[3,12,0],[0,0,0]], macro 0,936 trên 2 lớp.</p>
 
 === 211-216
-<p>Bootstrap cho macro-F1: mỗi lần bốc lại chỉ số, tính lại ma trận rồi <code>per_class_scores</code> rồi macro, lấy phần tử <code>[0]</code> (bỏ số lớp). Dùng đúng 2.000 lần, seed 42, nên khoảng LLM [0,851; 1,000]. Lưu ý code tính lại từ mảng nhãn chứ không bốc lại bảng per-class — đúng bản chất của bootstrap theo review.</p>
+<p>Bootstrap cho macro-F1: mỗi lần bốc lại chỉ số, tính lại ma trận rồi <code>per_class_scores</code> rồi macro, lấy phần tử <code>[0]</code> (bỏ số lớp). Dùng đúng 2.000 lần, seed 42, nên khoảng LLM [0,851; 1,000]. Code tính lại từ mảng nhãn chứ không bốc lại bảng per-class, đúng cách bootstrap theo review.</p>
 
 === 217-219
 <p>Accuracy = trace / n. Trace là tổng đường chéo = số dự đoán đúng: LLM 97/100 = 0,970, baseline 87/100 = 0,870. Khoảng tin cậy dùng Wilson (<a href="#metrics-L118">metrics dòng 118</a>) vì là tỷ lệ nhị thức và tỷ lệ sát 1.</p>
 
 === 220-225
-<p>Bootstrap cho kappa, cùng bộ chỉ số và seed với macro-F1. Kappa baseline [−0,019; 0,534] chứa 0; kappa LLM [0,706; 1,000] không chứa 0 — đây là bằng chứng mạnh hơn việc so hai accuracy, vì hai khoảng accuracy [0,790; 0,922] và [0,915; 0,990] chồng nhau một chút.</p>
+<p>Bootstrap cho kappa, cùng bộ chỉ số và seed với macro-F1. Kappa baseline [−0,019; 0,534] chứa 0; kappa LLM [0,706; 1,000] không chứa 0, bằng chứng mạnh hơn việc so hai accuracy, vì hai khoảng accuracy [0,790; 0,922] và [0,915; 0,990] chồng nhau một chút.</p>
 
 === 227-232
 <p>Dựng tập cặp (phía, khía cạnh) cho gold, chỉ trên dòng đã chấm. Gold lưu khía cạnh dạng chuỗi <code>"location;host"</code>, nên phải <code>parse_aspects</code> trước khi ghép phía.</p>
 
 === 233-238
-<p>Tương tự cho máy, nhưng khía cạnh đã là list trong cache/baseline nên chỉ cần <code>list(...)</code>. <code>strict=True</code> bảo đảm số dòng hai bên bằng nhau; lệch là lỗi thay vì cắt im lặng.</p>
+<p>Tương tự cho máy, nhưng khía cạnh đã là list trong cache/baseline nên chỉ cần <code>list(...)</code>. <code>strict=True</code> buộc số dòng hai bên bằng nhau, lệch là lỗi thay vì cắt im lặng.</p>
 
 === 239-240
-<p>Cộng dồn TP/FP/FN trên toàn bộ cặp, rồi tính micro precision/recall/F1. Số thật: LLM TP 222, FP 12, FN 35 → F1 0,904; baseline 114/8/143 → 0,602.</p>
+<p>Cộng dồn TP/FP/FN trên toàn bộ cặp, rồi tính micro precision/recall/F1. Số thật: LLM TP 222, FP 12, FN 35 cho F1 0,904; baseline 114/8/143 cho 0,602.</p>
 
 === 241-248
-<p>Bootstrap cho micro-F1: mỗi lần bốc lại chỉ số review, lấy lại tập cặp gold/máy theo chỉ số đó, đếm lại rồi tính F1. Vì bốc theo review, một review có nhiều cặp vẫn đi cùng nhau — đúng đơn vị lấy mẫu.</p>
+<p>Bootstrap cho micro-F1: mỗi lần bốc lại chỉ số review, lấy lại tập cặp gold/máy theo chỉ số đó, đếm lại rồi tính F1. Vì bốc theo review, một review có nhiều cặp vẫn đi cùng nhau, đúng đơn vị lấy mẫu.</p>
 
 === 250-252
 <p>So ngôn ngữ gold với ngôn ngữ máy. Gold đọc bằng <code>keep_default_na=False</code> nên ô trống là <code>""</code>; <code>fillna("")</code> chỉ để phòng DataFrame dựng tay. Với dữ liệu thật, cả hai bên đều <code>"en"</code> nên <code>language_accuracy</code> = 1,000.</p>
@@ -184,7 +184,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Accuracy và hai cận Wilson. Với baseline: 0,870 [0,790; 0,922]; LLM: 0,970 [0,915; 0,990].</p>
 
 === 264-267
-<p>Macro-F1, hai cận bootstrap, và <code>sentiment_macro_f1_labels</code> = 2 — số lớp đã đưa vào trung bình. Cột này để người đọc biết lớp <code>negative</code> (support 0) không được tính.</p>
+<p>Macro-F1, hai cận bootstrap, và <code>sentiment_macro_f1_labels</code> = 2, số lớp đã đưa vào trung bình. Cột này để người đọc biết lớp <code>negative</code> (support 0) không được tính.</p>
 
 === 268-270
 <p>Kappa điểm và hai cận bootstrap. Kappa không dùng Wilson vì là hàm của cả ma trận, không phải tỷ lệ đơn.</p>
@@ -220,7 +220,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Bảng từng review cho từng phương pháp, phục vụ phân tích lỗi. Năm loại lỗi trong docstring: <code>unlabeled</code>, <code>sentiment:gold-&gt;máy</code>, <code>aspect_missing</code>, <code>aspect_extra</code> (một dòng có thể mang nhiều loại, ngăn bởi <code>;</code>).</p>
 
 === 309-312
-<p>Tính tập cặp gold cho <b>toàn bộ</b> gold, không lọc theo dòng có nhãn — khác <code>score_method</code>. Lý do: bảng lỗi cần cả dòng <code>unlabeled</code> để hiển thị.</p>
+<p>Tính tập cặp gold cho <b>toàn bộ</b> gold, không lọc theo dòng có nhãn, khác <code>score_method</code>. Lý do: bảng lỗi cần cả dòng <code>unlabeled</code> để hiển thị.</p>
 
 === 313-314
 <p><code>rows</code> gom kết quả; lặp từng phương pháp theo thứ tự xuất hiện.</p>
@@ -235,7 +235,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Tính phần thiếu (gold có, máy không), phần thừa (máy có, gold không), và nhãn sentiment máy. Dùng set nên không phụ thuộc thứ tự.</p>
 
 === 321-325
-<p>Xếp loại lỗi theo thứ tự cố định: chưa có nhãn → <code>unlabeled</code>; sai sentiment → <code>sentiment:gold-&gt;máy</code> (ví dụ <code>sentiment:mixed-&gt;positive</code>); rồi cờ thiếu/thừa khía cạnh. Dòng chưa có nhãn vẫn được tính lỗi khía cạnh: cache thiếu bản ghi nên hai danh sách rỗng, gold có khía cạnh thì sinh thêm <code>aspect_missing</code>. Test <code>test_per_review_frame_marks_error_types</code> kỳ vọng đúng chuỗi <code>unlabeled;aspect_missing</code>.</p>
+<p>Xếp loại lỗi theo thứ tự cố định: chưa có nhãn thì <code>unlabeled</code>; sai sentiment thì <code>sentiment:gold-&gt;máy</code> (ví dụ <code>sentiment:mixed-&gt;positive</code>); rồi cờ thiếu/thừa khía cạnh. Dòng chưa có nhãn vẫn được tính lỗi khía cạnh: cache thiếu bản ghi nên hai danh sách rỗng, gold có khía cạnh thì sinh thêm <code>aspect_missing</code>. Test <code>test_per_review_frame_marks_error_types</code> kỳ vọng đúng chuỗi <code>unlabeled;aspect_missing</code>.</p>
 
 === 326-329
 <p>Thêm <code>aspect_missing</code>/<code>aspect_extra</code> nếu có. Một review vừa thiếu vừa thừa sẽ có cả hai, đúng như ca LLM ở test: <code>sentiment:positive-&gt;mixed;aspect_missing;aspect_extra</code>.</p>
@@ -253,7 +253,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p>Trả DataFrame 200 dòng khi có 2 phương pháp × 100 review. <code>eval_report.write_markdown</code> đếm lỗi trên bảng này để viết mục "Khía cạnh hay bị bỏ sót / gán thừa" và "Ca sai sentiment".</p>
 
 === 349-354
-<p>Hàm điều phối chính. <code>output_dir</code>/<code>figure_dir</code> là tham số tuỳ chọn để ghi đè đường dẫn trong config — dùng cho test và cho chạy thử vào thư mục tạm. Trả bảng tóm tắt, hoặc bảng coverage nếu chỉ chẩn đoán.</p>
+<p>Hàm điều phối chính. <code>output_dir</code>/<code>figure_dir</code> là tham số tuỳ chọn để ghi đè đường dẫn trong config, dùng cho test và cho chạy thử vào thư mục tạm. Trả bảng tóm tắt, hoặc bảng coverage nếu chỉ chẩn đoán.</p>
 
 === 355
 <p>Đường dẫn nhãn tay: <code>labels.path</code>, mặc định <code>data/samples/hand_labels.csv</code>. Dùng <code>Path</code> để ghép đường dẫn an toàn trên Windows.</p>
@@ -295,7 +295,7 @@ lead: Bước đánh giá của pipeline: đọc 100 nhãn tay và cache LLM, d�
 <p><code>score_method</code> trả dict gồm cả hai khoá không phải số. <code>pop</code> chúng ra trước khi thêm vào <code>summaries</code>, nhờ vậy bảng tóm tắt chỉ còn số và chuỗi. Bảng per-class được gán thêm cột <code>method</code>.</p>
 
 === 390-407
-<p>Dựng lại tập cặp gold/máy trên các dòng đã chấm (cùng logic với <code>score_method</code>), rồi gọi <code>per_aspect_scores</code> với 6 khía cạnh. Đoạn này lặp lại việc tách cặp hai lần — có thể gom vào một hàm phụ, nhưng hiện tại vẫn đúng và dễ đọc theo từng bước.</p>
+<p>Dựng lại tập cặp gold/máy trên các dòng đã chấm (cùng logic với <code>score_method</code>), rồi gọi <code>per_aspect_scores</code> với 6 khía cạnh. Đoạn này lặp lại việc tách cặp hai lần, có thể gom vào một hàm phụ, nhưng hiện tại vẫn đúng và dễ đọc theo từng bước.</p>
 
 === 409-412
 <p>Ghép thành bốn bảng: <code>summary</code> (2 dòng), <code>per_class</code> (6 dòng), <code>per_aspect</code> (12 dòng), <code>per_review</code> (200 dòng).</p>
@@ -365,7 +365,7 @@ low | load_gold không kiểm language | Cột <code>language</code> chỉ cần
 <p>Vì 100 review là mẫu nhỏ; chấm trên 3 dòng rồi công bố accuracy sẽ gây hiểu nhầm. <code>diagnostic_reasons</code> (<a href="#evaluate-L120">dòng 120</a>) chặn khi gold &lt; 100 hoặc cache LLM thiếu bất kỳ nhãn nào; khi đó <code>run</code> chỉ ghi <code>eval_diagnostics.*</code> và trả sớm, không đụng file metric cũ.</p>
 ? Gold không có lớp negative mà vẫn công bố F1, có gian không?
 <p>Không giấu: <code>scoring_warnings</code> in cảnh báo và chép vào <code>eval_errors.md</code>; <code>sentiment_macro_f1_labels</code> = 2 cho biết trung bình chỉ trên positive và mixed. Lớp negative vẫn có dòng trong <code>eval_perclass.csv</code> với support 0 và F1 0.</p>
-? Accuracy 0,970 so với baseline 0,870 — chênh có ý nghĩa không?
+? Accuracy 0,970 so với baseline 0,870, chênh có ý nghĩa không?
 <p>Hai khoảng Wilson chồng nhau một chút ([0,915; 0,990] và [0,790; 0,922]), nên chỉ nhìn accuracy thì chưa dứt khoát. Kappa mạnh hơn: LLM [0,706; 1,000] không chứa 0, baseline [−0,019; 0,534] thì chứa 0. Kết luận an toàn: LLM hơn rõ về đồng thuận vượt mức ngẫu nhiên.</p>
 ? Vì sao baseline và LLM dùng chung seed bootstrap?
 <p>Để hai phương pháp được bốc trên cùng các bộ chỉ số, so sánh công bằng và tái lập được từng chữ số (<a href="#metrics-L142">metrics dòng 142</a>). Hạn chế: code không tính khoảng cho hiệu số LLM − baseline, nên không kết luận được ý nghĩa thống kê của chênh lệch chỉ từ hai khoảng riêng.</p>

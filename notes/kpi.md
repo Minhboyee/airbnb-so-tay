@@ -1,41 +1,37 @@
 --- meta
 title: kpi.py
-lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run()</code> tính 5 KPI chung + thương mại theo <code>analysis_area</code> + availability theo khu, ghi <code>data/processed/kpi_metrics.csv</code> (158 dòng); <code>run_phantom()</code> tính KPI căn ảo, ghi <code>kpi_phantom.csv</code> (216 dòng). Mọi KPI trả <code>(giá trị, n_obs)</code>: giá trị là tỷ lệ 0–100 (không phải 0–1), <code>n_obs</code> là mẫu số thật của tỷ lệ đó. Điểm dễ bị hỏi: lọc <code>qa_has_error_excl_price</code>, tách chế độ lưu trú khi so giá, và <code>n_obs</code> không phải lúc nào cũng là mẫu số.
+lead: Bước 5 của pipeline, và 5b cho căn ảo. Có hai cửa vào. <code>run()</code> tính 5 KPI chung, thương mại theo <code>analysis_area</code> và availability theo khu, ghi <code>data/processed/kpi_metrics.csv</code> (158 dòng). <code>run_phantom()</code> tính KPI căn ảo, ghi <code>kpi_phantom.csv</code> (216 dòng). Mọi KPI trả <code>(giá trị, n_obs)</code>: giá trị là tỷ lệ 0–100 chứ không phải 0–1, còn <code>n_obs</code> là mẫu số thật của tỷ lệ đó. Giảng viên hay hỏi ba chỗ: lọc <code>qa_has_error_excl_price</code>, tách chế độ lưu trú khi so giá, và vì sao <code>n_obs</code> không phải lúc nào cũng là mẫu số.
 
 --- blocks
 === 1-21
-<p>Docstring mô tả vị trí file trong pipeline và hợp đồng của mọi hàm KPI:</p>
-<ul><li><b>Chạy sau QA, LLM, đánh giá; trước viz.</b> Trong <code>run_pipeline.py</code>, <a href="#run_pipeline-L180">dòng 180</a> gọi <code>kpi.run(config, flagged)</code>; <a href="#run_pipeline-L184">dòng 184</a> gọi <code>kpi.run_phantom(config)</code> nhưng chỉ khi <code>seg["scope"] == "full"</code>.</li>
-<li><b>Hợp đồng:</b> mỗi KPI là hàm nhỏ trả <code>(value, n_obs)</code>. <code>value</code> là phần trăm (nhân 100), <code>n_obs</code> là số dòng thực sự vào mẫu số. <code>add_kpi</code> ghi một dòng; <code>compute_regular_kpis</code>/<code>compute_phantom_kpis</code> chỉ gọi các hàm rồi ghi.</li>
-<li><b>Đầu vào:</b> bảng listings/calendar đã qua QA (hoặc đọc <code>data/processed/&lt;city&gt;/&lt;mốc&gt;/</code> khi gọi trực tiếp), cache LLM, và <code>config["kpi"]</code> (<code>area_col</code>, <code>min_area_listings</code>).</li>
-<li><b>Đầu ra:</b> <code>kpi_metrics.csv</code> dạng dài, cột <code>OUTPUT_COLUMNS</code>.</li></ul>
-<p>Dòng 19–20 nhấn mạnh: mẫu số chỉ gồm dòng có dữ liệu hợp lệ (không NaN), và <code>n_obs</code> cho người đọc biết tỷ lệ dựa trên bao nhiêu quan sát. Đây là lý do mỗi KPI trả hai giá trị chứ không trả một con số trần.</p>
+<p>Docstring nói file đứng ở đâu trong pipeline và mọi hàm KPI theo một hợp đồng chung.</p>
+<p>Về vị trí: chạy sau QA, LLM và đánh giá, trước viz. Trong <code>run_pipeline.py</code>, <a href="#run_pipeline-L180">dòng 180</a> gọi <code>kpi.run(config, flagged)</code>; <a href="#run_pipeline-L184">dòng 184</a> gọi <code>kpi.run_phantom(config)</code> nhưng chỉ khi <code>seg["scope"] == "full"</code>.</p>
+<p>Hợp đồng: mỗi KPI là một hàm nhỏ trả <code>(value, n_obs)</code>. <code>value</code> là phần trăm (nhân 100), <code>n_obs</code> là số dòng thực sự vào mẫu số. <code>add_kpi</code> ghi một dòng; <code>compute_regular_kpis</code>/<code>compute_phantom_kpis</code> chỉ gọi các hàm rồi ghi.</p>
+<p>Đầu vào là bảng listings/calendar đã qua QA (hoặc đọc <code>data/processed/&lt;city&gt;/&lt;mốc&gt;/</code> khi gọi trực tiếp), cache LLM, và <code>config["kpi"]</code> (<code>area_col</code>, <code>min_area_listings</code>). Đầu ra là <code>kpi_metrics.csv</code> dạng dài, cột <code>OUTPUT_COLUMNS</code>.</p>
+<p>Dòng 19–20 nói mẫu số chỉ gồm dòng có dữ liệu hợp lệ (không NaN), và <code>n_obs</code> cho người đọc biết tỷ lệ dựa trên bao nhiêu quan sát. Vì thế mỗi KPI trả hai giá trị chứ không trả một con số trần.</p>
 
 === 23-26
-<p>Bốn import chuẩn: <code>json</code> để đọc chuỗi dạng JSON list trong <code>split_aspects</code>; <code>re</code> để tách aspect theo dấu phân cách; <code>Path</code> để ghép đường dẫn; <code>Any</code> cho dict config tự do. Không có import nặng ngoài pandas ở dòng 28.</p>
+<p>Bốn import chuẩn: <code>json</code> để đọc chuỗi dạng JSON list trong <code>split_aspects</code>; <code>re</code> để tách aspect theo dấu phân cách; <code>Path</code> để ghép đường dẫn; <code>Any</code> cho dict config tự do. Ngoài pandas ở dòng 28 không có import nặng nào.</p>
 
 === 28
 <p><code>pandas</code> là công cụ chính: đọc CSV/JSONL, <code>groupby</code>, <code>to_numeric</code>, <code>merge</code>, <code>drop_duplicates</code>.</p>
 
 === 30-32
-<p>Ba import nội bộ, mỗi cái là một sự thật cần nhớ:</p>
+<p>Ba import nội bộ:</p>
 <ul><li><code>load_sample_ids</code> (từ <code>download.py</code>) đọc danh sách ID review của nhóm, dùng để lọc cache LLM (<code>_keep_group_reviews</code>).</li>
-<li><code>parse_price</code> (từ <code>qa_rules.py</code>, <a href="#qa_rules-L103">dòng 103</a>) đổi chuỗi kiểu <code>"$1,200.00"</code> sang số. Kiểm nhanh: <code>"$1,200.00" → 1200.0</code>, chuỗi rỗng/None → <code>NaN</code>.</li>
-<li><code>PHANTOM</code> (từ <code>segments/rules.py</code>, <a href="#seg_rules-L32">dòng 32</a>) là tuple <code>("B_ghost", "D_dormant", "D_never")</code> — ba nhóm bị coi là căn ảo.</li></ul>
+<li><code>parse_price</code> (từ <code>qa_rules.py</code>, <a href="#qa_rules-L103">dòng 103</a>) đổi chuỗi kiểu <code>"$1,200.00"</code> sang số. Thử nhanh: <code>"$1,200.00" → 1200.0</code>, chuỗi rỗng/None → <code>NaN</code>.</li>
+<li><code>PHANTOM</code> (từ <code>segments/rules.py</code>, <a href="#seg_rules-L32">dòng 32</a>) là tuple <code>("B_ghost", "D_dormant", "D_never")</code>, ba nhóm bị coi là căn ảo.</li></ul>
 
 === 34-36
 <p><code>OUTPUT_COLUMNS</code> cố định 6 cột của file dài. <code>scope</code> nhận một trong: <code>overall</code>, <code>analysis_area</code>, tên cột khu vực (<code>neighbourhood_cleansed</code>), <code>llm</code>, <code>llm_additional_4000</code>, <code>llm_combined_5000</code>; <code>group_name</code> là giá trị trong scope (<code>all</code>, tên khu, tên nhóm, tên aspect).</p>
 
 === 38-49
 <p>Hai danh sách cột bắt buộc, kiểm sớm ở <code>compute_regular_kpis</code>:</p>
-<ul><li><code>LISTING_COLUMNS</code>: 7 cột cho 5 KPI chung. Đáng chú ý: <code>neighbourhood_cleansed</code> luôn bắt buộc, kể cả khi <code>config["kpi"]["area_col"]</code> là cột khác — vì các hàm mặc định vẫn dùng nó.</li>
+<ul><li><code>LISTING_COLUMNS</code>: 7 cột cho 5 KPI chung. Trong đó <code>neighbourhood_cleansed</code> luôn bắt buộc, kể cả khi <code>config["kpi"]["area_col"]</code> là cột khác, vì các hàm mặc định vẫn dùng nó.</li>
 <li><code>CALENDAR_COLUMNS</code>: chỉ <code>listing_id</code> và <code>available</code> cho KPI availability.</li></ul>
 
 === 52-71
-<p><code>add_kpi</code> là nơi duy nhất dựng một dòng kết quả. Ba quyết định định dạng:</p>
-<ul><li><b>NaN → <code>None</code></b> (dòng 68): CSV ghi ô trống, phân biệt với 0 thật. Ví dụ nhóm không có quan sát thì <code>value</code> trống chứ không phải 0%.</li>
-<li><b><code>round(..., 4)</code></b>: giữ 4 chữ số thập phân. Đó là lý do CSV có <code>21.188</code>, <code>6.1683</code>.</li>
-<li><b><code>int(n_obs)</code></b>: mẫu số luôn là số nguyên, không bị pandas đổi thành float khi có NaN.</li></ul>
+<p><code>add_kpi</code> là nơi duy nhất dựng một dòng kết quả. Nó xử lý ba chỗ về định dạng. NaN đổi thành <code>None</code> (dòng 68) để CSV ghi ô trống, phân biệt với 0 thật: nhóm không có quan sát thì <code>value</code> trống chứ không phải 0%. Số được <code>round(..., 4)</code> nên chỉ giữ 4 chữ số thập phân, vì thế CSV có <code>21.188</code>, <code>6.1683</code>. Còn <code>int(n_obs)</code> giữ mẫu số là số nguyên, không để pandas đổi thành float khi có NaN.</p>
 <p>Test <code>test_add_kpi_rounds_to_four_decimals_and_keeps_n_obs_int</code> kiểm đúng <code>2/3*100 = 66.6667</code> và kiểu <code>int</code>.</p>
 
 === 74-78
@@ -45,13 +41,13 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>load_phantom_kpi_data</code> đọc bảng phân nhóm <b>toàn thành phố</b> (<code>segments_full.csv</code>) rồi nối thêm <code>price</code>/<code>license</code> từ listings thô. Docstring ghi "full Sydney"; <code>city</code> lấy từ config nên đổi thành phố vẫn chạy, miễn có file cùng tên.</p>
 
 === 85
-<p>Đường dẫn cứng <code>data/processed/&lt;city&gt;/segments_full.csv</code>. Đây là lý do bước 5b chỉ chạy với scope <code>full</code>: scope <code>sample</code> không sinh file này.</p>
+<p>Đường dẫn cứng <code>data/processed/&lt;city&gt;/segments_full.csv</code>. Bước 5b chỉ chạy với scope <code>full</code> vì scope <code>sample</code> không sinh file này.</p>
 
 === 87-88
 <p>Thiếu file thì <code>FileNotFoundError</code> kèm đường dẫn. Không âm thầm trả bảng rỗng, vì KPI căn ảo mà tính trên bảng rỗng sẽ ra toàn NaN khó hiểu.</p>
 
 === 90-94
-<p>Đọc CSV với <code>dtype={"id": "string"}</code>. Quan trọng: ID Airbnb dài 18 chữ số; đọc thành số sẽ bị làm tròn và <code>merge</code> sai. <code>low_memory=False</code> để pandas đọc một lượt, tránh đoán kiểu từng khối.</p>
+<p>Đọc CSV với <code>dtype={"id": "string"}</code>. ID Airbnb dài 18 chữ số; đọc thành số sẽ bị làm tròn và <code>merge</code> sai. <code>low_memory=False</code> để pandas đọc một lượt, tránh đoán kiểu từng khối.</p>
 
 === 96-107
 <p>Kiểm 6 cột tối thiểu: <code>id</code>, <code>snapshot</code>, <code>segment</code>, <code>neighbourhood_cleansed</code>, <code>room_type</code>, <code>minimum_nights</code>. Đủ cho mọi KPI căn ảo trừ giá/license (nối thêm ở dưới).</p>
@@ -63,7 +59,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Lặp qua các mốc trong config; <code>str(snapshot)</code> để chắc chắn là chuỗi, vì PyYAML có thể đã đổi ngày thành <code>date</code> (xem <a href="#config-L31">config._as_text</a>).</p>
 
 === 114
-<p>Đường dẫn listings thô: <code>data/raw/&lt;city&gt;/&lt;mốc&gt;/listings.csv.gz</code>. Đây là chỗ khiến <code>run_phantom</code> không chạy được trên bản clone sạch nếu thiếu <code>data/raw</code> (bị gitignore).</p>
+<p>Đường dẫn listings thô: <code>data/raw/&lt;city&gt;/&lt;mốc&gt;/listings.csv.gz</code>. Thiếu <code>data/raw</code> (bị gitignore) thì <code>run_phantom</code> không chạy được trên bản clone sạch.</p>
 
 === 116-117
 <p>Thiếu file thô của bất kỳ mốc nào thì dừng cả hàm. Cố ý: KPI căn ảo cần đủ mọi mốc để so sánh, thiếu một mốc thì bảng sẽ lệch.</p>
@@ -87,7 +83,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>valid</code> = dòng có <code>segment</code> không NaN; <code>value</code> = trung bình của <code>isin(PHANTOM)</code> trên đúng các dòng đó, nhân 100. Với mốc 2026-06-16: 918 + 1.913 + 1.528 = 4.359 căn ảo / 20.573 = <b>21,188%</b> (khớp <code>kpi_phantom.csv</code>).</p>
 
 === 149
-<p>Trả <code>(value, valid.sum())</code> = <code>(21.188, 20573)</code>. Lưu ý docstring nói "trên tổng số listing" nhưng mẫu số thực tế là số listing có <code>segment</code> hợp lệ; với dữ liệu hiện tại hai số bằng nhau vì mọi dòng đều được phân nhóm.</p>
+<p>Trả <code>(value, valid.sum())</code> = <code>(21.188, 20573)</code>. Docstring nói "trên tổng số listing" nhưng mẫu số thực tế là số listing có <code>segment</code> hợp lệ; với dữ liệu hiện tại hai số bằng nhau vì mọi dòng đều được phân nhóm.</p>
 
 === 152-160
 <p><code>phantom_listing_rate_by_area</code>: cùng phép tính nhưng chia theo <code>neighbourhood_cleansed</code>. Kiểm 2 cột trước khi làm.</p>
@@ -126,7 +122,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>license_text</code> đổi sang kiểu chuỗi rồi <code>strip</code>, để chuỗi toàn khoảng trắng bị coi là rỗng.</p>
 
 === 208
-<p><code>missing</code> = NaN <b>hoặc</b> chuỗi rỗng sau khi strip. Hệ quả: <code>"Exempt"</code> (được miễn) <b>không</b> tính là thiếu — đúng như cách báo cáo dùng. Kiểm trên raw 2026-06-16: 1.269 thiếu, 4.067 <code>Exempt</code>.</p>
+<p><code>missing</code> = NaN <b>hoặc</b> chuỗi rỗng sau khi strip. Vì thế <code>"Exempt"</code> (được miễn) <b>không</b> tính là thiếu, đúng như cách báo cáo dùng. Kiểm trên raw 2026-06-16: 1.269 thiếu, 4.067 <code>Exempt</code>.</p>
 
 === 210
 <p>Tỷ lệ trên <b>toàn bộ</b> listings: 1.269 / 20.573 = <b>6,1683%</b>.</p>
@@ -150,19 +146,19 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Bỏ NaN và giá trị &lt; 1. Với dữ liệu hiện tại không mất dòng nào: 1.269 căn thiếu license đều có <code>minimum_nights &gt;= 1</code>, nên tổng 4 rổ = 1.269.</p>
 
 === 241-249
-<p>Bốn mặt nạ, nhãn viết cứng theo ngưỡng 90: <code>1-7</code>, <code>8-20</code>, <code>21-89</code> (<code>between(21, threshold-1)</code>), <code>90+</code> (<code>&gt;= threshold</code>). Nếu config đổi <code>long_stay_min_nights</code> khác 90 thì nhãn <code>21-89</code>/<code>90+</code> sẽ sai — xem review.</p>
+<p>Bốn mặt nạ, nhãn viết cứng theo ngưỡng 90: <code>1-7</code>, <code>8-20</code>, <code>21-89</code> (<code>between(21, threshold-1)</code>), <code>90+</code> (<code>&gt;= threshold</code>). Nếu config đổi <code>long_stay_min_nights</code> khác 90 thì nhãn <code>21-89</code>/<code>90+</code> sẽ sai, xem review.</p>
 
 === 251-252
 <p><code>total</code> = số căn thiếu license có số đêm hợp lệ; <code>results</code> gom kết quả.</p>
 
 === 254-257
-<p>Mỗi rổ: <code>count</code> = số căn trong rổ; <code>value</code> = <code>count / total * 100</code> (nếu <code>total = 0</code> thì NaN). Trả <code>(nhãn, value, count)</code>. <b>Chú ý:</b> <code>n_obs</code> ở đây là <em>số đếm của rổ</em>, không phải mẫu số <code>total</code>. Trong <code>kpi_phantom.csv</code> mốc cuối: <code>1-7</code> 21, <code>8-20</code> 4, <code>21-89</code> 0, <code>90+</code> 1.244, và tỷ lệ 98,0299% của rổ <code>90+</code> là 1.244/1.269.</p>
+<p>Mỗi rổ: <code>count</code> = số căn trong rổ; <code>value</code> = <code>count / total * 100</code> (nếu <code>total = 0</code> thì NaN). Trả <code>(nhãn, value, count)</code>. Ở đây <code>n_obs</code> là <em>số đếm của rổ</em>, không phải mẫu số <code>total</code>. Trong <code>kpi_phantom.csv</code> mốc cuối: <code>1-7</code> 21, <code>8-20</code> 4, <code>21-89</code> 0, <code>90+</code> 1.244, và tỷ lệ 98,0299% của rổ <code>90+</code> là 1.244/1.269.</p>
 
 === 259
 <p>Trả 4 dòng cho <code>compute_phantom_kpis</code>.</p>
 
 === 262-274
-<p>Đây là KPI khó nhất của file: so giá mỗi căn với trung vị giá của "hàng xóm" <b>cùng khu, cùng loại phòng và cùng chế độ lưu trú</b>. Docstring nêu lý do (<code>WHY</code>): căn thuê dài có giá/đêm thấp hơn hẳn căn ngắn ngày; nếu gộp hai chế độ vào một trung vị, trung vị bị kéo xuống và tỷ số của căn ngắn ngày bị thổi lên. Đây là bẫy gộp nhóm (Simpson): nhìn chung tưởng căn ảo rẻ, tách ra thì căn ngắn ngày lại đắt hơn hàng xóm.</p>
+<p>KPI khó nhất của file là so giá mỗi căn với trung vị giá của "hàng xóm" <b>cùng khu, cùng loại phòng và cùng chế độ lưu trú</b>. Docstring nêu lý do (<code>WHY</code>): căn thuê dài có giá/đêm thấp hơn hẳn căn ngắn ngày; nếu gộp hai chế độ vào một trung vị, trung vị bị kéo xuống và tỷ số của căn ngắn ngày bị thổi lên. Đây là bẫy gộp nhóm (Simpson): nhìn chung tưởng căn ảo rẻ, tách ra thì căn ngắn ngày lại đắt hơn hàng xóm.</p>
 
 === 275-285
 <p>Kiểm 5 cột trước khi tính: <code>segment</code>, <code>neighbourhood_cleansed</code>, <code>room_type</code>, <code>minimum_nights</code>, <code>price</code>.</p>
@@ -189,13 +185,13 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Gán <code>"90_plus"</code> cho căn có <code>minimum_nights &gt;= long_stay_min</code> (= 90). Nhãn <code>90_plus</code> viết cứng; nếu config đổi ngưỡng thì nhãn trong <code>kpi_name</code> sẽ lệch (xem review). Với 20/90, khoảng 21–89 không thuộc chế độ nào và bị loại.</p>
 
 === 327
-<p>Bỏ các căn ở khoảng giữa (21–89 đêm). Chúng không vào tử số lẫn mẫu số — đúng như docstring nói.</p>
+<p>Bỏ các căn ở khoảng giữa (21–89 đêm). Chúng không vào tử số lẫn mẫu số, đúng như docstring nói.</p>
 
 === 329-333
 <p>Khoá nhóm hàng xóm: khu × loại phòng × chế độ. Trung vị được tính <b>trong từng nhóm này</b>, không phải toàn thành phố.</p>
 
 === 335-338
-<p><code>transform("median")</code> gắn trung vị của nhóm trở lại từng dòng, nên mỗi căn có <code>peer_median_price</code> riêng. Lưu ý: trung vị <b>tính cả chính căn đó</b>; nhóm chỉ có 1 căn thì trung vị = giá căn đó và tỷ số = 1,0 (test <code>test_price_relative_to_local_median</code> chứng minh).</p>
+<p><code>transform("median")</code> gắn trung vị của nhóm trở lại từng dòng, nên mỗi căn có <code>peer_median_price</code> riêng. Trung vị <b>tính cả chính căn đó</b>; nhóm chỉ có 1 căn thì trung vị = giá căn đó và tỷ số = 1,0 (test <code>test_price_relative_to_local_median</code> chứng minh).</p>
 
 === 340
 <p>Bỏ nhóm có trung vị 0 (không thể chia). Thực tế hiếm vì đã lọc giá dương.</p>
@@ -207,13 +203,13 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Danh sách kết quả <code>(regime, segment, tỷ lệ, n_obs)</code>.</p>
 
 === 346-347
-<p>Gom theo <code>(stay_regime, segment)</code>, lấy <b>trung vị của các tỷ số</b> (không phải tỷ số của các trung vị). Đây là lựa chọn có chủ ý: trung vị tỷ số chịu được vài căn giá lệch.</p>
+<p>Gom theo <code>(stay_regime, segment)</code>, lấy <b>trung vị của các tỷ số</b> (không phải tỷ số của các trung vị). Chọn vậy có chủ ý: trung vị tỷ số chịu được vài căn giá lệch.</p>
 
 === 349-356
 <p>Thêm một dòng kết quả, <code>n_obs</code> = số căn trong nhóm. Mốc 2026-06-16 (khớp <code>kpi_phantom.csv</code>): ngắn ngày <code>D_dormant 1,3203×</code> (791 căn), <code>D_never 1,8549×</code> (529), <code>H_healthy 0,9639×</code> (11.584); 90+ <code>D_dormant 0,9583×</code> (836), <code>D_never 1,0706×</code> (740), <code>H_healthy 0,9761×</code> (66).</p>
 
 === 358
-<p>Trả danh sách. Đáng chú ý khi đọc CSV: hai mốc 2025 <b>không có dòng giá nào</b> vì cột <code>price</code> trong listings thô của hai mốc đó rỗng; mốc 2026-03-21 chỉ có <code>short_stay</code> vì <code>minimum_nights</code> lớn nhất của mốc này là 7 (không có căn 90+).</p>
+<p>Trả danh sách. Khi đọc CSV, hai mốc 2025 <b>không có dòng giá nào</b> vì cột <code>price</code> trong listings thô của hai mốc đó rỗng; mốc 2026-03-21 chỉ có <code>short_stay</code> vì <code>minimum_nights</code> lớn nhất của mốc này là 7 (không có căn 90+).</p>
 
 === 361-362
 <p><code>availability_rate</code>: tỷ lệ ngày còn trống trên toàn bộ lịch. Docstring nói rõ mẫu số chỉ đếm ngày có <code>available</code> là <code>t</code> hoặc <code>f</code>.</p>
@@ -255,7 +251,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>valid</code> = host có số listing hợp lệ.</p>
 
 === 426
-<p>Tỷ lệ host có <code>calculated_host_listings_count &gt; 1</code>. Mốc cuối: 384/738 = <b>52,0325%</b>. Điểm dễ bị hỏi: cột này là <b>tổng số listing của host trên Airbnb</b>, không phải số listing xuất hiện trong mẫu 1.000; đã kiểm 283/738 host có trường này &gt; 1 nhưng chỉ có đúng 1 listing trong mẫu, nên vẫn bị tính là "chuyên nghiệp".</p>
+<p>Tỷ lệ host có <code>calculated_host_listings_count &gt; 1</code>. Mốc cuối: 384/738 = <b>52,0325%</b>. Cột này là <b>tổng số listing của host trên Airbnb</b>, không phải số listing xuất hiện trong mẫu 1.000; đã kiểm 283/738 host có trường này &gt; 1 nhưng chỉ có đúng 1 listing trong mẫu, nên vẫn bị tính là "chuyên nghiệp".</p>
 
 === 428
 <p>Trả <code>(value, số host)</code>. <code>n_obs</code> là số host (738–740), không phải 1.000 listing.</p>
@@ -273,7 +269,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>commercialized_listing_rate_by_area</code>: tỷ lệ listing có dấu hiệu vận hành thương mại theo <code>analysis_area</code>. Định nghĩa trong docstring: <b>cả căn (Entire home/apt) VÀ host có hơn 1 listing</b>.</p>
 
 === 454-466
-<p>Kiểm 4 cột: <code>id</code>, <code>analysis_area</code>, <code>room_type</code>, <code>calculated_host_listings_count</code>. Lưu ý hàm dùng thẳng <code>analysis_area</code>, <b>không</b> theo <code>config["kpi"]["area_col"]</code>; đổi <code>area_col</code> chỉ đổi bảng availability theo khu, không đổi KPI thương mại.</p>
+<p>Kiểm 4 cột: <code>id</code>, <code>analysis_area</code>, <code>room_type</code>, <code>calculated_host_listings_count</code>. Hàm dùng thẳng <code>analysis_area</code>, <b>không</b> theo <code>config["kpi"]["area_col"]</code>; đổi <code>area_col</code> chỉ đổi bảng availability theo khu, không đổi KPI thương mại.</p>
 
 === 468-479
 <p>Lấy 4 cột và <code>drop_duplicates(subset=["id"])</code>. Trong <code>run</code> hàm được gọi cho từng mốc nên mỗi id chỉ có một dòng; bước khử trùng là lưới an toàn.</p>
@@ -303,13 +299,11 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Lấy bảng ánh xạ <code>id → khu</code> (mỗi listing một dòng), đổi tên <code>id</code> thành <code>listing_id</code> để merge với lịch. <code>validate="many_to_one"</code>: nhiều ngày lịch ứng với một listing.</p>
 
 === 514-522
-<p>Gom lịch theo khu. Hai điều kiện:</p>
-<ul><li><b>Bỏ khu quá nhỏ:</b> <code>group["listing_id"].nunique() &lt; min_area_listings</code> thì <code>continue</code>. Với <code>min_area_listings = 10</code>, <code>kpi_metrics.csv</code> có 25 khu (so với 38 khu thô) — khác với KPI căn ảo theo khu không lọc.</li>
-<li><b>Tính trên ngày hợp lệ:</b> <code>valid</code> chỉ gồm <code>t</code>/<code>f</code>; <code>n_obs</code> là số ngày hợp lệ của khu, không phải số listing.</li></ul>
+<p>Gom lịch theo khu. Khu nào có <code>group["listing_id"].nunique() &lt; min_area_listings</code> thì <code>continue</code>. Với <code>min_area_listings = 10</code>, <code>kpi_metrics.csv</code> có 25 khu (so với 38 khu thô), khác với KPI căn ảo theo khu không lọc. Phần tính chỉ lấy ngày hợp lệ <code>t</code>/<code>f</code>; <code>n_obs</code> là số ngày hợp lệ của khu, không phải số listing.</p>
 <p>Đếm <code>nunique</code> listing (không đếm số dòng lịch) để một listing có 365 ngày không bị tính thành 365 "căn".</p>
 
 === 525-534
-<p><code>compute_phantom_kpis</code> là "nhạc trưởng" của bước 5b: đọc hai ngưỡng từ <code>config["segments"]</code> (<code>long_stay_min_nights = 90</code>, <code>short_stay_max_nights = 20</code>) rồi gọi từng hàm KPI và ghi qua <code>add_kpi</code>.</p>
+<p><code>compute_phantom_kpis</code> điều phối bước 5b: đọc hai ngưỡng từ <code>config["segments"]</code> (<code>long_stay_min_nights = 90</code>, <code>short_stay_max_nights = 20</code>) rồi gọi từng hàm KPI và ghi qua <code>add_kpi</code>.</p>
 
 === 536-545
 <p>KPI đầu tiên: <code>phantom_listing_rate</code> cho toàn thành phố, scope <code>overall</code>, group <code>all</code>. Bốn mốc: <b>13,1472 / 12,0180 / 6,4882 / 21,1880%</b>; <code>n_obs</code> theo mốc là 17.730 / 20.436 / 13.563 / 20.573 (đúng số dòng listings thô của từng mốc).</p>
@@ -324,34 +318,34 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>missing_registration_rate</code> cho toàn thành phố: <b>7,6368 / 6,7968 / 0,1770 / 6,1683%</b>. Mốc 2026-03-21 thấp bất thường (0,177%) vì lần cào đó phần lớn listing đã có license; đây là khác biệt dữ liệu giữa các mốc, không phải lỗi code.</p>
 
 === 583-595
-<p>Bốn rổ <code>minimum_nights</code> của căn thiếu license, scope <code>missing_registration_min_nights</code>, group là nhãn rổ. Mốc cuối: 21 / 4 / 0 / 1.244 căn; tỷ lệ 1,6548 / 0,3152 / 0 / 98,0299%. Nhớ rằng <code>n_obs</code> ở đây là số đếm của rổ, còn mẫu số của tỷ lệ là tổng 1.269.</p>
+<p>Bốn rổ <code>minimum_nights</code> của căn thiếu license, scope <code>missing_registration_min_nights</code>, group là nhãn rổ. Mốc cuối: 21 / 4 / 0 / 1.244 căn; tỷ lệ 1,6548 / 0,3152 / 0 / 98,0299%. Ở đây <code>n_obs</code> là số đếm của rổ, còn mẫu số của tỷ lệ là tổng 1.269.</p>
 
 === 597-610
-<p>Giá so hàng xóm, scope <code>segment</code>, tên KPI ghép động <code>price_relative_local_median_{regime}</code> → <code>..._short_stay</code> và <code>..._90_plus</code>. Đây là chỗ nối kết quả của <code>price_relative_to_local_median</code> vào bảng dài.</p>
+<p>Giá so hàng xóm, scope <code>segment</code>, tên KPI ghép động <code>price_relative_local_median_{regime}</code> → <code>..._short_stay</code> và <code>..._90_plus</code>. Kết quả của <code>price_relative_to_local_median</code> được nối vào bảng dài ở đây.</p>
 
 === 613-620
-<p><code>compute_regular_kpis</code> là "nhạc trưởng" của bước 5: tính 5 KPI chung, rồi thương mại theo <code>analysis_area</code>, rồi availability theo khu. Docstring nói rõ hàm chỉ ghi vào <code>rows</code>, không trả về gì.</p>
+<p><code>compute_regular_kpis</code> điều phối bước 5: tính 5 KPI chung, rồi thương mại theo <code>analysis_area</code>, rồi availability theo khu. Docstring nói rõ hàm chỉ ghi vào <code>rows</code>, không trả về gì.</p>
 
 === 622-625
 <p>Kiểm cột bắt buộc của cả hai bảng trước khi tính. Thiếu cột thì <code>ValueError</code> ngay, không để lỗi lan sang từng KPI.</p>
 
 === 627-636
-<p>KPI 1 — <code>availability_rate</code> toàn thành phố, scope <code>overall</code>. Bốn mốc: <b>49,6477 / 50,0811 / 52,1800 / 50,7595%</b>, <code>n_obs = 365.000</code>.</p>
+<p>KPI 1: <code>availability_rate</code> toàn thành phố, scope <code>overall</code>. Bốn mốc: <b>49,6477 / 50,0811 / 52,1800 / 50,7595%</b>, <code>n_obs = 365.000</code>.</p>
 
 === 638-647
-<p>KPI 2 — <code>long_stay_restriction_rate</code> (ngưỡng 7 đêm): <b>7,2 / 8,0 / 3,5 / 4,4%</b>, <code>n_obs = 1.000</code>.</p>
+<p>KPI 2: <code>long_stay_restriction_rate</code> (ngưỡng 7 đêm): <b>7,2 / 8,0 / 3,5 / 4,4%</b>, <code>n_obs = 1.000</code>.</p>
 
 === 649-658
-<p>KPI 3 — <code>high_utilization_listing_rate</code> (occupancy ≥ 180 ngày): <b>23,2 / 25,6 / 24,3 / 22,8%</b>, <code>n_obs = 1.000</code>.</p>
+<p>KPI 3: <code>high_utilization_listing_rate</code> (occupancy ≥ 180 ngày): <b>23,2 / 25,6 / 24,3 / 22,8%</b>, <code>n_obs = 1.000</code>.</p>
 
 === 660-669
-<p>KPI 4 — <code>professional_host_presence</code>: <b>50,9485 / 51,6915 / 47,9730 / 52,0325%</b>, <code>n_obs</code> là số host 738 / 739 / 740 / 738.</p>
+<p>KPI 4: <code>professional_host_presence</code>: <b>50,9485 / 51,6915 / 47,9730 / 52,0325%</b>, <code>n_obs</code> là số host 738 / 739 / 740 / 738.</p>
 
 === 671-680
-<p>KPI 5 — <code>high_rated_listing_share</code> (rating ≥ 4,9): <b>36,5263 / 35,4639 / 34,4615 / 32,8205%</b>, <code>n_obs</code> 950 / 970 / 975 / 975.</p>
+<p>KPI 5: <code>high_rated_listing_share</code> (rating ≥ 4,9): <b>36,5263 / 35,4639 / 34,4615 / 32,8205%</b>, <code>n_obs</code> 950 / 970 / 975 / 975.</p>
 
 === 682-694
-<p>Thương mại theo <code>analysis_area</code> (8 khu, mỗi khu ~120–130 căn). Sau vòng lặp, hai dòng 692–693 đọc cấu hình khu vực cho KPI availability: <code>area_col</code> mặc định <code>neighbourhood_cleansed</code>, <code>min_area_listings</code> mặc định 10. Dòng 694 kiểm lại cột <code>id</code> + cột khu đã chọn — cần thiết vì <code>area_col</code> có thể khác cột mặc định.</p>
+<p>Thương mại theo <code>analysis_area</code> (8 khu, mỗi khu ~120–130 căn). Sau vòng lặp, hai dòng 692–693 đọc cấu hình khu vực cho KPI availability: <code>area_col</code> mặc định <code>neighbourhood_cleansed</code>, <code>min_area_listings</code> mặc định 10. Dòng 694 kiểm lại cột <code>id</code> + cột khu đã chọn, cần thiết vì <code>area_col</code> có thể khác cột mặc định.</p>
 
 === 696-697
 <p>Availability theo từng khu, scope là chính tên <code>area_col</code>. Với config hiện tại: 25 khu × 4 mốc = 100 dòng trong <code>kpi_metrics.csv</code>.</p>
@@ -360,7 +354,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>to_bool</code> chuẩn hoá cờ LLM về bool. Nhánh đầu: nếu cột đã là kiểu bool (kể cả <code>boolean</code> có NA) thì điền NA thành <code>False</code>. Nhờ vậy không phải đoán chuỗi cho cột chuẩn.</p>
 
 === 705-717
-<p>Nhánh còn lại: đổi sang chuỗi, <code>strip</code>, <code>lower</code>, rồi so với đúng bốn token <code>true/1/yes/y</code>. Hệ quả:</p>
+<p>Nhánh còn lại: đổi sang chuỗi, <code>strip</code>, <code>lower</code>, rồi so với đúng bốn token <code>true/1/yes/y</code>:</p>
 <ul><li><code>True</code> (Python bool trong cột object) → <code>"true"</code> → True; <code>False</code> → False.</li>
 <li>Số <code>1</code> → <code>"1"</code> → True; <code>0</code> → False.</li>
 <li>Chuỗi <code>"t"</code> <b>không</b> được coi là true; <code>"maybe"</code> cũng False. Test <code>test_to_bool_string_columns_understand_truthy_tokens_only</code> kiểm đủ danh sách.</li></ul>
@@ -375,10 +369,10 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Đổi sang chuỗi và strip; chuỗi rỗng → danh sách rỗng.</p>
 
 === 733-741
-<p>Nếu chuỗi trông như JSON list (<code>[...]</code>) thì thử <code>json.loads</code>. Thành công và là list thì strip/khử trùng như nhánh list. Thất bại (<code>JSONDecodeError</code>) thì rơi xuống nhánh tách thường — ví dụ <code>"[not,json]"</code> thành <code>["[not", "json]"]</code> (có test).</p>
+<p>Nếu chuỗi trông như JSON list (<code>[...]</code>) thì thử <code>json.loads</code>. Thành công và là list thì strip/khử trùng như nhánh list. Thất bại (<code>JSONDecodeError</code>) thì rơi xuống nhánh tách thường, ví dụ <code>"[not,json]"</code> thành <code>["[not", "json]"]</code> (có test).</p>
 
 === 743-744
-<p>Nhánh cuối: tách theo bất kỳ dấu <code>;</code>, <code>,</code>, <code>|</code>, bỏ phần rỗng, khử trùng giữ thứ tự. Lưu ý: không tách theo xuống dòng.</p>
+<p>Nhánh cuối: tách theo bất kỳ dấu <code>;</code>, <code>,</code>, <code>|</code>, bỏ phần rỗng, khử trùng giữ thứ tự. Hàm không tách theo xuống dòng.</p>
 
 === 747-750
 <p><code>complaint_bearing_review_rate</code>: tỷ lệ review có phàn nàn. Mẫu số là <b>toàn bộ review trong bảng</b> (sau khử trùng ở nơi gọi), không phải chỉ review có phàn nàn. Mốc chính thức: 14,0% trên 1.000 review.</p>
@@ -408,10 +402,10 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>_dedupe_reviews</code> gói lại đúng phép khử trùng "giữ bản sau" để phần KPI mở rộng dùng lại. Không có <code>review_id</code> thì trả nguyên bảng.</p>
 
 === 800-803
-<p><code>_add_llm_kpi_rows</code> ghi 2 KPI của một bảng dưới một <code>scope</code> cho trước — dùng chung cho cohort bổ sung và bảng gộp.</p>
+<p><code>_add_llm_kpi_rows</code> ghi 2 KPI của một bảng dưới một <code>scope</code> cho trước, dùng chung cho cohort bổ sung và bảng gộp.</p>
 
 === 805-808
-<p>Phần top aspect lặp lại y hệt <code>compute_llm_kpis</code> nhưng scope khác. Đây là chỗ tránh viết ba lần cùng logic.</p>
+<p>Phần top aspect lặp lại y hệt <code>compute_llm_kpis</code> nhưng scope khác. Viết vậy để khỏi lặp cùng logic ba lần.</p>
 
 === 811-816
 <p><code>compute_extended_llm_kpis</code> tính 2 KPI mở rộng: một cho cache bổ sung (scope <code>llm_additional_4000</code>) và một cho bảng gộp với cache chính thức (scope <code>llm_combined_5000</code>). Docstring nhấn: đây là số <b>tham khảo</b>, không thay KPI chính thức.</p>
@@ -432,10 +426,10 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p><code>_keep_group_reviews</code> lọc cache LLM về đúng review của nhóm. Docstring: mục đích là để cache của thành phố/nhóm khác không lọt vào KPI; nếu không đọc được danh sách ID thì giữ nguyên cache như trước.</p>
 
 === 838-846
-<p>Không có cột <code>review_id</code> → trả nguyên. Gọi <code>load_sample_ids(config)</code> lấy <code>review_ids</code>; <b>chỉ bắt <code>FileNotFoundError</code></b> (thiếu file ID) để lùi về hành vi cũ. Có file thì giữ các dòng có <code>review_id</code> nằm trong tập ID của nhóm. Lưu ý: hàm này chỉ áp cho cache chính thức, không áp cho cohort bổ sung.</p>
+<p>Không có cột <code>review_id</code> → trả nguyên. Gọi <code>load_sample_ids(config)</code> lấy <code>review_ids</code>; <b>chỉ bắt <code>FileNotFoundError</code></b> (thiếu file ID) để lùi về hành vi cũ. Có file thì giữ các dòng có <code>review_id</code> nằm trong tập ID của nhóm. Hàm này chỉ áp cho cache chính thức, không áp cho cohort bổ sung.</p>
 
 === 849-850
-<p><code>_filter_passed_qa</code> là chỗ quyết định dùng cờ QA nào. Docstring nêu <code>WHY</code>: lỗi giá không làm listing sai cho các KPI phi giá (occupancy/rating/min-nights), nên dùng <code>qa_has_error_excl_price</code> để không loại oan dòng chỉ vướng cờ giá.</p>
+<p><code>_filter_passed_qa</code> quyết định dùng cờ QA nào. Docstring nêu <code>WHY</code>: lỗi giá không làm listing sai cho các KPI phi giá (occupancy/rating/min-nights), nên dùng <code>qa_has_error_excl_price</code> để không loại oan dòng chỉ vướng cờ giá.</p>
 
 === 852-860
 <p>Thứ tự lùi ba mức: có <code>qa_has_error_excl_price</code> thì lọc theo nó; không có thì lùi về <code>qa_has_error</code>; không có cột cờ nào thì giữ nguyên. Test <code>test_filter_passed_qa_prefers_core_flag_then_falls_back_to_any</code> kiểm cả ba.</p>
@@ -447,7 +441,7 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Thiếu một trong hai cột khoá thì trả nguyên lịch (không lỗi). Có đủ thì giữ các dòng có <code>listing_id</code> nằm trong tập <code>id</code> của listings. Test <code>test_filter_calendar_to_listings_keeps_only_remaining_listing_ids</code> kiểm.</p>
 
 === 874-878
-<p><code>_read_snapshot</code> đọc listings và calendar của một mốc từ <code>data/processed</code>. Docstring nhấn ID dạng chuỗi. Đây là đường đi khi gọi <code>run</code> trực tiếp, không qua pipeline.</p>
+<p><code>_read_snapshot</code> đọc listings và calendar của một mốc từ <code>data/processed</code>. Docstring nhấn ID dạng chuỗi. Đường này dùng khi gọi <code>run</code> trực tiếp, không qua pipeline.</p>
 
 === 880-883
 <p>Thiếu <code>listings.csv</code> hoặc <code>calendar.csv</code> → <code>FileNotFoundError</code> kèm đường dẫn. Có test riêng cho từng file.</p>
@@ -466,11 +460,11 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 
 === 914-921
 <p>Hai nhánh:</p>
-<ul><li><b>Không có <code>tables</code>:</b> đọc CSV processed. Lưu ý đã kiểm: <code>listings.csv</code> trong processed <b>không</b> có cột <code>qa_has_error*</code>, nên <code>_filter_passed_qa</code> không lọc gì. Với dữ liệu hiện tại không khác biệt vì mọi lỗi error đều là lỗi giá (<code>excl_price</code> = 0 ở cả 4 mốc).</li>
+<ul><li><b>Không có <code>tables</code>:</b> đọc CSV processed. Kiểm rồi: <code>listings.csv</code> trong processed <b>không</b> có cột <code>qa_has_error*</code>, nên <code>_filter_passed_qa</code> không lọc gì. Với dữ liệu hiện tại không khác biệt vì mọi lỗi error đều là lỗi giá (<code>excl_price</code> = 0 ở cả 4 mốc).</li>
 <li><b>Có <code>tables</code>:</b> lọc listings theo cờ QA lõi; lọc calendar theo <b>cờ của chính lịch</b> (bỏ ngày trùng/orphan) rồi cắt về tập listing còn lại. Test <code>test_run_excludes_calendar_own_qa_flags</code> kiểm nhánh này.</li></ul>
 
 === 923
-<p>Tính KPI chung cho mốc. Đây là nơi 5 KPI + thương mại + availability theo khu được ghi vào <code>rows</code>.</p>
+<p>Tính KPI chung cho mốc: 5 KPI, phần thương mại và availability theo khu ghi vào <code>rows</code>.</p>
 
 === 925-927
 <p>Đường dẫn cache LLM lấy từ <code>config["llm"]["cache"]</code>, mặc định <code>data/processed/llm_cache.jsonl</code>. <code>official_llm_df</code> giữ cache chính thức để phần mở rộng dùng lại; <code>None</code> nghĩa là chưa có.</p>
@@ -483,19 +477,19 @@ lead: Bước 5 của pipeline (và 5b cho căn ảo). Hai cửa vào: <code>run
 <p>Không có file → in "Chưa có LLM output" và bỏ. Test <code>test_run_ignores_llm_cache_of_another_group</code> và <code>test_run_with_incomplete_llm_cache_skips_llm_kpis</code> kiểm hai nhánh.</p>
 
 === 943-956
-<p>Phần mở rộng chỉ chạy khi config có <code>llm.comparison_cohorts.additional</code> <b>và</b> đã có cache chính thức. Với mỗi cohort: thiếu file thì in cảnh báo, xoá danh sách tạm và <code>break</code> — nghĩa là <b>một</b> cohort thiếu làm bỏ <b>toàn bộ</b> KPI mở rộng, không tính thiếu. Đọc từng cache bằng <code>read_json</code>.</p>
+<p>Phần mở rộng chỉ chạy khi config có <code>llm.comparison_cohorts.additional</code> <b>và</b> đã có cache chính thức. Với mỗi cohort: thiếu file thì in cảnh báo, xoá danh sách tạm và <code>break</code>, nghĩa là <b>một</b> cohort thiếu làm bỏ <b>toàn bộ</b> KPI mở rộng, không tính thiếu. Đọc từng cache bằng <code>read_json</code>.</p>
 
 === 958-967
 <p>Nối các cohort, kiểm đủ hai cột rồi gọi <code>compute_extended_llm_kpis</code>. Thiếu cột thì in cảnh báo và bỏ, không ghi dòng nào cho hai scope mở rộng.</p>
 
 === 969-970
-<p>Dựng DataFrame đúng thứ tự <code>OUTPUT_COLUMNS</code> rồi sắp xếp ổn định theo <code>(snapshot, scope, group_name, kpi_name)</code> — thứ tự này là thứ tự test kiểm. Cạnh biên: nếu <code>rows</code> rỗng (config không có mốc nào) thì <code>pd.DataFrame(rows)[OUTPUT_COLUMNS]</code> ném <code>KeyError</code>; chưa có test cho nhánh này.</p>
+<p>Dựng DataFrame đúng thứ tự <code>OUTPUT_COLUMNS</code> rồi sắp xếp ổn định theo <code>(snapshot, scope, group_name, kpi_name)</code>, thứ tự này là thứ tự test kiểm. Cạnh biên: nếu <code>rows</code> rỗng (config không có mốc nào) thì <code>pd.DataFrame(rows)[OUTPUT_COLUMNS]</code> ném <code>KeyError</code>; chưa có test cho nhánh này.</p>
 
 === 972-974
 <p>Ghi <code>data/processed/kpi_metrics.csv</code>. Đường dẫn <b>không</b> có <code>&lt;city&gt;</code>, nên chạy thành phố khác sẽ ghi đè file cũ (xem review). <code>mkdir(parents=True, exist_ok=True)</code> để chạy được cả khi thư mục chưa có.</p>
 
 === 976-977
-<p>In số dòng đã ghi rồi trả DataFrame — tiện cho test và cho bước sau dùng lại mà không phải đọc lại CSV.</p>
+<p>In số dòng đã ghi rồi trả DataFrame, tiện cho test và cho bước sau dùng lại mà không phải đọc lại CSV.</p>
 
 === 980-983
 <p><code>run_phantom</code> là cửa vào bước 5b. Đọc bảng phân nhóm full + giá/license, chuẩn bị <code>rows</code>. Chỉ được gọi khi scope <code>full</code> (xem <a href="#run_pipeline-L184">run_pipeline dòng 184</a>).</p>
@@ -576,6 +570,6 @@ ok | Tách chế độ khi so giá | <code>price_relative_to_local_median</code>
 ? Vì sao <code>professional_host_presence</code> có <code>n_obs = 738</code> chứ không phải 1.000?
 <p>Vì KPI tính trên host, mỗi host một dòng. 738 host sở hữu 1.000 listing; 384 host có <code>calculated_host_listings_count &gt; 1</code>, tức 52,0325%. Cột này là tổng số listing của host trên Airbnb, không phải số listing trong mẫu.</p>
 ? Vì sao KPI căn ảo theo khu có 38 khu còn availability theo khu chỉ 25?
-<p><code>phantom_listing_rate_by_area</code> không lọc mẫu nhỏ nên giữ đủ 38 khu; <code>availability_rate_by_area</code> bỏ khu có ít hơn <code>min_area_listings = 10</code> listing nên còn 25 khu. Đó là lý do Hunters Hill (22 căn) có mặt trong bảng căn ảo nhưng không có trong bảng availability.</p>
+<p><code>phantom_listing_rate_by_area</code> không lọc mẫu nhỏ nên giữ đủ 38 khu; <code>availability_rate_by_area</code> bỏ khu có ít hơn <code>min_area_listings = 10</code> listing nên còn 25 khu. Vì thế Hunters Hill (22 căn) có mặt trong bảng căn ảo nhưng không có trong bảng availability.</p>
 ? License ghi "Exempt" có bị tính là thiếu không?
 <p>Không. <code>missing</code> chỉ đúng khi license là NaN hoặc chuỗi rỗng sau <code>strip</code>; "Exempt" là chuỗi khác rỗng nên vẫn tính là có license. Trên raw 2026-06-16: 1.269 căn thiếu (6,1683%), 4.067 căn ghi "Exempt".</p>

@@ -16,7 +16,7 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <li>Review lọc theo <code>review_id</code>: <a href="#download-L368">filter_reviews</a>.</li>
 <li>Calendar đọc theo chunk, bỏ cột giá: <a href="#download-L382">read_calendar_filtered</a>.</li>
 <li><code>analysis_area</code> lấy từ danh sách của đề: <a href="#download-L360">filter_listings</a>.</li></ol>
-<p>Câu “ID đọc dạng số sẽ dễ bị làm tròn” cần nói chính xác: pandas đọc cột ID <b>không có ô trống</b> thành <code>int64</code>, vẫn đúng từng chữ số (ID 19 chữ số của nhóm vẫn nhỏ hơn giới hạn int64 ≈ 9,22 tỉ tỉ, tức 19 chữ số). Hỏng thật xảy ra khi cột thành <code>float64</code>: chỉ cần một ô trống, hoặc ID đi qua Excel. Xem ví dụ số ở <a href="#download-L53">dòng 53</a>.</p>
+<p>Câu “ID đọc dạng số sẽ dễ bị làm tròn” chỉ đúng một phần. Pandas đọc cột ID không có ô trống thành <code>int64</code> và vẫn đúng từng chữ số: ID 19 chữ số của nhóm vẫn nhỏ hơn giới hạn int64 ≈ 9,22 tỉ tỉ, tức 19 chữ số. Hỏng thật xảy ra khi cột thành <code>float64</code>, chỉ cần một ô trống hoặc ID đi qua Excel. Xem ví dụ số ở <a href="#download-L53">dòng 53</a>.</p>
 
 === 29
 <p>Cho phép viết chú thích kiểu <code>str | Path</code>, <code>dict | None</code> trên Python 3.10, phiên bản ghi trong <code>.python-version</code>.</p>
@@ -65,8 +65,8 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Lỗi riêng cho trường hợp “tải xong không báo lỗi nhưng thiếu byte”. Kế thừa <code>OSError</code> để cùng họ với lỗi I/O. Được ném ở <a href="#download-L105">dòng 105</a> và nằm trong danh sách thử lại.</p>
 
 === 82-89
-<p>Chỉ thử lại lỗi <b>tạm thời</b>: mất kết nối, hết thời gian chờ, đứt giữa luồng dữ liệu (<code>ChunkedEncodingError</code>), thiếu byte. Lỗi HTTP (<code>HTTPError</code> từ <code>raise_for_status</code>) không có ở đây: 403/404 nghĩa là sai mốc hoặc sai <code>data_root</code>, thử lại cũng vậy. Test <code>test_download_file_does_not_retry_http_errors</code>: 403 chỉ gọi GET đúng 1 lần.</p>
-<p>Hệ quả nhỏ: 5xx (máy chủ quá tải) cũng là <code>HTTPError</code> nên cũng không được thử lại.</p>
+<p>Chỉ thử lại lỗi tạm thời: mất kết nối, hết thời gian chờ, đứt giữa luồng dữ liệu (<code>ChunkedEncodingError</code>), thiếu byte. Lỗi HTTP (<code>HTTPError</code> từ <code>raise_for_status</code>) không có ở đây: 403/404 nghĩa là sai mốc hoặc sai <code>data_root</code>, thử lại cũng vậy. Test <code>test_download_file_does_not_retry_http_errors</code>: 403 chỉ gọi GET đúng 1 lần.</p>
+<p>5xx (máy chủ quá tải) cũng là <code>HTTPError</code> nên cũng không được thử lại.</p>
 
 === 90-92
 <p>3 lần thử. Lần 1 lỗi chờ 5 giây, lần 2 lỗi chờ 10 giây, lần 3 lỗi thì ném lỗi ra. Tổng chờ tối đa 15 giây mỗi file. Test đặt <code>RETRY_WAIT_SECONDS = 0</code> (fixture <code>no_wait</code>) để không ngủ thật.</p>
@@ -79,18 +79,18 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <li><code>if chunk</code>: bỏ khúc rỗng (keep-alive). Test <code>test_download_file_refetches_when_size_differs</code> có khúc <code>b""</code> ở giữa.</li></ul>
 
 === 104-105
-<p>Kiểm đủ byte: so kích thước file vừa ghi với <code>Content-Length</code> lấy từ HEAD. Thiếu thì ném <code>IncompleteDownloadError</code> → được thử lại. <code>if expected</code>: nếu không biết dung lượng nguồn (HEAD lỗi hoặc không có header) thì bỏ qua phép so này.</p>
+<p>Kiểm đủ byte: so kích thước file vừa ghi với <code>Content-Length</code> lấy từ HEAD. Thiếu thì ném <code>IncompleteDownloadError</code>, và lỗi này được thử lại. <code>if expected</code>: nếu không biết dung lượng nguồn (HEAD lỗi hoặc không có header) thì bỏ qua phép so này.</p>
 
 === 108-116
 <p>Hàm tải chính, docstring nêu 3 quy tắc. Tạo thư mục cha nếu chưa có (<code>parents=True</code>: tạo cả <code>data/raw/sydney/&lt;mốc&gt;</code>). <code>Path(path)</code> để nhận cả chuỗi.</p>
 
 === 118-128
 <p>Gửi HEAD (chỉ lấy header, không tải nội dung) để biết <code>Content-Length</code>. Đã thử trên nguồn thật: HEAD <code>listings.csv.gz</code> mốc 2025-09-12 trả 200 và 10.561.421 byte, đúng bằng <code>listings_bytes</code> trong <code>reports/check_DSE2049-C02-G06-sydney.csv</code>.</p>
-<p>HEAD lỗi (mất mạng): nếu file đã có và không rỗng thì in <code>[OFFLINE]</code> và dùng luôn. Lý do (comment WHY): file chỉ xuất hiện ở <code>path</code> sau khi tải trọn (cơ chế <code>.part</code>), nên “có file” đồng nghĩa “file đã tải xong”. Chạy lại khi mất mạng không làm chết pipeline. Test <code>test_download_file_uses_local_copy_when_offline</code>: không gọi GET, file giữ nguyên.</p>
+<p>HEAD lỗi (mất mạng): nếu file đã có và không rỗng thì in <code>[OFFLINE]</code> và dùng luôn. File chỉ xuất hiện ở <code>path</code> sau khi tải trọn (cơ chế <code>.part</code>), nên “có file” đồng nghĩa “file đã tải xong”. Chạy lại khi mất mạng không làm chết pipeline. Test <code>test_download_file_uses_local_copy_when_offline</code>: không gọi GET, file giữ nguyên.</p>
 <p>HEAD lỗi mà chưa có file: không <code>return</code>, đi tiếp xuống GET với <code>expected = 0</code> (test <code>test_download_file_ignores_head_errors</code>).</p>
 
 === 130-132
-<p>Đã có file và đúng dung lượng nguồn → <code>[SKIP]</code>, không tải lại. Nhờ vậy chạy lại pipeline không tải lại khoảng 400 MB. Test <code>test_download_file_skips_when_size_matches_content_length</code>.</p>
+<p>Đã có file và đúng dung lượng nguồn thì in <code>[SKIP]</code> và không tải lại. Nhờ vậy chạy lại pipeline không tải lại khoảng 400 MB. Test <code>test_download_file_skips_when_size_matches_content_length</code>.</p>
 <p>Điều kiện cần <code>expected</code> khác 0. Nếu nguồn không gửi <code>Content-Length</code>, file đã có vẫn bị tải lại mỗi lần chạy (không sai, chỉ tốn thời gian).</p>
 
 === 134-135
@@ -117,7 +117,7 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Điều phối tải: tiêu đề in ra rồi lặp từng mốc. Trả về <code>data/raw/sydney</code> cho <code>run</code> dùng tiếp.</p>
 
 === 168-176
-<p>Mỗi mốc 4 lần gọi <code>download_file</code>: 3 bảng theo <code>DATA_FILES</code>, rồi geojson. 4 mốc → 16 file. <code>str(snapshot)</code> phòng khi mốc còn là <code>datetime.date</code> (gọi <code>run</code> không qua <code>load_config</code>); test <code>test_run_orchestration</code> truyền <code>date(2025, 9, 12)</code> và kiểm URL vẫn đúng.</p>
+<p>Mỗi mốc 4 lần gọi <code>download_file</code>: 3 bảng theo <code>DATA_FILES</code>, rồi geojson. 4 mốc cho ra 16 file. <code>str(snapshot)</code> phòng khi mốc còn là <code>datetime.date</code> (gọi <code>run</code> không qua <code>load_config</code>); test <code>test_run_orchestration</code> truyền <code>date(2025, 9, 12)</code> và kiểm URL vẫn đúng.</p>
 <p>Geojson (ranh giới khu, khoảng 4,3 MB) không được lọc hay dùng trong bước 1; nó được tải vì đề yêu cầu và để kiểm ở <code>verify_raw</code>.</p>
 
 === 178
@@ -134,26 +134,26 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Lỗi riêng để dừng pipeline khi dữ liệu thô hỏng. Nguyên tắc: không lọc trên dữ liệu sai rồi sinh bảng sai mà không ai biết.</p>
 
 === 195-203
-<p>Kiểm một mốc, trả <b>danh sách lỗi</b> thay vì ném lỗi ngay, để gom được nhiều lỗi. Bảng nào thiếu file hoặc file rỗng (0 byte) thì ghi “thiếu tệp” và chuyển bảng khác.</p>
+<p>Kiểm một mốc, trả danh sách lỗi thay vì ném lỗi ngay, để gom được nhiều lỗi. Bảng nào thiếu file hoặc file rỗng (0 byte) thì ghi “thiếu tệp” và chuyển bảng khác.</p>
 
 === 204-212
 <p>Đọc header bằng <code>nrows=0</code>: pandas chỉ giải nén đoạn đầu file, nhanh dù file 85 MB. Bắt 4 loại lỗi: <code>OSError</code> (gzip sai định dạng), <code>EOFError</code>, <code>zlib.error</code>, <code>ValueError</code> (gồm <code>EmptyDataError</code>). Rồi so header với cột khoá.</p>
-<p>Giới hạn (đã chạy thử): file gzip bị cắt mất nửa sau vẫn qua phép kiểm này, vì phần header còn nguyên; chỉ khi đọc cả file mới ra <code>EOFError: Compressed file ended before the end-of-stream marker</code>. Trong luồng bình thường điều này không xảy ra vì <code>download_file</code> đã so dung lượng và dùng <code>.part</code>; chỉ xảy ra nếu ai đó tự chép file dở vào <code>data/raw</code>.</p>
+<p>Đã chạy thử: file gzip bị cắt mất nửa sau vẫn qua phép kiểm này, vì phần header còn nguyên; chỉ khi đọc cả file mới ra <code>EOFError: Compressed file ended before the end-of-stream marker</code>. Trong luồng bình thường điều này không xảy ra vì <code>download_file</code> đã so dung lượng và dùng <code>.part</code>; chỉ xảy ra nếu ai đó tự chép file dở vào <code>data/raw</code>.</p>
 
 === 214-224
 <p>Geojson: phải tồn tại, là JSON hợp lệ, và có ít nhất một <code>feature</code> (ranh giới khu). <code>AttributeError</code> để bắt trường hợp JSON hợp lệ nhưng không phải object (ví dụ một mảng: mảng không có <code>.get</code>).</p>
 
 === 225
-<p>Rỗng = mốc đạt.</p>
+<p>Danh sách rỗng nghĩa là mốc đạt.</p>
 
 === 228-237
-<p>Kiểm mọi mốc, mốc đạt in <code>[CHECK]</code>. Có lỗi thì gom <b>tất cả</b> vào một <code>RawDataError</code>, mỗi lỗi một dòng: sửa một lượt, không phải chạy đi chạy lại. Test <code>test_verify_raw_reports_every_problem_at_once</code>: một mốc thiếu cột <code>date</code>, reviews hỏng gzip, geojson rỗng, mốc kia thiếu cả 4 tệp → một thông báo chứa đủ.</p>
+<p>Kiểm mọi mốc, mốc đạt in <code>[CHECK]</code>. Có lỗi thì gom tất cả vào một <code>RawDataError</code>, mỗi lỗi một dòng, để sửa một lượt thay vì chạy đi chạy lại. Test <code>test_verify_raw_reports_every_problem_at_once</code>: một mốc thiếu cột <code>date</code>, reviews hỏng gzip, geojson rỗng, mốc kia thiếu cả 4 tệp, thì một thông báo chứa đủ.</p>
 
 === 240-249
 <p>Đọc ID từ workbook gốc của đề (Excel khoảng 18 MB, chứa cả 84 nhóm). <code>@lru_cache(maxsize=4)</code>: cùng (đường dẫn, mã nhóm) chỉ đọc file một lần trong một lần chạy. Tham số phải hashable nên <code>path</code> là <code>str</code>/<code>Path</code>, không phải DataFrame.</p>
 
 === 250-252
-<p><code>dtype=str</code> ở <code>read_excel</code>: nếu không, ô số trong Excel thành <code>float64</code> và ID 18–19 chữ số mất chữ số cuối (cùng hiện tượng ở <a href="#download-L53">dòng 53</a>). Lưu ý: nếu chính file Excel đã lưu ID dạng <b>số</b> thì chữ số đã mất ngay trong Excel (Excel chỉ giữ 15 chữ số); <code>dtype=str</code> chỉ cứu được khi ô lưu dạng văn bản. Test <code>test_load_group_ids_from_workbook_uses_dtype_str</code> kiểm mọi lần gọi đều có <code>dtype is str</code>.</p>
+<p><code>dtype=str</code> ở <code>read_excel</code>: nếu không, ô số trong Excel thành <code>float64</code> và ID 18–19 chữ số mất chữ số cuối (cùng hiện tượng ở <a href="#download-L53">dòng 53</a>). Nếu chính file Excel đã lưu ID dạng số thì chữ số đã mất ngay trong Excel (Excel chỉ giữ 15 chữ số); <code>dtype=str</code> chỉ cứu được khi ô lưu dạng văn bản. Test <code>test_load_group_ids_from_workbook_uses_dtype_str</code> kiểm mọi lần gọi đều có <code>dtype is str</code>.</p>
 
 === 253-257
 <p>Lọc theo cột <code>Mã dữ liệu</code> = <code>group_code</code> (<code>DSE2049-C02-G06-sydney</code>), đổi tên cột tiếng Việt, giữ đúng các cột code cần. Trả về cùng dạng với hai file CSV trong <code>data/samples/</code>.</p>
@@ -162,7 +162,7 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Nguồn ID của nhóm. Mặc định đọc CSV đã trích sẵn; chỉ đọc workbook khi config có <code>ids.workbook</code>.</p>
 
 === 266-272
-<p>Nhánh workbook. Mã nhóm không có trong workbook thì <code>ValueError</code> (test <code>test_load_group_ids_rejects_unknown_group_code</code>), thay vì lọc ra 0 dòng rồi chạy tiếp. Trả <code>.copy()</code> vì <code>lru_cache</code> trả <b>cùng một đối tượng</b> cho mọi lần gọi: nơi gọi sửa bảng thì bản trong cache cũng hỏng theo.</p>
+<p>Nhánh workbook. Mã nhóm không có trong workbook thì <code>ValueError</code> (test <code>test_load_group_ids_rejects_unknown_group_code</code>), thay vì lọc ra 0 dòng rồi chạy tiếp. Trả <code>.copy()</code> vì <code>lru_cache</code> trả cùng một đối tượng cho mọi lần gọi: nơi gọi sửa bảng thì bản trong cache cũng hỏng theo.</p>
 
 === 273-275
 <p>Nhánh mặc định (Sydney đang dùng): đọc hai CSV với <code>dtype=str</code> cho mọi cột. Test <code>test_load_group_ids_reads_every_id_as_exact_string</code>: ID 19 chữ số giữ nguyên, ID <code>"1000"</code> không thành <code>1000.0</code>.</p>
@@ -172,13 +172,13 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 
 === 284-287
 <p>Cách chia:</p>
-<ol><li><code>north</code>: vĩ độ ≥ trung vị → 1 (bắc), còn lại 0 (nam). Ở Sydney vĩ độ âm, số lớn hơn (ít âm hơn) là phía bắc.</li>
-<li>Trong mỗi nửa, chia kinh độ thành 4 phần bằng <code>qcut</code> → 0..3 (tây sang đông).</li>
-<li>Mã khu = <code>north*4 + quarter + 1</code> → 1..8 → <code>A01</code>..<code>A08</code>.</li></ol>
+<ol><li><code>north</code>: vĩ độ ≥ trung vị thì gán 1 (bắc), còn lại 0 (nam). Ở Sydney vĩ độ âm, số lớn hơn (ít âm hơn) là phía bắc.</li>
+<li>Trong mỗi nửa, chia kinh độ thành 4 phần bằng <code>qcut</code>, ra 0..3 (tây sang đông).</li>
+<li>Mã khu = <code>north*4 + quarter + 1</code>, tức 1..8, rồi đổi thành <code>A01</code>..<code>A08</code>.</li></ol>
 <p><code>rank(method="first")</code> trước khi <code>qcut</code>: nếu nhiều căn trùng kinh độ, <code>qcut</code> trên giá trị gốc báo lỗi “bin edges must be unique”; trên thứ hạng thì mọi giá trị khác nhau nên luôn chia được. Test <code>test_assign_areas_makes_eight_near_equal_areas</code>: 80 điểm, kinh độ chỉ 11 giá trị, vẫn ra 8 khu mỗi khu 9–11 căn.</p>
 
 === 290-298
-<p>Mẫu dự phòng khi ID của nhóm không thuộc thành phố đang tải (giảng viên đổi config sang thành phố khác). Docstring nêu 3 quy tắc: listing phải có ở <b>mọi</b> mốc, seed cố định, review lấy ở mốc cuối vì review tích luỹ.</p>
+<p>Mẫu dự phòng khi ID của nhóm không thuộc thành phố đang tải (giảng viên đổi config sang thành phố khác). Docstring nêu 3 quy tắc: listing phải có ở mọi mốc, seed cố định, review lấy ở mốc cuối vì review tích luỹ.</p>
 
 === 299-305
 <ul><li>Chỉ đọc 3 cột <code>id</code>, <code>latitude</code>, <code>longitude</code> của listings mỗi mốc.</li>
@@ -193,13 +193,13 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Review: mọi review của các listing đã chọn ở mốc cuối, đổi <code>id</code> thành <code>review_id</code>. Khác mẫu của đề: không giới hạn 5.000 và không có cột <code>mau_llm</code>/<code>nhan_tay</code>. Bước LLM xử lý trường hợp này: không có <code>mau_llm</code> thì lấy mẫu ngẫu nhiên theo seed (<a href="#llm-L115">llm.py dòng 115</a>).</p>
 
 === 313-316
-<p>Phát hiện “ID của nhóm thuộc thành phố khác”: chỉ cần <b>một</b> listing của nhóm có trong file thô là coi như đúng thành phố. Chỉ đọc cột <code>id</code> của mốc đầu (gọi ở <a href="#download-L518">dòng 518</a>).</p>
+<p>Phát hiện “ID của nhóm thuộc thành phố khác”: chỉ cần một listing của nhóm có trong file thô là coi như đúng thành phố. Chỉ đọc cột <code>id</code> của mốc đầu (gọi ở <a href="#download-L518">dòng 518</a>).</p>
 
 === 319-322
 <p>Nơi lưu mẫu đã dùng: <code>data/processed/sydney/sample_listing_ids.csv</code> và <code>sample_review_ids.csv</code>.</p>
 
 === 325-333
-<p>Các bước sau (KPI, LLM, so sánh LLM theo nhóm căn) gọi hàm này thay vì <code>load_group_ids</code>, để dùng <b>đúng mẫu bước 1 đã dùng</b>, kể cả khi chạy lại với <code>--skip-download</code>. Chưa có file mẫu (chưa chạy bước 1) thì dùng ID của nhóm. Test <code>test_load_sample_ids_falls_back_to_group_ids_before_step_one</code>.</p>
+<p>Các bước sau (KPI, LLM, so sánh LLM theo nhóm căn) gọi hàm này thay vì <code>load_group_ids</code>, để dùng đúng mẫu bước 1 đã dùng, kể cả khi chạy lại với <code>--skip-download</code>. Chưa có file mẫu (chưa chạy bước 1) thì dùng ID của nhóm. Test <code>test_load_sample_ids_falls_back_to_group_ids_before_step_one</code>.</p>
 
 === 336-344
 <p>True khi mọi dòng của file mẫu có <code>sample_source == "seed"</code>. <code>run_pipeline.py</code> dùng nó ở <a href="#run_pipeline-L140">dòng 140</a> để bỏ <code>qa.expected</code> trước QA: các số 875/125, 50/30/25/25 chỉ đúng cho mẫu của nhóm, áp lên mẫu theo seed thì QA dừng oan.</p>
@@ -212,10 +212,10 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 
 === 360-365
 <p>Listings dùng <code>merge</code> (inner) chứ không <code>isin</code>, vì cần gắn thêm cột <code>analysis_area</code> của đề vào từng căn. Inner join: chỉ giữ căn có trong cả file thô và danh sách nhóm. Sau đó bỏ cột <code>listing_id</code> thừa (đã có <code>id</code>).</p>
-<p>Comment WHY: không tự tính khu bằng toạ độ, để chỉ có một nguồn sự thật. Theo <code>data/samples/listing_ids.csv</code>, 8 khu có 120–130 căn: A01 123, A02 126, A03 130, A04 120, A05 126, A06 120, A07 129, A08 126.</p>
+<p>Không tự tính khu bằng toạ độ, để chỉ có một nguồn sự thật. Theo <code>data/samples/listing_ids.csv</code>, 8 khu có 120–130 căn: A01 123, A02 126, A03 130, A04 120, A05 126, A06 120, A07 129, A08 126.</p>
 
 === 368-371
-<p>Ghi chú trợ giảng số 2: review lọc theo <b>review_id</b> (cột <code>id</code> của <code>reviews.csv.gz</code>). Nếu lọc theo <code>listing_id</code> thì lấy <b>mọi</b> review của 713 listing, nhiều hơn 5.000 review đề giao, và lẫn review không thuộc mẫu. Test <code>test_filter_reviews_uses_review_id_not_listing_id</code>: một review thuộc listing của nhóm nhưng không có trong danh sách review_id bị loại.</p>
+<p>Ghi chú trợ giảng số 2: review lọc theo <code>review_id</code> (cột <code>id</code> của <code>reviews.csv.gz</code>). Nếu lọc theo <code>listing_id</code> thì lấy mọi review của 713 listing, nhiều hơn 5.000 review đề giao, và lẫn review không thuộc mẫu. Test <code>test_filter_reviews_uses_review_id_not_listing_id</code>: một review thuộc listing của nhóm nhưng không có trong danh sách review_id bị loại.</p>
 
 === 374-379
 <p>Hàm truyền cho <code>usecols</code>: pandas gọi nó với từng tên cột trong header, giữ cột trả <code>True</code>. Dùng hàm thay vì danh sách vì danh sách sẽ báo lỗi nếu file thiếu một cột; hàm thì bỏ qua cột không có.</p>
@@ -224,10 +224,10 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Đọc calendar: <code>chunksize</code> làm <code>read_csv</code> trả về một bộ lặp, mỗi lần một <code>DataFrame</code> 200.000 dòng. <code>usecols</code> bỏ cột giá ngay khi đọc; <code>listing_id</code> dạng chuỗi.</p>
 
 === 391-395
-<p>Lọc ngay trong từng chunk, chỉ giữ dòng của nhóm. Mốc cuối: 7.509.145 dòng gốc → 365.000 dòng (1.000 × 365). <code>if not parts</code>: file không có dòng dữ liệu nào thì trả bảng rỗng đúng 5 cột, để <code>concat</code> không lỗi (test <code>test_read_calendar_filtered_empty_file_returns_empty_frame</code>).</p>
+<p>Lọc ngay trong từng chunk, chỉ giữ dòng của nhóm. Mốc cuối: 7.509.145 dòng gốc còn 365.000 dòng (1.000 × 365). <code>if not parts</code>: file không có dòng dữ liệu nào thì trả bảng rỗng đúng 5 cột, để <code>concat</code> không lỗi (test <code>test_read_calendar_filtered_empty_file_returns_empty_frame</code>).</p>
 
 === 398-414
-<p>Đối chiếu số lượng một mốc với <code>qa.expected</code>. Docstring nói rõ: <b>chỉ cảnh báo</b>, trả danh sách chuỗi. Nơi dừng hẳn là <a href="#qa_constraints-L22">qa_constraints.py</a> ở bước 2. Lý do tách: bước 1 vẫn ghi CSV để người chạy mở ra xem lệch ở đâu.</p>
+<p>Đối chiếu số lượng một mốc với <code>qa.expected</code>. Docstring nói rõ: chỗ này chỉ cảnh báo, trả danh sách chuỗi. Nơi dừng hẳn là <a href="#qa_constraints-L22">qa_constraints.py</a> ở bước 2. Tách ra vậy vì bước 1 vẫn ghi CSV để người chạy mở ra xem lệch ở đâu.</p>
 
 === 415-421
 <p>Đếm số listing (1.000) và số căn từng loại phòng (875 <code>Entire home/apt</code>, 125 <code>Private room</code>, <a href="#sydney_yaml-L26">sydney.yaml dòng 26</a>).</p>
@@ -241,18 +241,18 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 
 === 436-440
 <p>Calendar phải đủ <code>n_listings × calendar_days</code> = 365.000 dòng.</p>
-<p>Review: <code>n_reviews</code> = 5.000 là tổng của nhóm qua các mốc, nên ở từng mốc chỉ báo khi <b>vượt</b> tổng. Ít hơn 5.000 ở một mốc là bình thường (review bị gỡ). Test <code>test_check_expected_per_snapshot_reviews_below_total_is_fine</code>. Với Sydney, theo audit, cả 4 mốc đều có đủ 5.000 review.</p>
+<p>Review: <code>n_reviews</code> = 5.000 là tổng của nhóm qua các mốc, nên ở từng mốc chỉ báo khi vượt tổng. Ít hơn 5.000 ở một mốc là bình thường (review bị gỡ). Test <code>test_check_expected_per_snapshot_reviews_below_total_is_fine</code>. Với Sydney, theo audit, cả 4 mốc đều có đủ 5.000 review.</p>
 
 === 442-448
 <p>Phân bố khu: đúng 8 khu và mỗi khu nằm trong [120, 130] căn (<code>between</code> tính cả hai đầu). Chỉ kiểm khi bảng có cột <code>analysis_area</code>.</p>
 
 === 451-455
-<p>Kiểm tổng review: <b>hợp</b> các <code>review_id</code> gặp ở mọi mốc phải đúng 5.000. Dùng tập hợp vì một review có mặt ở nhiều mốc chỉ tính một lần. Test <code>test_check_review_total_is_a_group_total</code>.</p>
+<p>Kiểm tổng review: hợp các <code>review_id</code> gặp ở mọi mốc phải đúng 5.000. Dùng tập hợp vì một review có mặt ở nhiều mốc chỉ tính một lần. Test <code>test_check_review_total_is_a_group_total</code>.</p>
 
 === 458-468
 <p>Ghi CSV với <code>lineterminator="\r\n"</code>. Vấn đề có thật (commit <code>0aa866e</code>): comment review có ký tự <code>\r</code> đứng một mình; đọc lại CSV ra 5.015 dòng thay vì 5.000.</p>
-<p>Cơ chế, đã chạy thử: module <code>csv</code> của Python 3.10 với <code>lineterminator="\n"</code> ghi <code>a\rb</code> <b>không có ngoặc kép</b>; <code>pd.read_csv</code> coi <code>\r</code> là xuống dòng nên một review thành 3 dòng. Khi <code>lineterminator</code> chứa <code>\r</code>, writer bắt buộc đặt ngoặc kép quanh trường có <code>\r</code>, nên đọc lại đúng.</p>
-<p>Lệch docstring cần biết: trên Python 3.11, 3.12, 3.13 (đã chạy thử), writer tự đặt ngoặc kép quanh <code>\r</code> dù dùng <code>"\n"</code>. Nên lỗi chỉ tái hiện trên Python 3.10, đúng phiên bản trong <code>.python-version</code>. Test <code>test_write_csv_quotes_carriage_return_and_newline_comments</code> chạy trong CI trên cả 3.10.22 và 3.12.</p>
+<p>Cơ chế, đã chạy thử: module <code>csv</code> của Python 3.10 với <code>lineterminator="\n"</code> ghi <code>a\rb</code> không có ngoặc kép; <code>pd.read_csv</code> coi <code>\r</code> là xuống dòng nên một review thành 3 dòng. Khi <code>lineterminator</code> chứa <code>\r</code>, writer bắt buộc đặt ngoặc kép quanh trường có <code>\r</code>, nên đọc lại đúng.</p>
+<p>Docstring nói hơi quá: trên Python 3.11, 3.12, 3.13 (đã chạy thử), writer tự đặt ngoặc kép quanh <code>\r</code> dù dùng <code>"\n"</code>. Nên lỗi chỉ tái hiện trên Python 3.10, đúng phiên bản trong <code>.python-version</code>. Test <code>test_write_csv_quotes_carriage_return_and_newline_comments</code> chạy trong CI trên cả 3.10.22 và 3.12.</p>
 
 === 471-484
 <p>Xử lý trọn một mốc: lọc 3 bảng, gắn cột <code>snapshot</code>, đối chiếu, ghi CSV. <code>expected</code> có thể là <code>None</code> (mẫu theo seed hoặc mốc khác mốc được giao).</p>
@@ -267,7 +267,7 @@ lead: Bước 1 của pipeline. Mỗi mốc tải 3 bảng <code>.csv.gz</code> 
 <p>Ghi 3 CSV qua <code>_write_csv</code> và in một dòng tóm tắt. Với Sydney mỗi mốc phải in <code>listings=1000 calendar=365000 reviews=5000 | OK</code>. Ghi cả khi có cảnh báo, để mở file xem lệch ở đâu.</p>
 
 === 505-510
-<p>Điểm vào của bước 1. Thứ tự: tải (bỏ qua file đã đủ) → đổi mốc về chuỗi → <code>verify_raw</code>. Kiểm <b>trước</b> khi lọc: test <code>test_run_stops_before_filtering_when_raw_is_broken</code> cho listings thiếu cột <code>id</code> và khẳng định thư mục processed không được tạo.</p>
+<p>Điểm vào của bước 1. Thứ tự: tải (bỏ qua file đã đủ), đổi mốc về chuỗi, rồi <code>verify_raw</code>. Kiểm trước khi lọc: test <code>test_run_stops_before_filtering_when_raw_is_broken</code> cho listings thiếu cột <code>id</code> và khẳng định thư mục processed không được tạo.</p>
 
 === 511
 <p>Đọc ID của nhóm (mặc định từ <code>data/samples/</code>).</p>

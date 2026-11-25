@@ -5,10 +5,10 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 --- blocks
 === 1-12
 <p>Docstring nói rõ vị trí và ranh giới:</p>
-<ul><li><b>Vị trí:</b> <code>evaluate.py</code> tính số rồi gọi module này để ghi file, in console và vẽ hình.</li>
-<li><b>Vào:</b> DataFrame đã tính, danh sách lý do chưa chấm được, thư mục ra.</li>
-<li><b>Ra:</b> <code>eval_diagnostics.csv/.md</code> (chế độ chẩn đoán), <code>eval_errors.md</code> (chế độ đầy đủ), <code>eval_confusion_matrices.png</code>, và các dòng <code>[EVAL] ...</code>.</li>
-<li><b>Không import <code>evaluate</code></b> nên không có vòng phụ thuộc; chỉ import <code>LABELS</code> từ <code>metrics</code>.</li></ul>
+<ul><li>Vị trí: <code>evaluate.py</code> tính số rồi gọi module này để ghi file, in console và vẽ hình.</li>
+<li>Vào: DataFrame đã tính, danh sách lý do chưa chấm được, thư mục ra.</li>
+<li>Ra: <code>eval_diagnostics.csv/.md</code> (chế độ chẩn đoán), <code>eval_errors.md</code> (chế độ đầy đủ), <code>eval_confusion_matrices.png</code>, và các dòng <code>[EVAL] ...</code>.</li>
+<li>Không import <code>evaluate</code> nên không có vòng phụ thuộc; chỉ import <code>LABELS</code> từ <code>metrics</code>.</li></ul>
 
 === 14-17
 <p><code>Counter</code> để đếm số lần một cặp khía cạnh bị bỏ sót/gán thừa; <code>Path</code> cho đường dẫn; <code>from __future__ import annotations</code> cho cú pháp kiểu mới trên Python 3.10.</p>
@@ -35,7 +35,7 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 <p>Docstring nói đầu vào/đầu ra. "Thay cho metric" nghĩa là khi chưa đủ điều kiện, báo cáo này là thứ duy nhất được ghi; không có accuracy/F1.</p>
 
 === 59-60
-<p>Tạo thư mục nếu chưa có rồi ghi <code>eval_diagnostics.csv</code> — bảng coverage thô, mở bằng Excel/pandas được. Luôn ghi CSV trước để người đọc máy có dữ liệu, kể cả khi bước ghi Markdown phía dưới lỗi.</p>
+<p>Tạo thư mục nếu chưa có rồi ghi <code>eval_diagnostics.csv</code>, bảng coverage thô, mở bằng Excel/pandas được. Luôn ghi CSV trước để người đọc máy có dữ liệu, kể cả khi bước ghi Markdown phía dưới lỗi.</p>
 
 === 62-66
 <p>Bắt đầu dựng Markdown. Dòng đầu là tiêu đề; dòng thứ ba in đậm câu "Không công bố accuracy/F1" để người mở file thấy ngay, tránh đọc nhầm bảng coverage thành điểm số.</p>
@@ -68,10 +68,10 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 <p>In câu caveat prompt. Câu này lặp lại trong file Markdown; in ở console để người chạy không bỏ qua.</p>
 
 === 115-119
-<p>Gọi <code>stale_metric_paths</code>. Nếu có file metric cũ, in cảnh báo kèm tên file — đây là cơ chế duy nhất phát hiện "báo cáo cũ không phản ánh lần chạy này". Cuối cùng in nơi đã ghi chẩn đoán.</p>
+<p>Gọi <code>stale_metric_paths</code>. Nếu có file metric cũ, in cảnh báo kèm tên file; đây là cơ chế duy nhất phát hiện "báo cáo cũ không phản ánh lần chạy này". Cuối cùng in nơi đã ghi chẩn đoán.</p>
 
 === 122-124
-<p>Định dạng tỷ lệ cho báo cáo: NaN thành <code>"n/a"</code>, còn lại 3 chữ số thập phân. Cách nhận NaN là <code>value != value</code> (NaN khác chính nó). Lưu ý chỉ đúng với NaN kiểu float; <code>None</code> sẽ ném <code>TypeError</code> khi format (đã chạy thử) — trong pipeline không xảy ra.</p>
+<p>Định dạng tỷ lệ cho báo cáo: NaN thành <code>"n/a"</code>, còn lại 3 chữ số thập phân. Cách nhận NaN là <code>value != value</code> (NaN khác chính nó). Cách này chỉ đúng với NaN kiểu float; <code>None</code> sẽ ném <code>TypeError</code> khi format (đã chạy thử), trong pipeline không xảy ra.</p>
 
 === 127-132
 <p>Lấy một khoá số từ dòng summary, chịu được dòng thiếu khoá hoặc <code>None</code>: trả NaN để <code>format_rate</code> in "n/a". Mục đích theo docstring là không vỡ fixture/báo cáo cũ thiếu cột; hiện chỉ ba cột CI macro-F1 đi qua hàm này. Các cột khác vẫn đọc trực tiếp, nên tương thích chỉ là một phần.</p>
@@ -80,7 +80,7 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 <p>Chữ ký ghi báo cáo đầy đủ: bảng summary (mỗi phương pháp một dòng), bảng per-review, đường dẫn file, và danh sách cảnh báo tuỳ chọn (ví dụ gold thiếu lớp âm).</p>
 
 === 141-145
-<p>Docstring mô tả ba phần của file: bảng tổng hợp metric, khía cạnh hay bị bỏ sót/gán thừa, và các ca sai sentiment. Đây đúng là ba mục được dựng bên dưới.</p>
+<p>Docstring mô tả ba phần của file: bảng tổng hợp metric, khía cạnh hay bị bỏ sót/gán thừa, và các ca sai sentiment.</p>
 
 === 146-153
 <p>Phần đầu file Markdown: tiêu đề; số review nhãn tay lấy từ dòng đầu của summary; hai câu nhắc "số liệu là đồng thuận, không phải chân lý" và "CI 95% vì n nhỏ"; câu caveat prompt. Bốn dòng này là những gì giảng viên hay hỏi khi mở báo cáo.</p>
@@ -107,7 +107,7 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 <p>Vẽ ma trận nhầm lẫn cho từng phương pháp cạnh nhau và lưu PNG. Vào là dict <code>method → ma trận 3×3</code>; ra là file ảnh.</p>
 
 === 219-220
-<p>Tạo <code>Figure</code> kích thước 10,4×4,4 inch, nền trắng, và gắn <code>FigureCanvasAgg</code> — backend không cần màn hình. Không gọi <code>plt.show()</code> hay <code>plt.savefig()</code>.</p>
+<p>Tạo <code>Figure</code> kích thước 10,4×4,4 inch, nền trắng, và gắn <code>FigureCanvasAgg</code>, backend không cần màn hình. Không gọi <code>plt.show()</code> hay <code>plt.savefig()</code>.</p>
 
 === 221-222
 <p>Mỗi phương pháp một ô: <code>add_subplot(1, len(matrices), position)</code>, vị trí bắt đầu từ 1. Với hai phương pháp: baseline trái, LLM phải, đúng thứ tự dict do <code>run</code> dựng.</p>
@@ -119,7 +119,7 @@ lead: Phần "ra giấy" của bước đánh giá: ghi <code>eval_errors.md</co
 <p>Ngưỡng tô màu chữ: nửa giá trị lớn nhất của ma trận. Ô lớn hơn ngưỡng nền xanh đậm nên chữ trắng; ô nhỏ hơn nền nhạt nên chữ đen. Với ma trận LLM max 85, ngưỡng 42,5: ô 85 chữ trắng, ô 3 và 12 chữ đen.</p>
 
 === 230-240
-<p>Ghi số vào từng ô: duyệt 3×3, lấy <code>int(matrix[row, column])</code>, đặt tại toạ độ (cột, hàng) — chú ý thứ tự này vì <code>text(x, y)</code> nhận hoành trước tung. Màu chữ theo ngưỡng ở trên.</p>
+<p>Ghi số vào từng ô: duyệt 3×3, lấy <code>int(matrix[row, column])</code>, đặt tại toạ độ (cột, hàng), chú ý thứ tự này vì <code>text(x, y)</code> nhận hoành trước tung. Màu chữ theo ngưỡng ở trên.</p>
 
 === 241
 <p>Thêm thanh màu cho từng ô, <code>fraction=0.046, pad=0.04</code> để không chiếm chỗ của ma trận bên cạnh.</p>
@@ -157,7 +157,7 @@ mid | Chẩn đoán không tự bảo vệ metric cũ | Câu "Không ghi/cập n
 low | Tương thích ngược chỉ một phần | <code>_row_value</code> chỉ che ba cột CI macro-F1; các cột khác đọc trực tiếp. Thiếu <code>sentiment_accuracy_ci_low</code> vẫn <code>KeyError</code> (đã chạy thử); <code>format_rate(None)</code> ném <code>TypeError</code> vì chỉ nhận diện NaN kiểu float. Trong pipeline các cột luôn đủ và là float.
 low | Không có test trực tiếp | Không có <code>tests/test_eval_report.py</code>; các hàm chỉ được kiểm gián tiếp qua <code>evaluate.run</code> (file tồn tại, Markdown chứa chuỗi cảnh báo, hình &gt; 0 byte).
 ok | Không dùng pyplot | <code>Figure</code> + <code>FigureCanvasAgg</code> chạy headless, không rò trạng thái toàn cục, phù hợp CI.
-mid | Câu caveat tự khai | <code>PROMPT_REUSE_NOTE</code> khẳng định gold đã dùng rà prompt; code không kiểm chứng được. Nếu đúng, accuracy/F1 không phải bằng chứng độc lập — báo cáo in câu này ở mọi lần chạy, nên trích dẫn kèm caveat.
+mid | Câu caveat tự khai | <code>PROMPT_REUSE_NOTE</code> khẳng định gold đã dùng rà prompt; code không kiểm chứng được. Nếu đúng, accuracy/F1 không phải bằng chứng độc lập; báo cáo in câu này ở mọi lần chạy, nên trích dẫn kèm caveat.
 low | Bộ lọc ca sai bỏ qua unlabeled | <code>str.contains("sentiment:")</code> không bắt dòng <code>unlabeled</code>. Trong pipeline không có dòng nào như vậy khi tới bước ghi báo cáo (cổng coverage đã chặn), nên số công bố không đổi.
 
 --- qa

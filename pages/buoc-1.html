@@ -9,20 +9,20 @@
     <div class="text">
       <h3>Quy tắc lọc từng bảng</h3>
       <ul>
-        <li><b>listings</b>: giữ <code>id</code> thuộc nhóm, gắn <code>analysis_area</code> chính thức của đề (A01–A08).</li>
-        <li><b>reviews</b>: lọc theo <code>review_id</code> (cột <code>id</code>), <b>không</b> theo <code>listing_id</code>. Đề giao đúng 5.000 review cụ thể.</li>
-        <li><b>calendar</b>: đọc theo khúc 200.000 dòng, chỉ giữ các cột cần; cột <code>price</code> của calendar bị bỏ.</li>
+        <li><b>listings</b>: giữ các <code>id</code> thuộc nhóm và gắn <code>analysis_area</code> chính thức của đề (A01–A08).</li>
+        <li><b>reviews</b>: lọc theo <code>review_id</code> (cột <code>id</code>), <b>không</b> theo <code>listing_id</code>, vì đề giao đúng 5.000 review cụ thể.</li>
+        <li><b>calendar</b>: đọc theo từng khúc 200.000 dòng, chỉ giữ các cột cần, bỏ cột <code>price</code>.</li>
       </ul>
       <h3>Bẫy dữ liệu đã xử lý</h3>
       <ul>
-        <li>ID dài 18–19 chữ số: luôn đọc <code>dtype=str</code>. Đọc thành số thực là mất chữ số cuối, lọc ra sai.</li>
-        <li>Comment review có ký tự <code>\r</code>: ghi CSV sao cho đọc lại đúng số dòng.</li>
-        <li>Mất mạng mà file đã có: dùng bản local, không dừng pipeline.</li>
+        <li>ID dài 18–19 chữ số nên luôn đọc <code>dtype=str</code>; đọc thành số thực là mất chữ số cuối và lọc sai.</li>
+        <li>Comment review có ký tự <code>\r</code> nên phải ghi CSV sao cho đọc lại đúng số dòng.</li>
+        <li>Mất mạng mà file đã có thì dùng bản local, không dừng pipeline.</li>
       </ul>
     </div>
     <div class="panel">
       <h3>Đối chiếu số lượng của đề</h3>
-      <p class="muted"><code>qa.expected</code>; ở bước 1 chỉ cảnh báo, bước 2 mới dừng.</p>
+      <p class="muted"><code>qa.expected</code>: ở bước 1 chỉ cảnh báo, bước 2 mới dừng.</p>
       <ul>
         <li>1.000 listing mỗi mốc: 875 Entire home/apt + 125 Private room</li>
         <li>Căn 0 review: 50 / 30 / 25 / 25</li>
@@ -31,7 +31,7 @@
         <li>8 khu, mỗi khu 120–130 căn</li>
         <li>Tổng 5.000 review (hợp qua 4 mốc)</li>
       </ul>
-      <p class="muted">Kết quả kiểm thật: <code>reports/assignment_data_audit.json</code>, sinh bởi <a href="#f-check_assignment">check_assignment_data.py</a>.</p>
+      <p class="muted">Kết quả kiểm thật nằm ở <code>reports/assignment_data_audit.json</code>, do <a href="#f-check_assignment">check_assignment_data.py</a> sinh ra.</p>
     </div>
   </div>
 </section>

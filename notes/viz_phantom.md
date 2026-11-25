@@ -8,10 +8,10 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Thiếu file được bỏ qua; file có nhưng thiếu cột thì lỗi. Câu “sai số thì dừng hẳn” mạnh hơn mức kiểm tra thực tế: ví dụ <code>kpi_rows</code> ép kiểu nhưng chưa kiểm tỉ lệ trong khoảng 0–100, xem review.</p>
 
 === 20-31
-<p>Bản đồ đọc module: hằng số → nạp CSV → định dạng → tám hàm vẽ → bộ điều phối. Chạy module bằng <code>python -m src.viz_phantom</code> để import theo package <code>src</code>. <code>--sample-dir</code> dùng fixture có số giả để kiểm khung hình; phải phân biệt với <code>--scope sample</code>, là mẫu 1.000 căn thật của nhóm.</p>
+<p>File đi theo thứ tự: hằng số, nạp CSV, các hàm định dạng, tám hàm vẽ, rồi bộ điều phối. Chạy module bằng <code>python -m src.viz_phantom</code> để import theo package <code>src</code>. <code>--sample-dir</code> dùng fixture có số giả để kiểm khung hình; phải phân biệt với <code>--scope sample</code>, là mẫu 1.000 căn thật của nhóm.</p>
 
 === 33
-<p>Hoãn đánh giá annotation; các kiểu như <code>dict[str, Any]</code> mô tả giao diện hàm, không tự kiểm dữ liệu CSV lúc chạy.</p>
+<p>Dòng này hoãn việc đánh giá annotation. Các kiểu như <code>dict[str, Any]</code> chỉ mô tả giao diện hàm, không kiểm dữ liệu CSV lúc chạy.</p>
 
 === 35-38
 <p><code>argparse</code> nhận cờ CLI; <code>math</code> nhận diện giá thiếu bằng <code>isnan</code>; <code>Path</code> ghép đường dẫn; <code>Any</code> cho config và đối tượng matplotlib có giao diện linh hoạt.</p>
@@ -23,7 +23,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Dùng lại cấu hình chuẩn hoá, thứ tự nhóm, tập <code>PHANTOM</code>, nhãn Việt và tên <code>GONE = BIEN_MAT</code> từ bước chia nhóm. Màu, font và khung hình nhập từ <code>viz.py</code> giúp hai bộ hình thống nhất. Module này không chép lại thuật toán <code>classify</code>.</p>
 
 === 49-51
-<p>PNG mặc định nằm trong <code>figures/phantom</code>. Riêng KPI luôn đọc <code>data/processed/kpi_phantom.csv</code>, không nối theo <code>segments.output_dir</code> hay hậu tố <code>full/sample</code>. Đây là điểm phải hỏi khi đổi thư mục hoặc chạy mẫu; xem <a href="#viz_phantom-L116">real_inputs</a>.</p>
+<p>PNG mặc định nằm trong <code>figures/phantom</code>. Riêng KPI luôn đọc <code>data/processed/kpi_phantom.csv</code>, không nối theo <code>segments.output_dir</code> hay hậu tố <code>full/sample</code>. Đổi thư mục hay chạy mẫu là chỗ dễ sai; xem <a href="#viz_phantom-L116">real_inputs</a>.</p>
 
 === 53-57
 <p>Cam đất đánh dấu nhóm ảo hoặc điểm cần chú ý; xám nhạt biểu diễn phần chưa rõ/biến mất. <code>ON_WHITE</code> là nền sau chữ số, không phải nền của cả thanh: nó che đường tham chiếu để số vẫn đọc được.</p>
@@ -47,7 +47,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Bốn nhãn bucket phải trùng bảng KPI: 1–7, 8–20, 21–89, 90+ đêm. Đây là nhãn viết cố định; khi đổi ngưỡng dài ngày cần xem lại ý nghĩa nhãn, vì bước KPI có dùng ngưỡng cấu hình cho hai bucket cuối.</p>
 
 === 113
-<p>Bắt đầu lớp đọc dữ liệu: các hàm dưới đây trả đường dẫn hoặc DataFrame, chưa tạo hình.</p>
+<p>Bắt đầu lớp đọc dữ liệu: mấy hàm này trả đường dẫn hoặc DataFrame, chưa tạo hình.</p>
 
 === 116-118
 <p><code>real_inputs</code> lấy thư mục kết quả chia nhóm qua <code>cfg_get</code>; thiếu khoá sẽ báo lỗi rõ từ module luật. <code>scope</code> ở đây là phạm vi listing của bước 3, khác cột <code>scope</code> trong KPI vốn chỉ kiểu gom nhóm như <code>overall</code> hay <code>segment</code>.</p>
@@ -56,7 +56,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Bốn bảng chia nhóm/audit nhận hậu tố <code>_{scope}</code>. KPI dùng hằng đường dẫn; LLM dùng <code>&lt;output_dir&gt;/&lt;city&gt;/llm_segment_aspects.csv</code> không có hậu tố phạm vi. Đã kiểm bằng Python: gọi với <code>full</code> và <code>sample</code> cho cùng đường dẫn KPI. CSV commit hiện có số KPI toàn thành phố; không được hiểu <code>--scope sample</code> là đổi mọi hình sang 1.000 căn.</p>
 
 === 130-132
-<p>Đầu vào demo đặt tên theo khoá schema, chẳng hạn <code>counts.csv</code> và <code>llm_aspects.csv</code>, cùng trong một thư mục. Duyệt <code>INPUT_COLUMNS</code> bảo đảm đường dẫn demo đủ sáu loại bảng; đây không phải dữ liệu để trích số vào báo cáo.</p>
+<p>Đầu vào demo đặt tên theo khoá schema, chẳng hạn <code>counts.csv</code> và <code>llm_aspects.csv</code>, cùng trong một thư mục. Duyệt <code>INPUT_COLUMNS</code> cho đường dẫn demo đủ sáu loại bảng; đây không phải dữ liệu để trích số vào báo cáo.</p>
 
 === 135-140
 <p><code>read_input</code> đọc CSV có thể mang BOM do xuất cho Excel. Không yêu cầu pandas parse ngày thành datetime: các ngày ISO trong CSV giữ dạng chuỗi để so với config đã chuẩn hoá.</p>
@@ -68,7 +68,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>CSV có header đúng nhưng không có dòng cũng bị từ chối. Trả nguyên DataFrame khi qua kiểm: chưa kiểm tính duy nhất của khoá, miền giá trị hay tính khớp giữa các bảng. Test đọc file kiểm cả thiếu cột và bảng rỗng.</p>
 
 === 150-152
-<p>“Mốc cuối” là phần tử cuối danh sách config, <b>không phải</b> ngày lớn nhất trong CSV. Với YAML hiện tại là <code>2026-06-16</code>. Config cần giữ thứ tự thời gian nếu muốn hình mang nghĩa mốc mới nhất.</p>
+<p>“Mốc cuối” là phần tử cuối danh sách config, không phải ngày lớn nhất trong CSV. Với YAML hiện tại là <code>2026-06-16</code>. Config cần giữ thứ tự thời gian nếu muốn hình mang nghĩa mốc mới nhất.</p>
 
 === 155-157
 <p>Lấy cột dưới dạng mảng float, tìm vị trí tên hàng rồi lấy phần tử tương ứng. Cách này trả scalar phục vụ định dạng số. Hàm giả định tên hàng có tồn tại và duy nhất; nó không tự điền 0 cho nhóm thiếu, nên các hàm chuẩn bị bảng phải reindex hoặc kiểm trước.</p>
@@ -128,7 +128,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Chia phần ngang còn lại thành hai khung cùng chiều rộng, chừa khoảng giữa 0,08 Figure. Hình 04 và 06 nhờ vậy có thể so hai đại lượng cạnh nhau; riêng dùng chung bố cục chưa bảo đảm chung thang đo, việc đó caller phải đặt.</p>
 
 === 260-267
-<p>Heatmap ánh xạ từ 0 tới <code>vmax</code>, nền → màu đậm, ô NaN thành xám nhạt. Hình 02 cố định <code>vmax=100</code>; hình 08 chọn theo cực đại sau khi che hàng ít review. Do đó không thể so màu giữa hai hình như cùng một thang.</p>
+<p>Heatmap ánh xạ từ 0 tới <code>vmax</code>, từ nền sang màu đậm, ô NaN thành xám nhạt. Hình 02 cố định <code>vmax=100</code>; hình 08 chọn theo cực đại sau khi che hàng ít review. Do đó không thể so màu giữa hai hình như cùng một thang.</p>
 
 === 268-272
 <p>Bỏ các cạnh khung và vạch tick, đưa tên cột lên trên cho dễ đọc kiểu bảng. <code>aspect="auto"</code> cho phép ô chữ nhật theo vùng vẽ, không ép mỗi ô vuông.</p>
@@ -152,13 +152,13 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Thiếu bất kỳ nhóm nào hoặc số đếm NaN sẽ báo lỗi liệt kê tên nhóm. Đủ bảy hàng mới ép số đếm về int. Test xoá <code>D_never</code> và yêu cầu hàm phải từ chối vẽ, thay vì coi thiếu dữ liệu là nhóm có 0 căn.</p>
 
 === 304-306
-<p>Tổng số căn là mẫu số chung cho cả bảy thanh; tỉ lệ ảo bằng tổng tỉ lệ ba nhóm cam. Tự cộng CSV <code>segments_counts_full.csv</code> ở mốc cuối được <b>4.359/20.573 = 21,1879648%</b>; bản <code>sample</code> là <b>84/1.000 = 8,4%</b>. Hai con số mô tả hai phạm vi khác nhau.</p>
+<p>Tổng số căn là mẫu số chung cho cả bảy thanh; tỉ lệ ảo bằng tổng tỉ lệ ba nhóm cam. Cộng CSV <code>segments_counts_full.csv</code> ở mốc cuối được <b>4.359/20.573 = 21,1879648%</b>; bản <code>sample</code> là 84/1.000 = 8,4%. Hai con số mô tả hai phạm vi khác nhau.</p>
 
 === 308-314
 <p>Tạo bảy thanh theo thứ tự luật, dùng chiều dài là phần trăm. Trục x mở rộng 30% ngoài thanh dài nhất để còn chỗ ghi số; nhãn trục nói rõ mẫu số là tổng căn. Không sắp giảm dần ở hình này vì muốn giữ thứ tự nhóm xuyên suốt bộ hình.</p>
 
 === 315-316
-<p><b>Đọc ảnh thật 01:</b> mỗi thanh có cả % và số căn. Nhóm khoẻ mạnh là 11.907 căn, khoảng 57,9%; ba thanh cam lần lượt 918, 1.913, 1.528 căn. Không cộng <code>B_booked</code> vào ảo chỉ vì nó cũng kín lịch.</p>
+<p>Ảnh thật 01 vẽ mỗi thanh kèm cả % và số căn. Nhóm khoẻ mạnh là 11.907 căn, khoảng 57,9%; ba thanh cam lần lượt 918, 1.913, 1.528 căn. Không cộng <code>B_booked</code> vào ảo chỉ vì nó cũng kín lịch.</p>
 
 === 318-323
 <p>Tiêu đề suy từ nghịch đảo tỉ lệ ảo: khoảng 5 căn có 1 căn ảo. Đây là cách nói làm tròn, không phải cứ mỗi nhóm năm listing có đúng một căn. Nhánh 0 căn ảo tránh chia cho 0 và có test dự phòng riêng.</p>
@@ -188,10 +188,10 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p><code>pivot_table(..., aggfunc="sum")</code> cộng các dòng cùng cặp nhóm, điền ô thiếu bằng 0; reindex tạo đủ bảy hàng và tám cột theo thứ tự chuẩn. Chỉ giữ hàng tổng dương để chuẩn hoá không chia 0. Ảnh thật 02 còn sáu hàng vì <code>D_never</code> ở tháng 9 có 0 căn.</p>
 
 === 368-373
-<p>Chuẩn hoá <b>theo hàng</b>: mỗi ô chia tổng số căn của chính nhóm nguồn rồi nhân 100. <code>axis=0</code> căn Series mẫu số theo index hàng. Danh sách <code>hidden</code> dùng giải thích vì sao có nhóm không xuất hiện, không xoá cột nhóm ấy ở mốc đích.</p>
+<p>Chuẩn hoá theo hàng: mỗi ô chia tổng số căn của chính nhóm nguồn rồi nhân 100. <code>axis=0</code> căn Series mẫu số theo index hàng. Danh sách <code>hidden</code> dùng giải thích vì sao có nhóm không xuất hiện, không xoá cột nhóm ấy ở mốc đích.</p>
 
 === 375-383
-<p>Heatmap dùng chung thang 0–100%; tên cột ở trên là nhóm cuối, tên hàng bên trái là nhóm đầu kèm n. Vạch dọc tách cột biến mất ra khỏi bảy nhóm. <b>Đọc ảnh 02:</b> đi ngang một hàng, không đi dọc cột để diễn giải “x% căn chuyển đi đâu”.</p>
+<p>Heatmap dùng chung thang 0–100%; tên cột ở trên là nhóm cuối, tên hàng bên trái là nhóm đầu kèm n. Vạch dọc tách cột biến mất ra khỏi bảy nhóm. Ảnh 02 đọc theo hàng ngang, đừng đọc dọc cột, để diễn giải “x% căn chuyển đi đâu”.</p>
 
 === 385-391
 <p>Ghi % làm tròn tới số nguyên vào từng ô; ô từ 55% đổi chữ trắng, ô cùng nhóm nguồn/đích in đậm. Tổng số <em>chưa làm tròn</em> trên hàng là 100%; các số nguyên in ra có thể cộng lệch 100 do làm tròn độc lập.</p>
@@ -215,7 +215,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p><code>ranked_areas</code> trả hai bảng: khu đủ quy mô để xếp hạng và khu nhỏ giữ lại cho ghi chú. Ngưỡng giảm việc diễn giải quá mức tỉ lệ từ ít căn; nó không biến dữ liệu thành mẫu ngẫu nhiên hay tạo khoảng tin cậy.</p>
 
 === 422-425
-<p>Lấy <code>phantom_listing_rate</code> ở cấp <code>neighbourhood_cleansed</code>, dùng <code>n_obs ≥ area_min_listings</code> rồi sắp giảm dần theo %. Config hiện là 300 căn; <b>đúng 300 vẫn được giữ</b>. Đây khác ngưỡng tính KPI khu thường trong mục <code>kpi</code>.</p>
+<p>Lấy <code>phantom_listing_rate</code> ở cấp <code>neighbourhood_cleansed</code>, dùng <code>n_obs ≥ area_min_listings</code> rồi sắp giảm dần theo %. Config hiện là 300 căn, và đúng 300 vẫn được giữ. Đây khác ngưỡng tính KPI khu thường trong mục <code>kpi</code>.</p>
 
 === 426-428
 <p>Không khu nào đủ lớn thì báo lỗi, còn khu dưới ngưỡng được trả riêng cũng theo thứ tự tỉ lệ giảm dần. Test kiểm cả thứ hạng và trường hợp nâng ngưỡng lên 10.000 để không còn khu hợp lệ.</p>
@@ -224,10 +224,10 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p><code>draw_phantom_by_area</code> ghi <code>03_phantom_rate_by_area.png</code>. Đường tham chiếu lấy từ dòng KPI <code>overall</code> đầu tiên, không lấy trung bình các % khu. Với CSV commit là 21,188%; tổng thể phải được tính theo căn, không cho mọi khu trọng số bằng nhau.</p>
 
 === 438-443
-<p>Chiều cao tăng 0,34 inch mỗi khu; lề dưới cố định bằng inch để không chồng ghi chú. Mỗi giá trị <b>lớn hơn</b> mức thành phố được tô cam, bằng hoặc thấp hơn tô xanh. Màu không mang nghĩa nhóm căn ở hình 01 nữa.</p>
+<p>Chiều cao tăng 0,34 inch mỗi khu; lề dưới cố định bằng inch để không chồng ghi chú. Giá trị lớn hơn mức thành phố thì tô cam, bằng hoặc thấp hơn thì tô xanh. Màu không mang nghĩa nhóm căn ở hình 01 nữa.</p>
 
 === 444-449
-<p>Vẽ thanh và nhãn khu kèm <code>n_obs</code>; đường đứt đứng là mức thành phố. <b>Đọc ảnh 03:</b> Pittwater đứng đầu 36,5% trên 918 căn, Auburn cuối 12,3% trên 667 căn; khu Sydney có 5.014 căn và tỉ lệ khoảng 15,9%, không đồng nhất với toàn thành phố Sydney.</p>
+<p>Vẽ thanh và nhãn khu kèm <code>n_obs</code>; đường đứt đứng là mức thành phố. Ảnh 03 cho Pittwater đứng đầu 36,5% trên 918 căn, Auburn cuối 12,3% trên 667 căn; khu Sydney có 5.014 căn và tỉ lệ khoảng 15,9%, không đồng nhất với toàn thành phố Sydney.</p>
 
 === 450-453
 <p>Nhãn % đặt ngoài đầu thanh, bọc nền trắng để đường tham chiếu không cắt chữ. Nhãn “Toàn thành phố 21,2%” đặt trên hàng đầu ở đúng x của đường tham chiếu.</p>
@@ -248,7 +248,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Lấy KPI ở cấp <code>segment</code>, đặt tên nhóm làm index rồi giữ các nhóm có mặt theo thứ tự chuẩn. Không tự thêm nhóm thiếu thành 0; riêng hình giá sẽ reindex đủ bảy hàng sau đó để ghi “không có giá”.</p>
 
 === 483-486
-<p><code>night_buckets</code> chọn KPI phân bố số đêm của listing thiếu đăng ký. <code>n_obs</code> trong bảng này là <b>số căn của bucket</b>, khác <code>n_obs</code> trong KPI tỉ lệ tổng thể là mẫu số toàn thành phố.</p>
+<p><code>night_buckets</code> chọn KPI phân bố số đêm của listing thiếu đăng ký. <code>n_obs</code> trong bảng này là số căn của bucket, khác <code>n_obs</code> trong KPI tỉ lệ tổng thể là mẫu số toàn thành phố.</p>
 
 === 487-489
 <p>Bắt buộc có đủ bốn <code>value</code>; bucket có 0 căn và giá trị 0% vẫn hợp lệ, khác hẳn thiếu dòng hay NaN. Test bỏ bucket 21–89 phải lỗi; CSV thật có bucket này với 0 căn.</p>
@@ -263,7 +263,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p><code>draw_long_stay_license</code> đọc ba mảng thông tin: <code>long_stay_90_rate</code> theo nhóm, bốn bucket thiếu đăng ký, và tỉ lệ thiếu đăng ký <code>overall</code>. Nhãn số đêm lấy ngưỡng config (90), còn tên KPI vẫn là chuỗi <code>long_stay_90_rate</code>.</p>
 
 === 513-520
-<p>Khung trái vẽ % đòi lưu trú từ ngưỡng dài ngày, cùng trục 0–100. Cam vẫn là nhóm ảo. <b>Đọc ảnh 04 bên trái:</b> ba nhóm ảo khoảng 47,1%, 55,4%, 60,6%, trong khi khoẻ mạnh chỉ 1,1%; đây là điều kiện đặt tối thiểu, không phải số đêm đã có khách ở.</p>
+<p>Khung trái vẽ % đòi lưu trú từ ngưỡng dài ngày, cùng trục 0–100. Cam vẫn là nhóm ảo. Ảnh 04 bên trái có ba nhóm ảo khoảng 47,1%, 55,4%, 60,6%, trong khi khoẻ mạnh chỉ 1,1%; đây là điều kiện đặt tối thiểu, không phải số đêm đã có khách ở.</p>
 
 === 521-523
 <p>Ghi % mỗi thanh và tiêu đề panel. Không ghi n ở đây nên khi vấn đáp cần mở CSV: <code>B_booked</code> có mẫu số 1.151, ít hơn 1.159 căn trong counts, vì KPI loại dòng thiếu <code>minimum_nights</code>; các số này đã đối chiếu CSV và <a href="#kpi-L173">hàm tính KPI</a>.</p>
@@ -305,7 +305,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Phần rộng ít nhất 6 điểm % mới ghi nhãn ở tâm; phần nhỏ vẫn vẽ nhưng không in số để tránh chồng chữ. <code>left[pos] += width</code> chạy cả khi không in nhãn. Vì vậy vùng cam nhỏ của khoẻ mạnh trên ảnh vẫn tồn tại dù không có con số bên trong.</p>
 
 === 602-606
-<p>Nhãn hàng kèm n nguồn, trục x cố định 0–100 và ghi trạng thái ở ngày đích; legend nằm phía trên. <b>Đọc ảnh 05:</b> hàng ngủ đông n=1.632 chia khoảng 15% xanh, 69% cam, 16% xám; đây không phải phân bố ba trạng thái của toàn bộ 20.573 căn cuối kỳ.</p>
+<p>Nhãn hàng kèm n nguồn, trục x cố định 0–100 và ghi trạng thái ở ngày đích; legend nằm phía trên. Ảnh 05: hàng ngủ đông n=1.632 chia khoảng 15% xanh, 69% cam, 16% xám; đây không phải phân bố ba trạng thái của toàn bộ 20.573 căn cuối kỳ.</p>
 
 === 608-615
 <p>Lấy phần có review của ngủ đông làm thông điệp “Chỉ 15%… sau khoảng 9 tháng”. Với nhóm vốn có review ở mốc đầu, chữ “trở lại” nên hiểu là trạng thái review ở mốc cuối, không phải tất cả đã từng mất review rồi phục hồi. Nếu thiếu hàng ngủ đông, dùng tiêu đề chung; có test dự phòng.</p>
@@ -320,7 +320,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p><code>price_title</code> chỉ diễn đạt mức giá niêm yết tương đối của nhóm ảo trong khung ngắn ngày. Không suy rằng giá cao gây ít review, hay giá trên Airbnb là giá giao dịch thực tế.</p>
 
 === 633-637
-<p>Trong ba nhóm ảo, chỉ giữ nhóm có hàng và có tỉ số <b>lớn hơn 1</b>, rồi đổi nhãn về chữ thường để nối câu. Đúng 1 không bị gọi cao hơn; thiếu hàng không được mặc định là có giá thấp.</p>
+<p>Trong ba nhóm ảo, chỉ giữ nhóm có hàng và có tỉ số lớn hơn 1, rồi đổi nhãn về chữ thường để nối câu. Đúng 1 không bị gọi cao hơn; thiếu hàng không được mặc định là có giá thấp.</p>
 
 === 638-640
 <p>Không nhóm nào vượt 1 thì dùng thông điệp dự phòng; ngược lại nối tên bằng “và”. Với CSV thật, ngủ đông 1,3203× và chưa từng có review 1,8549× được nêu tên; khoá lịch không có giá nên không xuất hiện. Test kiểm cả nhánh có và không có nhóm vượt 1.</p>
@@ -335,13 +335,13 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Nhóm không có ratio ghi chữ xám; nhóm có ratio ghi số lần và n quan sát. Trong ảnh thật 06, hai nhóm kín lịch đều hiện “không có giá” ở cả hai khung. <code>n</code> là số căn có đủ dữ liệu tính ratio trong khung, không phải tổng số listing của nhóm.</p>
 
 === 660-665
-<p><code>draw_price_vs_neighbours</code> ghi <code>06_price_vs_neighbours.png</code>. Đại lượng là <b>trung vị các tỉ số từng căn</b>; không phải lấy trung vị giá nhóm chia một trung vị chung toàn thành phố. “Hàng xóm” đã được bước KPI ghép theo cùng khu, loại phòng và chế độ lưu trú.</p>
+<p><code>draw_price_vs_neighbours</code> ghi <code>06_price_vs_neighbours.png</code>. Đại lượng là trung vị các tỉ số từng căn, không phải lấy trung vị giá nhóm chia một trung vị chung toàn thành phố. “Hàng xóm” đã được bước KPI ghép theo cùng khu, loại phòng và chế độ lưu trú.</p>
 
 === 666-670
 <p>Lấy hai tên KPI riêng và hai ngưỡng config: ngắn ngày ≤ 20 đêm, dài ngày ≥ 90 đêm. Lấy cực đại hai bảng rồi nhân 1,35 để dùng chung x_max. Bước này chỉ dựng thang hình; ratio đã tính ở <a href="#kpi-L262">price_relative_to_local_median</a>, có loại căn thiếu trường ghép hoặc giá không dương.</p>
 
 === 672-678
-<p>Khung trái ghi “dưới 21 đêm”, tương đương ≤ 20 với số đêm nguyên; khung phải từ 90 đêm. Hai khung dùng cùng thứ tự nhóm và thang x, khung phải bỏ lặp nhãn y. <b>Đọc ảnh 06:</b> ngủ đông 1,32× (n=791) bên trái nhưng 0,96× (n=836) bên phải; không lấy hai số đó gộp thành kết luận chung rẻ/đắt.</p>
+<p>Khung trái ghi “dưới 21 đêm”, tương đương ≤ 20 với số đêm nguyên; khung phải từ 90 đêm. Hai khung dùng cùng thứ tự nhóm và thang x, khung phải bỏ lặp nhãn y. Ảnh 06 cho ngủ đông 1,32× (n=791) bên trái nhưng 0,96× (n=836) bên phải; không lấy hai số đó gộp thành kết luận chung rẻ/đắt.</p>
 
 === 680-685
 <p>Tiêu đề tự gọi tên nhóm ảo có ratio ngắn ngày trên 1. Dòng phụ nêu mốc, định nghĩa nhóm so sánh và vạch 1,00×. Trong CSV thật, khoẻ mạnh ngắn ngày 0,9639× (n=11.584), chưa từng có review 1,8549× (n=529): đây là so sánh mô tả có điều kiện, không kiểm định tác động của việc thuộc nhóm.</p>
@@ -380,10 +380,10 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Khung trái đọc <code>n_listings</code>, cực đại của <code>minimum_nights</code> và <code>share_blocked</code>. Cột share trong audit là tỉ phần nên nhân 100 trước khi in %. Cẩn thận: share của audit khác đơn vị <code>value</code> phần trăm trong KPI.</p>
 
 === 742-748
-<p>Tìm vị trí gap để nhấn cam; các mốc khác xanh. Dưới ngày ghi “tối đa x đêm”, nghĩa là <b>giá trị lớn nhất của cột minimum_nights trong snapshot</b>, không phải trường <code>maximum_nights</code> hay hạn trên số đêm khách được ở.</p>
+<p>Tìm vị trí gap để nhấn cam; các mốc khác xanh. Dưới ngày ghi “tối đa x đêm”, nghĩa là giá trị lớn nhất của cột minimum_nights trong snapshot, không phải trường <code>maximum_nights</code> hay hạn trên số đêm khách được ở.</p>
 
 === 749-755
-<p><b>Đọc ảnh thật 07 bên trái:</b> số căn lần lượt 17.730 / 20.436 / 13.563 / 20.573; cực đại minimum_nights là 999 / 500 / 7 / 500. Mốc tháng 3 chỉ khoảng 0,18% kín lịch (ảnh làm tròn 0,2%). Ba dấu hiệu đi cùng nhau cảnh báo mốc bị lọc khác, không đủ để kết luận hàng nghìn chủ đã rời thị trường.</p>
+<p>Ảnh thật 07 bên trái cho số căn lần lượt 17.730 / 20.436 / 13.563 / 20.573, cực đại minimum_nights là 999 / 500 / 7 / 500. Mốc tháng 3 chỉ khoảng 0,18% kín lịch (ảnh làm tròn 0,2%). Ba dấu hiệu đi cùng nhau cảnh báo mốc bị lọc khác, không đủ để kết luận hàng nghìn chủ đã rời thị trường.</p>
 
 === 757-763
 <p>Khung phải có một thanh chia hai phần số đếm: giải thích được và chưa rõ lý do. Chừa khoảng dưới cho nhãn phần nhỏ; dùng xám cho phần chưa rõ chứ không tô cam như bằng chứng đã xác định.</p>
@@ -398,7 +398,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Nếu không có căn vắng thì dùng giới hạn x=1 để tránh trục suy biến, in “Không áp dụng tỷ lệ” và bỏ tick số. Nếu có, trục x là số căn thực. Nhánh này bảo vệ trình bày, không thay thế kiểm dữ liệu đầu vào có số đếm âm hay không.</p>
 
 === 780-783
-<p>Tiêu đề định nghĩa cohort audit: căn có mặt ở <b>mọi mốc bình thường</b> nhưng vắng ở gap. Do đó 4.645 không phải hiệu 20.436 − 13.563 hay 20.573 − 13.563. Con số <code>len(audit)-1</code> hiện là ba mốc đối chiếu; ở đây chỉ trình bày kết quả bước chia nhóm đã tính.</p>
+<p>Tiêu đề định nghĩa cohort audit: căn có mặt ở mọi mốc bình thường nhưng vắng ở gap. Do đó 4.645 không phải hiệu 20.436 − 13.563 hay 20.573 − 13.563. Con số <code>len(audit)-1</code> hiện là ba mốc đối chiếu; ở đây chỉ trình bày kết quả bước chia nhóm đã tính.</p>
 
 === 785-790
 <p>Tiêu đề “căn vắng không có nghĩa là căn biến mất” là bài học về độ phủ. Dòng phụ lấy cực đại minimum_nights và % kín lịch tại đúng <code>gap_pos</code>, không dùng số của snapshot cuối để mô tả gap.</p>
@@ -431,10 +431,10 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Tạo bản sao share rồi che hàng có n &lt; 30 bằng NaN để heatmap hiện xám. Bảng share gốc và counts vẫn giữ nguyên để ghi nhãn. Đúng 30 review đã được tô, còn 0 review có thông báo riêng bên dưới.</p>
 
 === 839-843
-<p>Chỉ lấy cực đại các ô đủ cỡ mẫu để đặt thang màu. Công thức đi lên <b>bội 10 kế tiếp</b>, tối thiểu 10: nếu peak đúng 20 thì vmax=30 chứ không giữ 20. Không có ô được tô thì vmax vẫn 10. Hình không vẽ colorbar nên nên đọc cả con số trong ô, không chỉ độ đậm.</p>
+<p>Chỉ lấy cực đại các ô đủ cỡ mẫu để đặt thang màu. Công thức đi lên bội 10 kế tiếp, tối thiểu 10: nếu peak đúng 20 thì vmax=30 chứ không giữ 20. Không có ô được tô thì vmax vẫn 10. Hình không vẽ colorbar nên đọc con số trong ô, đừng chỉ nhìn độ đậm.</p>
 
 === 845-849
-<p>Dựng heatmap màu cam, tên cột dùng bản dịch nếu có, tên hàng kèm cả n căn và n review. <b>Đọc ảnh thật 08:</b> hàng khoẻ mạnh có màu; hàng ngủ đông, kín lịch vẫn có review và mở nhiều ít review màu xám vì nhỏ hơn ngưỡng, dù vẫn hiện số. Xám không có nghĩa là tỉ lệ chê bằng 0.</p>
+<p>Dựng heatmap màu cam, tên cột dùng bản dịch nếu có, tên hàng kèm cả n căn và n review. Ảnh thật 08: hàng khoẻ mạnh có màu; hàng ngủ đông, kín lịch vẫn có review và mở nhiều ít review màu xám vì nhỏ hơn ngưỡng, dù vẫn hiện số. Xám không có nghĩa là tỉ lệ chê bằng 0.</p>
 
 === 851-857
 <p>Với n=0, ghi một câu giữa hàng rồi <code>continue</code>, không chia mẫu số 0. <code>D_never/N_new</code> được ghi “theo định nghĩa không có review”; <code>B_ghost</code> ghi “không có review trong mẫu”, không kết luận chưa từng có review trong đời listing.</p>
@@ -443,7 +443,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Nhóm có review mới duyệt từng aspect: hàng nhỏ chữ xám; hàng đủ mẫu thì ô từ 55% thang màu đổi chữ trắng; còn lại chữ tối. Ngưỡng chữ trắng là 0,55 × vmax, không phải tỉ lệ chê 55% cố định như hình chuyển nhóm.</p>
 
 === 866-867
-<p>Mỗi ô in % làm tròn và phân số <code>số review chê / số review của nhóm</code>. Ảnh thật hiện ngủ đông chê tiện nghi 4/12 (33%) và khoẻ mạnh 81/954 (8%); đây là <b>số đọc trực tiếp từ PNG</b>, chưa tự đối tính từ CSV nguồn vì bảng <code>data/processed/sydney/llm_segment_aspects.csv</code> không có trong bản commit. Không lấy fixture số giả để xác nhận các số này.</p>
+<p>Mỗi ô in % làm tròn và phân số <code>số review chê / số review của nhóm</code>. Ảnh thật hiện ngủ đông chê tiện nghi 4/12 (33%) và khoẻ mạnh 81/954 (8%); đây là số đọc trực tiếp từ PNG, chưa tự đối tính từ CSV nguồn vì bảng <code>data/processed/sydney/llm_segment_aspects.csv</code> không có trong bản commit. Không lấy fixture số giả để xác nhận các số này.</p>
 
 === 869-873
 <p>Cộng n review của ba nhóm ảo, không cộng số lượt chê aspect vì một review có thể chê nhiều thứ. Dưới 30 thì tiêu đề cảnh báo chưa đủ kết luận; từ 30 dùng tiêu đề trung tính, chứ không tự khẳng định đủ đại diện hay có khác biệt thống kê. PNG thật ghi chỉ 12 review thuộc căn ảo; đây là quan sát trên ảnh, không phải số CSV đã tái tính.</p>
@@ -452,7 +452,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 <p>Phụ đề ghi tổng review có nhãn ghép với nhóm căn ở mốc cuối. Ảnh thật là 1.000 review của mẫu nhóm, không phải 20.573 căn toàn thành phố hay mọi review trong năm. Mẫu số mỗi ô là review của hàng, nên tổng % theo hàng không bắt buộc bằng 100%.</p>
 
 === 880-887
-<p>Ghi hạn chế mẫu nhỏ, một review nhiều aspect, review có thể cũ hơn thời điểm phân nhóm và không suy rộng ra Sydney. Tuy nhiên câu “chưa đo accuracy/F1” đã lỗi thời: <code>reports/evaluation/eval_summary.csv</code> có accuracy LLM 0,97 và macro-F1 ≈ 0,936 trên 100 gold. Tự đếm ID duy nhất trong <code>eval_per_review.csv</code> được 85 positive, 15 mixed, không có negative; thiếu lớp này hạn chế đánh giá chứ không có nghĩa chưa công bố điểm.</p>
+<p>Ghi hạn chế mẫu nhỏ, một review nhiều aspect, review có thể cũ hơn thời điểm phân nhóm và không suy rộng ra Sydney. Tuy nhiên câu “chưa đo accuracy/F1” đã lỗi thời: <code>reports/evaluation/eval_summary.csv</code> có accuracy LLM 0,97 và macro-F1 ≈ 0,936 trên 100 gold. Đếm ID duy nhất trong <code>eval_per_review.csv</code> được 85 positive, 15 mixed, không có negative; thiếu lớp này hạn chế đánh giá chứ không có nghĩa chưa công bố điểm.</p>
 
 === 890
 <p>Phần cuối nối các hàm riêng thành API chạy một lần, dùng chung dữ liệu đã đọc.</p>
@@ -498,7 +498,7 @@ lead: Bộ 8 hình kể câu chuyện “căn ảo”, chạy ở bước 6b sau
 
 --- flow
 ## Chọn đầu vào
-fn 0 965 | main | CLI → config chuẩn hoá
+fn 0 965 | main | CLI đọc config chuẩn hoá
 fn 0 929 | run | Điều phối tám hình, trả PNG vừa ghi
 st 1 116 | real_inputs | Đường dẫn thật theo phạm vi
 st 1 130 | sample_inputs | Hoặc sáu CSV demo
@@ -524,7 +524,7 @@ st 1 835 | Che hàng mẫu nhỏ | Dưới 30 review không tô màu
 st 0 958 | Ghi kết quả | Chỉ thêm paths sau khi vẽ thành công
 
 --- review
-mid | Chú thích đánh giá LLM lỗi thời | Dòng 883 và PNG 08 nói chưa đo accuracy/F1; CSV <code>reports/evaluation/eval_summary.csv</code> đã có accuracy LLM 0,97, macro-F1 0,935774, aspect micro-F1 0,904277 trên 100 gold. Tự đếm gold duy nhất: 85 positive, 15 mixed, 0 negative; hạn chế lớp negative có thật nhưng câu “chưa đo” không còn đúng.
+mid | Chú thích đánh giá LLM lỗi thời | Dòng 883 và PNG 08 nói chưa đo accuracy/F1; CSV <code>reports/evaluation/eval_summary.csv</code> đã có accuracy LLM 0,97, macro-F1 0,935774, aspect micro-F1 0,904277 trên 100 gold. Đếm gold duy nhất được 85 positive, 15 mixed, 0 negative; hạn chế lớp negative có thật nhưng câu “chưa đo” không còn đúng.
 mid | Scope có thể trộn mẫu và toàn thành phố | Đã gọi <code>real_inputs</code> với full/sample: KPI đều trỏ <code>data/processed/kpi_phantom.csv</code>, LLM cũng không có hậu tố. CSV counts sample có 84/1.000 căn ảo, còn KPI commit là 21,188% trên 20.573 căn. Chạy sample không đồng nghĩa mọi hình đã cùng phạm vi.
 mid | Kiểm số hẹp hơn lời hứa đầu file | Dòng 18 nói sai số sẽ dừng hẳn, nhưng thử <code>kpi_rows</code> với value=-10 và n_obs=1.9 vẫn trả value=-10, n_obs=1. Hàm ép kiểu, chưa kiểm miền % hay số đếm nguyên; một số nhánh khác có kiểm riêng, không phải bộ kiểm dữ liệu tổng quát.
 mid | Summary gap chưa đối chiếu cấu hình | <code>gap_numbers</code> dùng dòng summary đầu và kiểm tổng; thay gap_snapshot trong summary full thành 2025-09-12 vẫn được nhận dù config ghi 2026-03-21. Nếu file cũ lệch mốc, tiêu đề có thể chỉ nhầm snapshot; CSV commit hiện tại khớp config.

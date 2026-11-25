@@ -47,7 +47,7 @@
     <p>Với phân phối chuẩn, <code>IQR ≈ 1,349σ</code> và Q1/Q3 cách trung bình <code>0,6745σ</code>. Thay vào hàng rào:</p>
     <ul><li><code>k = 1,5</code> (quy tắc boxplot thường): ±2,70σ.</li>
     <li><code>k = 3</code>: ±4,72σ.</li></ul>
-    <p>Nghĩa là k = 1,5 bắt khoảng 0,7% đuôi phân phối chuẩn; k = 3 gần như chỉ bắt giá nhập sai. Số thật: mốc 06/2026 có <b>52/1.000</b> dòng bị <code>price_outlier</code> (5,2%); mốc 03/2026 có <b>51/1.000</b> (5,1%) — <code>reports/qa_report.csv</code>. Máy thử IQR nằm ở <a href="#buoc-2">trang bước 2</a>.</p>
+    <p>Nghĩa là k = 1,5 bắt khoảng 0,7% đuôi phân phối chuẩn; k = 3 gần như chỉ bắt giá nhập sai. Số thật: mốc 06/2026 có <b>52/1.000</b> dòng bị <code>price_outlier</code> (5,2%); mốc 03/2026 có <b>51/1.000</b> (5,1%), theo <code>reports/qa_report.csv</code>. Máy thử IQR nằm ở <a href="#buoc-2">trang bước 2</a>.</p>
   </div>
 </section>
 
@@ -124,7 +124,7 @@
       <tr><td>H_healthy</td><td>0,9639× (n = 11.584)</td><td>0,9761× (n = 66)</td></tr>
     </tbody>
   </table></div>
-  <p class="muted">Nguồn: <code>data/processed/kpi_phantom.csv</code>, mốc 06/2026. Ở khung ngắn ngày, căn ngủ đông đắt hơn hàng xóm 1,32 lần, căn chưa từng có review đắt 1,85 lần; căn khoẻ gần 1. Ở khung ≥ 90 đêm, tỷ số gần 1 vì phần lớn “hàng xóm” cũng là căn ảo — khung này không dùng để nói rẻ hay đắt.</p>
+  <p class="muted">Nguồn: <code>data/processed/kpi_phantom.csv</code>, mốc 06/2026. Ở khung ngắn ngày, căn ngủ đông đắt hơn hàng xóm 1,32 lần, căn chưa từng có review đắt 1,85 lần; căn khoẻ gần 1. Ở khung ≥ 90 đêm, tỷ số gần 1 vì phần lớn “hàng xóm” cũng là căn ảo, nên khung này không dùng để nói rẻ hay đắt.</p>
 </section>
 
 <section class="block">
@@ -180,7 +180,7 @@
   <p class="muted">Ma trận dựng lại từ <code>reports/evaluation/eval_perclass.csv</code> (support, predicted, precision, recall khớp). Accuracy: Gemini 97/100 = <b>0,970</b>, baseline 87/100 = <b>0,870</b>. Macro-F1 trên hai lớp có support: Gemini (0,9827 + 0,8889)/2 = <b>0,9358</b>; baseline (0,9282 + 0,3158)/2 = <b>0,6220</b>.</p>
   <div class="text">
     <p>Kappa của Gemini: gold 85/15/0, máy đoán 88/12/0 nên <code>p<sub>e</sub> = (85·88 + 15·12)/100² = 0,766</code>; <code>p<sub>o</sub> = 0,97</code>; kappa = (0,97 − 0,766)/(1 − 0,766) = <b>0,872</b>. Baseline: <code>p<sub>e</sub> = (85·96 + 15·4)/100² = 0,822</code>; kappa = (0,87 − 0,822)/(1 − 0,822) = <b>0,270</b>. Kappa trừ phần trùng do ngẫu nhiên, nên baseline đoán “positive” gần hết vẫn bị điểm thấp dù accuracy 0,87.</p>
-    <p><b>Macro vs micro:</b> sentiment dùng macro (mỗi lớp nặng như nhau, chỉ lớp có support &gt; 0). Khía cạnh dùng micro trên cặp <code>(khen/chê, khía cạnh)</code> — <a href="#metrics-L25">aspect_pairs</a> — nên khía cạnh xuất hiện nhiều đóng góp nhiều hơn. Micro-F1 khía cạnh: Gemini <b>0,904</b>, baseline <b>0,602</b> (<code>eval_summary.csv</code>).</p>
+    <p>Sentiment dùng macro (mỗi lớp nặng như nhau, chỉ lớp có support &gt; 0), còn khía cạnh dùng micro trên cặp <code>(khen/chê, khía cạnh)</code> (<a href="#metrics-L25">aspect_pairs</a>), nên khía cạnh xuất hiện nhiều đóng góp nhiều hơn. Micro-F1 khía cạnh: Gemini <b>0,904</b>, baseline <b>0,602</b> (<code>eval_summary.csv</code>).</p>
   </div>
 </section>
 
@@ -206,7 +206,7 @@
 <section class="block">
   <h2>11. LLM có đầu ra cấu trúc, cache và tính tái lập</h2>
   <div class="text">
-    <p>LLM không được trả văn bản tự do. Hai mô hình pydantic — <a href="#llm-L67">ReviewInfo</a> cho một review và <a href="#llm-L77">ReviewBatch</a> cho cả lô — định nghĩa đúng các trường: <code>sentiment</code> chỉ nhận <code>positive/mixed/negative</code>, hai danh sách khía cạnh tách khen/chê, và <code>language</code>. JSON schema của <code>ReviewBatch</code> được gửi kèm yêu cầu (<a href="#llm-L270">llm.py dòng 270</a>); kết quả được <code>model_validate_json(..., strict=True)</code> kiểm lại (<a href="#llm-L275">dòng 275</a>). Lô thiếu/trùng/ngoài ID bị từ chối, không vào cache.</p>
+    <p>LLM không được trả văn bản tự do. Hai mô hình pydantic, <a href="#llm-L67">ReviewInfo</a> cho một review và <a href="#llm-L77">ReviewBatch</a> cho cả lô, định nghĩa đúng các trường: <code>sentiment</code> chỉ nhận <code>positive/mixed/negative</code>, hai danh sách khía cạnh tách khen/chê, và <code>language</code>. JSON schema của <code>ReviewBatch</code> được gửi kèm yêu cầu (<a href="#llm-L270">llm.py dòng 270</a>); kết quả được <code>model_validate_json(..., strict=True)</code> kiểm lại (<a href="#llm-L275">dòng 275</a>). Lô thiếu/trùng/ngoài ID bị từ chối, không vào cache.</p>
     <p>Mỗi review đã có nhãn được ghi nối vào cache JSONL (<a href="#llm-L186">append_to_cache</a>). Lần chạy sau chỉ gọi API cho review còn thiếu; cache đủ thì không gọi mạng. Cache có <code>CACHE_SCHEMA_VERSION</code>; đổi cấu trúc là cache cũ bị từ chối thay vì trộn lẫn. Nếu thiếu key mà cache chưa đủ, <code>run</code> báo lỗi chứ <b>không sinh nhãn giả</b> (<a href="#llm-L349">dòng 349</a>).</p>
   </div>
   <div class="formula">nhãn(review) = f(review, prompt, schema) ; f chỉ chạy khi review chưa có trong cache<br>cùng cache + cùng mẫu (seed 42) → cùng nhãn</div>

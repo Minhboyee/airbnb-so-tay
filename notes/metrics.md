@@ -1,6 +1,6 @@
 --- meta
 title: metrics.py
-lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy, không đọc ghi file. <code>evaluate.py</code> đưa vào nhãn tay và nhãn máy, nhận lại ma trận nhầm lẫn, precision/recall/F1 từng lớp, macro-F1, Cohen's kappa, micro-F1 trên cặp (khen/chê, khía cạnh), và hai loại khoảng tin cậy 95%: Wilson cho accuracy, bootstrap cho kappa và F1. Mọi số ví dụ dưới đây tính lại từ 100 nhãn tay và khớp <code>reports/evaluation/eval_summary.csv</code>.
+lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy, không đọc ghi file. <code>evaluate.py</code> đưa vào nhãn tay và nhãn máy, nhận lại ma trận nhầm lẫn, precision/recall/F1 từng lớp, macro-F1, Cohen's kappa, micro-F1 trên cặp (khen/chê, khía cạnh), và hai loại khoảng tin cậy 95%: Wilson cho accuracy, bootstrap cho kappa và F1. Mọi số ví dụ tính lại từ 100 nhãn tay, khớp <code>reports/evaluation/eval_summary.csv</code>.
 
 --- blocks
 === 1-10
@@ -22,7 +22,7 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <p><code>1.96</code> là phân vị 97,5% của phân phối chuẩn tắc: khoảng ±1,96 độ lệch chuẩn chứa 95% xác suất. Chỉ Wilson dùng hệ số này; bootstrap lấy phân vị trực tiếp.</p>
 
 === 25-30
-<p>Biến hai danh sách khía cạnh thành <b>một tập cặp</b> (phía, khía cạnh). Vì sao cần: nếu chỉ so tên khía cạnh, máy nói "khen host" trong khi người gán "chê host" sẽ bị tính là đúng. Ghép phía vào cặp thì hai cái này khác nhau: một FP (<code>positive:host</code>) và một FN (<code>negative:host</code>).</p>
+<p>Biến hai danh sách khía cạnh thành một tập cặp (phía, khía cạnh). Vì sao cần: nếu chỉ so tên khía cạnh, máy nói "khen host" trong khi người gán "chê host" sẽ bị tính là đúng. Ghép phía vào cặp thì hai cái này khác nhau: một FP (<code>positive:host</code>) và một FN (<code>negative:host</code>).</p>
 <p>Dùng <code>set</code> nên trùng lặp tự bỏ và thứ tự không quan trọng.</p>
 
 === 33-41
@@ -30,7 +30,7 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <ul><li>TP = <code>|gold ∩ máy|</code>: cặp máy đoán và người cũng gán.</li>
 <li>FP = <code>|máy − gold|</code>: máy đoán thừa.</li>
 <li>FN = <code>|gold − máy|</code>: máy bỏ sót.</li></ul>
-<p>Ví dụ: gold <code>{(+,location), (+,value), (−,cleanliness), (−,noise)}</code>, baseline <code>{(+,location), (+,value)}</code> (review 600307857792014827) → TP 2, FP 0, FN 2. Không có "TN": số cặp có thể có là 12 (6 khía cạnh × 2 phía) nhưng đếm cặp vắng mặt không có nghĩa, nên không dùng accuracy cho khía cạnh.</p>
+<p>Ví dụ: gold <code>{(+,location), (+,value), (−,cleanliness), (−,noise)}</code>, baseline <code>{(+,location), (+,value)}</code> (review 600307857792014827) cho TP 2, FP 0, FN 2. Không có "TN": số cặp có thể có là 12 (6 khía cạnh × 2 phía) nhưng đếm cặp vắng mặt không có nghĩa, nên không dùng accuracy cho khía cạnh.</p>
 <p><code>strict=True</code>: hai danh sách phải dài bằng nhau, lệch là lỗi thay vì cắt im lặng.</p>
 
 === 44-50
@@ -41,8 +41,8 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <ul><li>Precision P = TP / (TP + FP)</li>
 <li>Recall R = TP / (TP + FN)</li>
 <li>F1 = 2PR / (P + R) = 2TP / (2TP + FP + FN). Code dùng dạng thứ hai: cùng giá trị, chỉ một phép chia, và chỉ bằng 0 khi không có cặp nào.</li></ul>
-<p>Số thật của LLM: TP 222, FP 12, FN 35 → P = 222/234 = 0,949; R = 222/257 = 0,864; F1 = 444/491 = 0,904. Baseline: TP 114, FP 8, FN 143 → P 0,934; R 0,444; F1 = 228/379 = 0,602.</p>
-<p>Mẫu số bằng 0 trả 0.0 thay vì NaN (test: <code>{"tp":0,"fp":0,"fn":0}</code> → F1 0).</p>
+<p>Số thật của LLM: TP 222, FP 12, FN 35 cho P = 222/234 = 0,949; R = 222/257 = 0,864; F1 = 444/491 = 0,904. Baseline: TP 114, FP 8, FN 143 cho P 0,934; R 0,444; F1 = 228/379 = 0,602.</p>
+<p>Mẫu số bằng 0 trả 0.0 thay vì NaN (test: <code>{"tp":0,"fp":0,"fn":0}</code> cho F1 0).</p>
 
 === 58-63
 <p>Ma trận 3×3, hàng = nhãn tay, cột = máy. Mỗi ô đếm bằng phép so sánh mảng boolean. Nhãn ngoài <code>LABELS</code> sẽ không vào ô nào (tổng ma trận nhỏ hơn n), nhưng <code>evaluate.py</code> đã chặn nhãn lạ ở cả gold và cache nên không xảy ra. Docstring nói "chỉ trên dòng đã có dự đoán": việc lọc đó do người gọi làm (<a href="#evaluate-L203">evaluate dòng 203</a>), hàm này không lọc.</p>
@@ -66,17 +66,17 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 
 === 77
 <p>p<sub>e</sub> = Σ<sub>k</sub> (tổng cột k × tổng hàng k) / n². Tổng hàng là số gold của lớp k, tổng cột là số máy đoán lớp k.</p>
-<p>Ví dụ LLM: hàng (85, 15, 0), cột (88, 12, 0). p<sub>e</sub> = (85·88 + 15·12)/10.000 = 0,766; p<sub>o</sub> = 0,97 → κ = (0,97 − 0,766)/0,234 = <b>0,872</b>.</p>
-<p>Baseline: hàng (85, 15, 0), cột (96, 4, 0). p<sub>e</sub> = (85·96 + 15·4)/10.000 = 0,822; p<sub>o</sub> = 0,87 → κ = 0,048/0,178 = <b>0,270</b>. Accuracy cao nhưng p<sub>e</sub> cũng cao vì cả hai bên gần như toàn positive.</p>
+<p>Ví dụ LLM: hàng (85, 15, 0), cột (88, 12, 0). p<sub>e</sub> = (85·88 + 15·12)/10.000 = 0,766; p<sub>o</sub> = 0,97 nên κ = (0,97 − 0,766)/0,234 = <b>0,872</b>.</p>
+<p>Baseline: hàng (85, 15, 0), cột (96, 4, 0). p<sub>e</sub> = (85·96 + 15·4)/10.000 = 0,822; p<sub>o</sub> = 0,87 nên κ = 0,048/0,178 = <b>0,270</b>. Accuracy cao nhưng p<sub>e</sub> cũng cao vì cả hai bên gần như toàn positive.</p>
 
 === 78
-<p>Chốt kết quả. Điều kiện viết <code>expected &gt;= 1</code> chứ không phải <code>== 1</code>: p<sub>e</sub> về lý thuyết không vượt 1, nhưng phép cộng số thực có thể cho 1,0000000000000002; lúc đó mẫu số âm rất nhỏ và kappa bùng nổ, nên chặn luôn. Trường hợp p<sub>e</sub> = 1 xảy ra khi cả gold và máy chỉ dùng đúng một nhãn (ví dụ toàn positive): mẫu số 1 − p<sub>e</sub> = 0, kappa không xác định, code quy ước trả 0. Với gold thật (15 mixed) trường hợp này không xảy ra; trong bootstrap chỉ xảy ra nếu một mẫu bốc lại không có review mixed nào, xác suất cỡ 0,85<sup>100</sup>, bỏ qua được.</p>
+<p>Điều kiện viết <code>expected &gt;= 1</code> chứ không phải <code>== 1</code>: p<sub>e</sub> về lý thuyết không vượt 1, nhưng phép cộng số thực có thể cho 1,0000000000000002; lúc đó mẫu số âm rất nhỏ và kappa bùng nổ, nên chặn luôn. Trường hợp p<sub>e</sub> = 1 xảy ra khi cả gold và máy chỉ dùng đúng một nhãn (ví dụ toàn positive): mẫu số 1 − p<sub>e</sub> = 0, kappa không xác định, code quy ước trả 0. Với gold thật (15 mixed) trường hợp này không xảy ra; trong bootstrap chỉ xảy ra nếu một mẫu bốc lại không có review mixed nào, xác suất cỡ 0,85<sup>100</sup>, bỏ qua được.</p>
 
 === 81-84
 <p>Precision/recall/F1 của <b>từng lớp</b> sentiment, đọc từ ma trận. <code>support</code> = tổng hàng (gold có bao nhiêu), <code>predicted</code> = tổng cột (máy đoán bao nhiêu).</p>
 
 === 85-90
-<p>Với lớp ở vị trí <code>index</code>: TP = ô đường chéo; precision = TP / tổng cột; recall = TP / tổng hàng. Ví dụ baseline lớp mixed: TP 3, đoán 4, gold 15 → P 0,75, R 0,20.</p>
+<p>Với lớp ở vị trí <code>index</code>: TP = ô đường chéo; precision = TP / tổng cột; recall = TP / tổng hàng. Ví dụ baseline lớp mixed: TP 3, đoán 4, gold 15 cho P 0,75, R 0,20.</p>
 
 === 91-92
 <p>Mẫu số 0 trả 0. Hệ quả: lớp negative (support 0, predicted 0) có P = R = 0, nên F1 = 0 trong <code>eval_perclass.csv</code>. Số 0 này không có nghĩa "máy sai hết lớp negative", mà là không có dữ liệu.</p>
@@ -92,7 +92,7 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 
 === 112-115
 <p><b>Chỉ lấy lớp có support &gt; 0.</b> Gold không có negative; nếu tính cả lớp đó (F1 = 0 theo quy ước trên) thì mọi phương pháp bị trừ oan. Chạy thử: macro-F1 baseline tính 3 lớp là 0,415, tính 2 lớp là 0,622. Hàm trả kèm số lớp đã dùng (<code>sentiment_macro_f1_labels = 2</code> trong <code>eval_summary.csv</code>) để người đọc biết trung bình trên mấy lớp.</p>
-<p>Số thật: LLM (0,983 + 0,889)/2 = 0,936; baseline (0,928 + 0,316)/2 = 0,622. Lưu ý: lớp negative mà máy đoán sai (gold không có) vẫn làm giảm precision chỗ khác, nhưng không có dòng negative nào trong trung bình.</p>
+<p>Số thật: LLM (0,983 + 0,889)/2 = 0,936; baseline (0,928 + 0,316)/2 = 0,622. Lớp negative mà máy đoán sai (gold không có) vẫn làm giảm precision chỗ khác, nhưng không có dòng negative nào trong trung bình.</p>
 
 === 118-123
 <p>Khoảng tin cậy cho một tỷ lệ (accuracy = số đúng / n). Cho biết tỷ lệ thật nhiều khả năng nằm trong khoảng nào. n = 0 thì trả <code>(nan, nan)</code>, báo cáo hiện "n/a".</p>
@@ -104,11 +104,11 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <p><code>rate</code> là p̂; <code>denominator</code> = 1 + z²/n = 1,0384 khi n = 100. Hai dòng sau dùng lại <code>rate</code> và <code>denominator</code>.</p>
 
 === 128-129
-<p>Tâm và nửa độ rộng đúng như công thức trên. Tính tay LLM 97/100: tâm = (0,97 + 0,0192)/1,0384 = 0,9526; nửa độ rộng = 1,96·√(0,000291 + 0,000096)/1,0384 = 0,0371 → <b>[0,915; 0,990]</b>. Baseline 87/100 → [0,790; 0,922].</p>
+<p>Tâm và nửa độ rộng đúng như công thức trên. Tính tay LLM 97/100: tâm = (0,97 + 0,0192)/1,0384 = 0,9526; nửa độ rộng = 1,96·√(0,000291 + 0,000096)/1,0384 = 0,0371 cho <b>[0,915; 0,990]</b>. Baseline 87/100 cho [0,790; 0,922].</p>
 <p>Vì sao không dùng khoảng chuẩn (Wald) p̂ ± 1,96√(p̂(1−p̂)/n)? Với 97/100 Wald cho [0,937; 1,003], vượt 1, vô nghĩa. Wilson luôn nằm trong [0; 1] và tâm bị kéo về 0,5 một chút, hợp với n nhỏ và tỷ lệ sát 1.</p>
 
 === 130
-<p>Trả hai cận dưới dạng <code>float</code>. Chạy thử <code>wilson_interval(0, 10)</code> ra cận dưới −2,8·10<sup>−17</sup>: sai số dấu phẩy động, thực chất là 0; cận trên 0,278.</p>
+<p>Trả hai cận dưới dạng <code>float</code>. Chạy thử <code>wilson_interval(0, 10)</code> ra cận dưới −2,8·10<sup>−17</sup>: sai số dấu phẩy động, gần như 0; cận trên 0,278.</p>
 
 === 133-139
 <p>Kappa và F1 không có công thức khoảng gọn như Wilson, nên dùng bootstrap: coi 100 review là "tổng thể thu nhỏ", bốc lại có hoàn lại 100 review, tính lại số đo, lặp nhiều lần, xem số đo dao động thế nào. Tắt bằng <code>n_boot = 0</code> (test dùng điều này).</p>
@@ -123,7 +123,7 @@ lead: Các công thức chấm điểm của bước 4c, viết tay bằng numpy
 <p>Gọi <code>metric</code> trên từng hàng chỉ số. <code>metric</code> là hàm đóng (lambda) do <code>evaluate.score_method</code> truyền vào, tự lấy dòng gold/máy theo chỉ số và tính lại ma trận (<a href="#evaluate-L211">evaluate dòng 211</a>).</p>
 
 === 144-145
-<p>Phương pháp <b>phân vị</b>: khoảng 95% là phân vị 2,5% và 97,5% của 2000 giá trị. Ví dụ kappa baseline [−0,019; 0,534]: cận dưới âm nghĩa là với 100 review này chưa loại được khả năng baseline không hơn ngẫu nhiên. Kappa LLM [0,706; 1,000] và macro-F1 LLM [0,851; 1,000] chạm 1 vì có những mẫu bốc lại không chứa 3 ca LLM sai.</p>
+<p>Phương pháp phân vị: khoảng 95% là phân vị 2,5% và 97,5% của 2000 giá trị. Ví dụ kappa baseline [−0,019; 0,534]: cận dưới âm nghĩa là với 100 review này chưa loại được khả năng baseline không hơn ngẫu nhiên. Kappa LLM [0,706; 1,000] và macro-F1 LLM [0,851; 1,000] chạm 1 vì có những mẫu bốc lại không chứa 3 ca LLM sai.</p>
 
 --- flow
 ## Hằng số

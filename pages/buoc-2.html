@@ -1,7 +1,7 @@
 <section class="head">
   <span class="kicker">Mức 2B · qa.py → qa_constraints.py, qa_rules.py</span>
   <h1>Bước 2 — Kiểm tra chất lượng (QA)</h1>
-  <p class="lead">Hai tầng. Tầng một kiểm <b>ràng buộc mẫu của đề</b>: sai là dữ liệu sai tập, dừng pipeline. Tầng hai <b>gắn cờ từng dòng</b> và không xoá dòng nào; KPI ở bước 5 mới quyết định bỏ dòng nào.</p>
+  <p class="lead">Có hai tầng. Tầng một kiểm <b>ràng buộc mẫu của đề</b>: sai là dữ liệu sai tập, dừng pipeline. Tầng hai <b>gắn cờ từng dòng</b> và không xoá dòng nào; KPI ở bước 5 mới quyết định bỏ dòng nào.</p>
 </section>
 <section class="block">
   {{diagram:step2}}
@@ -30,7 +30,7 @@
   </div>
   <div class="panel">
     <h3>Thử luật ngoại lệ IQR</h3>
-    <p class="muted">Bản sao <a href="#qa_rules-L180">_check_price_outlier_iqr</a>: Q1, Q3 theo nội suy tuyến tính như <code>pandas.quantile</code>; ngoài [Q1 − k·IQR, Q3 + k·IQR] thì gắn cờ. Sửa danh sách giá (AUD) hoặc kéo k.</p>
+    <p class="muted">Bản sao của <a href="#qa_rules-L180">_check_price_outlier_iqr</a>: Q1, Q3 tính theo nội suy tuyến tính như <code>pandas.quantile</code>; giá ngoài [Q1 − k·IQR, Q3 + k·IQR] thì gắn cờ. Sửa danh sách giá (AUD) hoặc kéo k để thử.</p>
     <textarea class="in" id="iqr-in" aria-label="Danh sách giá">180, 220, 250, 260, 290, 310, 330, 343, 360, 400, 450, 520, 610, 900, 2400, 9800</textarea>
     <div class="controls"><label class="ctl" for="iqr-k">k <input type="range" id="iqr-k" min="1" max="5" step="0.5" value="3"> <span class="readout" id="iqr-k-v"></span></label></div>
     <div class="msg" id="iqr-out"></div>

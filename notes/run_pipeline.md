@@ -1,10 +1,10 @@
 --- meta
 title: run_pipeline.py
-lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc config một lần, rồi gọi lần lượt 9 bước (tải, QA, chia nhóm, LLM, 4b, 4c, KPI, KPI căn ảo, hình, hình căn ảo) qua các hàm của <code>src/</code>. Không tự tính toán gì; mọi thứ nằm ở module riêng. Thứ tự có lý do: chia nhóm trước LLM vì 4b cần bảng nhóm; LLM trước KPI vì KPI đọc cache LLM.
+lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc config một lần rồi gọi lần lượt 9 bước (tải, QA, chia nhóm, LLM, 4b, 4c, KPI, KPI căn ảo, hình, hình căn ảo) qua các hàm của <code>src/</code>, không tự tính gì. Mọi phép tính nằm ở module riêng. Thứ tự có lý do: chia nhóm trước LLM vì 4b cần bảng nhóm, LLM trước KPI vì KPI đọc cache LLM.
 
 --- blocks
 === 1-17
-<p>Docstring đầu file là mục lục của cả pipeline, đúng thứ tự trong <code>main()</code>. Đọc kỹ ba chỗ dễ bị hỏi:</p>
+<p>Docstring đầu file là mục lục của cả pipeline, đúng thứ tự trong <code>main()</code>. Ba chỗ dễ bị hỏi:</p>
 <ul><li><b>5b</b> (<code>run_phantom</code>) chỉ chạy khi bước 3 làm ở scope <code>full</code>, vì nó đọc <code>data/raw</code> và <code>segments_full.csv</code>.</li>
 <li><b>6b</b> vẽ "8 hình câu chuyện căn ảo"; thư mục <code>figures/phantom/</code> trong repo đúng 8 file PNG (01…08).</li>
 <li>Đánh số <b>4b / 4c</b> ở đây khớp nhãn tab <code>buoc-4bc</code> của sổ tay, nhưng trong <code>main()</code> chúng chỉ là hai khối lệnh không có số riêng.</li></ul>
@@ -13,12 +13,12 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 === 18-26
 <p>Ba nguyên tắc vận hành, dùng để trả lời câu "sao không chạy được offline":</p>
 <ul><li>Config nằm ở <code>configs/sydney.yaml</code>; xem <a href="#sydney_yaml-L5">sydney.yaml</a> và <a href="#config-L90">config.py</a>.</li>
-<li>Thiếu <code>GEMINI_API_KEY</code> lẫn cache thì bước 4 báo bỏ qua, <b>không</b> sinh nhãn giả. Nhờ vậy KPI LLM không bao giờ tính trên dữ liệu bịa.</li>
+<li>Thiếu <code>GEMINI_API_KEY</code> lẫn cache thì bước 4 báo bỏ qua, không sinh nhãn giả. Nhờ vậy KPI LLM không bao giờ tính trên dữ liệu bịa.</li>
 <li>Mọi đường dẫn tương đối so với thư mục chạy lệnh, không so với vị trí file. Chạy từ thư mục khác sẽ ghi <code>data/</code> sai chỗ (các test CLI đều <code>chdir</code> vào thư mục tạm trước khi chạy).</li></ul>
 
 === 28-30
 <p>Ba import chuẩn: <code>argparse</code> cho cờ dòng lệnh, <code>os</code> chỉ để đọc biến môi trường <code>GEMINI_API_KEY</code> (<a href="#run_pipeline-L96">dòng 96</a>), <code>Path</code> cho đường dẫn.</p>
-<p>File này <b>không</b> có <code>from __future__ import annotations</code>, nên chú thích kiểu như <code>list[str] | None</code> (<a href="#run_pipeline-L45">dòng 45</a>) được Python tính ngay lúc định nghĩa hàm: cần Python ≥ 3.10. Đây là lý do <code>.python-version</code> ghim <code>3.10.22</code> và mypy khai <code>python_version = "3.10"</code> (<a href="#pyproject-L17">pyproject.toml dòng 17</a>).</p>
+<p>File này không có <code>from __future__ import annotations</code>, nên chú thích kiểu như <code>list[str] | None</code> (<a href="#run_pipeline-L45">dòng 45</a>) được Python tính ngay lúc định nghĩa hàm, cần Python ≥ 3.10. Vì thế <code>.python-version</code> ghim <code>3.10.22</code> và mypy khai <code>python_version = "3.10"</code> (<a href="#pyproject-L17">pyproject.toml dòng 17</a>).</p>
 
 === 32
 <p><code>pandas</code> chỉ dùng cho chú thích kiểu <code>pd.DataFrame</code> trong <a href="#run_pipeline-L64">load_processed_tables</a> và để gọi <code>pd.read_csv</code> ở <a href="#run_pipeline-L86">dòng 86</a>.</p>
@@ -32,22 +32,22 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p><code>ID_DTYPES</code> để giữ <code>id</code>, <code>listing_id</code>, <code>host_id</code> là chuỗi; <code>is_seed_sample</code> đọc file mẫu để biết mẫu do seed hay do đề. <code>run</code> của <code>download</code> được đổi tên <code>run_download</code> cho khỏi lẫn với <code>run</code> của các module khác.</p>
 
 === 39-42
-<p>Hai hằng số đường dẫn/tên bảng. <code>PROCESSED_ROOT</code> là <code>Path("data") / "processed"</code> — tương đối, ghép thêm <code>city</code> và mốc ở <a href="#run_pipeline-L70">dòng 70</a>. <code>TABLES</code> là tuple 3 tên bảng mỗi mốc phải có: <code>listings</code>, <code>calendar</code>, <code>reviews</code>.</p>
+<p>Hai hằng số đường dẫn/tên bảng. <code>PROCESSED_ROOT</code> là <code>Path("data") / "processed"</code>, tương đối, ghép thêm <code>city</code> và mốc ở <a href="#run_pipeline-L70">dòng 70</a>. <code>TABLES</code> là tuple 3 tên bảng mỗi mốc phải có: <code>listings</code>, <code>calendar</code>, <code>reviews</code>.</p>
 
 === 45-46
 <p><code>parse_args</code> nhận <code>argv</code> tuỳ chọn thay vì luôn đọc <code>sys.argv</code>. Nhờ tham số này, test gọi thẳng <code>parse_args(["--config", "config.yaml", "--skip-llm"])</code> mà không cần tiến trình con.</p>
 
 === 47
-<p>Tạo parser với mô tả hiện trong <code>--help</code>: <code>"Run Airbnb Analysis Pipeline"</code> — test <code>test_cli_help_exits_zero</code> kiểm đúng chuỗi này.</p>
+<p>Tạo parser với mô tả hiện trong <code>--help</code>: <code>"Run Airbnb Analysis Pipeline"</code>, và test <code>test_cli_help_exits_zero</code> kiểm đúng chuỗi này.</p>
 
 === 48
-<p><code>--config</code> là cờ <b>bắt buộc</b> (<code>required=True</code>). Thiếu nó, argparse in lỗi và thoát mã 2, không phải 1 — test <code>test_cli_requires_the_config_argument</code> kiểm <code>returncode == 2</code>.</p>
+<p><code>--config</code> là cờ bắt buộc (<code>required=True</code>). Thiếu nó, argparse in lỗi và thoát mã 2, không phải 1; test <code>test_cli_requires_the_config_argument</code> kiểm <code>returncode == 2</code>.</p>
 
 === 49-53
 <p><code>--skip-download</code> là cờ bật/tắt (<code>store_true</code>), mặc định <code>False</code>. Dùng khi <code>data/processed/</code> đã có sẵn, hoặc trong test/CI để không gọi mạng. Không có cờ này thì <a href="#run_pipeline-L136">dòng 136</a> gọi <code>run_download</code>.</p>
 
 === 54
-<p><code>--skip-llm</code> chỉ tắt <b>bước 4</b> (gọi API/gắn nhãn). Nó <b>không</b> tắt 4b, 4c: hai bước đó vẫn chạy nếu cache và nhãn tay có sẵn trên đĩa. Đây là chỗ dễ trả lời sai khi bị hỏi "cờ này tắt hết LLM chưa".</p>
+<p><code>--skip-llm</code> chỉ tắt bước 4 (gọi API/gắn nhãn). Nó không tắt 4b, 4c: hai bước đó vẫn chạy nếu cache và nhãn tay có sẵn trên đĩa. Bị hỏi "cờ này tắt hết LLM chưa" thì câu trả lời là chưa.</p>
 
 === 55-60
 <p><code>--segments-scope</code> chỉ nhận <code>full</code> hoặc <code>sample</code>, mặc định <code>None</code> = lấy <code>segments.scope</code> trong yaml (hiện là <code>full</code>). Truyền cờ thì ghi đè config cho riêng lần chạy; test <code>test_parse_args_exposes_segments_scope</code> kiểm cả hai trường hợp.</p>
@@ -74,11 +74,11 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Lặp 3 tên bảng, ghép <code>&lt;mốc&gt;/&lt;tên&gt;.csv</code>.</p>
 
 === 80-85
-<p>Không thấy file thì <b>dừng ngay</b> với <code>FileNotFoundError</code> nêu đúng đường dẫn, thay vì để QA chạy trên bảng rỗng rồi ghi báo cáo sai. Thông báo còn chỉ cách sửa: chạy lại không có <code>--skip-download</code>.</p>
-<p>Hệ quả thực tế: <code>data/processed/sydney/&lt;mốc&gt;/</code> bị gitignore, nên clone repo rồi chạy <code>--skip-download</code> sẽ dừng ở đây. Test <code>test_cli_fails_with_the_missing_processed_path</code> xoá <code>reviews.csv</code> và kiểm <code>returncode != 0</code> cùng tên file trong stderr.</p>
+<p>Không thấy file thì dừng ngay với <code>FileNotFoundError</code> nêu đúng đường dẫn, thay vì để QA chạy trên bảng rỗng rồi ghi báo cáo sai. Thông báo còn chỉ cách sửa: chạy lại không có <code>--skip-download</code>.</p>
+<p>Thực tế, <code>data/processed/sydney/&lt;mốc&gt;/</code> bị gitignore, nên clone repo rồi chạy <code>--skip-download</code> sẽ dừng ở đây. Test <code>test_cli_fails_with_the_missing_processed_path</code> xoá <code>reviews.csv</code> và kiểm <code>returncode != 0</code> cùng tên file trong stderr.</p>
 
 === 86
-<p>Đọc CSV với <code>low_memory=False</code> (đọc trọn rồi mới suy kiểu, tránh cảnh báo kiểu lẫn lộn giữa các khối) và <code>dtype=ID_DTYPES</code> để <code>id</code>/<code>listing_id</code>/<code>host_id</code> là chuỗi. Nếu để pandas tự suy, ID 19 chữ số thành <code>float64</code> và mất chữ số cuối — đúng lỗi đã ghi ở <a href="#download-L55">download.py dòng 55</a>.</p>
+<p>Đọc CSV với <code>low_memory=False</code> (đọc trọn rồi mới suy kiểu, tránh cảnh báo kiểu lẫn lộn giữa các khối) và <code>dtype=ID_DTYPES</code> để <code>id</code>/<code>listing_id</code>/<code>host_id</code> là chuỗi. Nếu để pandas tự suy, ID 19 chữ số thành <code>float64</code> và mất chữ số cuối, đúng lỗi đã ghi ở <a href="#download-L55">download.py dòng 55</a>.</p>
 
 === 88
 <p>Trả dict cho <code>qa.run</code>. Không cache lại; mỗi lần gọi đọc lại đĩa.</p>
@@ -91,7 +91,7 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 
 === 96-98
 <p>Nhánh khó nhất, đọc theo hai vế của <code>and</code>:</p>
-<ul><li>Không có <code>GEMINI_API_KEY</code> (không gọi API được), <b>và</b></li>
+<ul><li>Không có <code>GEMINI_API_KEY</code> (không gọi API được), và</li>
 <li>hoặc chưa có cache, hoặc <code>llm.missing_from_cache(config)</code> &gt; 0 (cache thiếu review của mẫu nhóm).</li></ul>
 <p><code>missing_from_cache</code> đếm số review trong mẫu LLM chưa có nhãn trong cache. Nó là cách phát hiện cache của thành phố khác còn sót: đổi <code>city</code> trong yaml nhưng cache vẫn Sydney thì hàm trả về toàn bộ mẫu, và pipeline bỏ qua thay vì tính KPI trên cache sai. Test <code>test_llm_stage_skips_cache_of_another_group_without_key</code> giả lập <code>missing_from_cache = 1000</code> và kiểm <code>llm.run</code> không được gọi.</p>
 
@@ -106,11 +106,11 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 
 === 110-114
 <p>Có nhãn tay:</p>
-<ul><li>Thiếu cache thì in cảnh báo "chỉ báo coverage" nhưng <b>vẫn</b> gọi <code>evaluate.run</code>. Hàm đó không lỗi: <code>diagnostic_reasons</code> thấy cache thiếu thì ghi bảng coverage và dừng (<a href="#evaluate-L368">evaluate.py dòng 368–373</a>).</li>
+<ul><li>Thiếu cache thì in cảnh báo "chỉ báo coverage" nhưng vẫn gọi <code>evaluate.run</code>. Hàm đó không lỗi: <code>diagnostic_reasons</code> thấy cache thiếu thì ghi bảng coverage và dừng (<a href="#evaluate-L368">evaluate.py dòng 368–373</a>).</li>
 <li>Có cache thì chấm đầy đủ baseline + LLM trên nhãn tay, ghi <code>reports/evaluation/</code>.</li></ul>
 
 === 117-118
-<p><code>main</code> không nhận tham số; đọc <code>sys.argv</code> qua <code>parse_args()</code> ở <a href="#run_pipeline-L119">dòng 119</a>. Docstring chỉ nói "theo thứ tự ghi ở đầu file" — đúng, danh sách bước chỉ tồn tại trong docstring, không có hằng số nào lặp lại thứ tự.</p>
+<p><code>main</code> không nhận tham số; đọc <code>sys.argv</code> qua <code>parse_args()</code> ở <a href="#run_pipeline-L119">dòng 119</a>. Docstring chỉ nói "theo thứ tự ghi ở đầu file", và đúng là danh sách bước chỉ tồn tại trong docstring, không có hằng số nào lặp lại thứ tự.</p>
 
 === 119
 <p>Đọc cờ CLI một lần, dùng cho cả hàm.</p>
@@ -119,21 +119,21 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Đọc + chuẩn hoá config một lần duy nhất (xem <a href="#config-L90">config.py</a>). Từ đây mọi bước nhận cùng một dict; không module nào tự mở yaml, trừ khi chạy riêng bằng <code>python -m</code>.</p>
 
 === 124
-<p>In tên thành phố qua <code>str.capitalize()</code>: viết hoa chữ đầu, <b>hạ</b> toàn bộ phần còn lại. Vì vậy <code>SYDNEY</code> → <code>Sydney</code> nhưng <code>new york</code> → <code>New york</code>. Test <code>test_main_capitalisation_is_python_str_capitalize</code> kiểm cả 4 trường hợp, kể cả <code>da-nang</code> → <code>Da-nang</code>.</p>
+<p>In tên thành phố qua <code>str.capitalize()</code>: viết hoa chữ đầu, hạ toàn bộ phần còn lại. Vì vậy <code>SYDNEY</code> → <code>Sydney</code> nhưng <code>new york</code> → <code>New york</code>. Test <code>test_main_capitalisation_is_python_str_capitalize</code> kiểm cả 4 trường hợp, kể cả <code>da-nang</code> → <code>Da-nang</code>.</p>
 
 === 125-129
-<p>Chặn sớm việc đối chiếu số lượng của đề. Điều kiện: có <code>qa.expected</code> <b>và</b> <code>expected_applies</code> trả <code>False</code> (mốc trong config khác <code>qa.expected.snapshots</code>). Khi đó <code>without_expected</code> trả bản sao config không có khoá <code>expected</code>, và biến <code>config</code> được gán lại.</p>
+<p>Chặn sớm việc đối chiếu số lượng của đề. Điều kiện: có <code>qa.expected</code> và <code>expected_applies</code> trả <code>False</code> (mốc trong config khác <code>qa.expected.snapshots</code>). Khi đó <code>without_expected</code> trả bản sao config không có khoá <code>expected</code>, và biến <code>config</code> được gán lại.</p>
 <p>Vì sao phải làm trước bước 1: nếu để QA phát hiện, pipeline đã tải xong hàng trăm MB rồi mới dừng oan. Test <code>test_cli_skips_assignment_counts_when_snapshots_are_changed</code> đổi 4 mốc và kiểm pipeline vẫn thoát 0 với dòng thông báo này.</p>
 
 === 131-136
-<p>Bước 1. <code>--skip-download</code> chỉ in dòng bỏ qua; ngược lại gọi <code>download.run(config)</code> — tải 4 file mỗi mốc (3 bảng + geojson) rồi lọc theo ID của nhóm. Xem <a href="#download-L1">download.py</a>.</p>
+<p>Bước 1. <code>--skip-download</code> chỉ in dòng bỏ qua; ngược lại gọi <code>download.run(config)</code> để tải 4 file mỗi mốc (3 bảng + geojson) rồi lọc theo ID của nhóm. Xem <a href="#download-L1">download.py</a>.</p>
 <p>Đường dẫn <code>data/raw</code>, <code>data/processed</code> đều tương đối, nên <code>main()</code> phải chạy từ gốc repo. Test <code>test_main_runs_download_with_the_loaded_config</code> thay <code>run_download</code> bằng hàm ghi lại config để kiểm <code>city</code> và <code>snapshots</code> được truyền đúng.</p>
 
 === 138-139
-<p>In tiêu đề bước 2 trước khi chạy. Thứ tự in quan trọng: test E2E so từng dòng stdout, nên mọi dòng print ở file này là một phần "hợp đồng" với test.</p>
+<p>In tiêu đề bước 2 trước khi chạy. Thứ tự in có lý do: test E2E so từng dòng stdout, nên mọi dòng print ở file này là một phần "hợp đồng" với test.</p>
 
 === 140-143
-<p>Chặn thứ hai, hẹp hơn: mẫu được chọn theo <b>seed</b> (bước 1 ghi <code>sample_source = "seed"</code>) thì các số 875/125, 50/30/25/25 của đề không còn nghĩa, nên bỏ <code>qa.expected</code> cho phần còn lại.</p>
+<p>Chặn thứ hai, hẹp hơn: mẫu được chọn theo seed (bước 1 ghi <code>sample_source = "seed"</code>) thì các số 875/125, 50/30/25/25 của đề không còn nghĩa, nên bỏ <code>qa.expected</code> cho phần còn lại.</p>
 <p><code>is_seed_sample</code> đọc file mẫu ở <code>data/processed/&lt;city&gt;/sample_listing_ids.csv</code>; file không tồn tại thì trả <code>False</code> (đang dùng ID chính thức). Kiểm cả <code>"expected" in config["qa"]</code> để không gọi <code>without_expected</code> vô ích.</p>
 
 === 144
@@ -141,7 +141,7 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Test <code>test_main_passes_qa_flagged_frames_to_kpi</code> thay <code>kpi.run</code> và kiểm <code>qa_has_error</code> có trong cả <code>listings</code> lẫn <code>calendar</code> của bảng truyền vào.</p>
 
 === 145
-<p>In số mốc đã QA (4) và đường dẫn báo cáo. Đường dẫn lấy từ <code>config["qa"]["report_path"]</code> với mặc định <code>reports/qa_report.csv</code> — trùng mặc định trong <code>qa.write_report</code>. Với repo hiện tại, file có 60 dòng: 48 dòng <code>section=rule</code> + 12 dòng <code>section=kpi</code>, chia 14/14/16/16 theo 4 mốc.</p>
+<p>In số mốc đã QA (4) và đường dẫn báo cáo. Đường dẫn lấy từ <code>config["qa"]["report_path"]</code> với mặc định <code>reports/qa_report.csv</code>, trùng mặc định trong <code>qa.write_report</code>. Với repo hiện tại, file có 60 dòng: 48 dòng <code>section=rule</code> + 12 dòng <code>section=kpi</code>, chia 14/14/16/16 theo 4 mốc.</p>
 
 === 147-150
 <p>Ba dòng chú thích nói rõ hợp đồng của bước 3: <code>seg</code> giữ <code>scope</code> và danh sách file đã ghi; mục <code>segments</code> là tuỳ chọn nên thiếu thì bỏ qua bước 3, 4b, 5b, 6b. <code>seg = None</code> là cờ "chưa chia nhóm" dùng lại ở các bước sau.</p>
@@ -154,7 +154,7 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Config mẫu của đề không có mục <code>segments</code>: chỉ in một dòng rồi đi tiếp, không dừng. Test <code>test_cli_skips_segments_when_config_has_no_segments_section</code> xoá mục này và kiểm cả thông báo bước 3 lẫn bước 6b.</p>
 
 === 158-160
-<p>Bước 4. Đặt ở đây, <b>sau</b> bước 3 và <b>trước</b> bước 5, vì hai lý do ngược chiều nhau:</p>
+<p>Bước 4. Đặt ở đây, sau bước 3 và trước bước 5, vì hai lý do ngược chiều nhau:</p>
 <ul><li>4b cần <code>seg["scope"]</code> và bảng nhóm để nối review với nhóm căn;</li>
 <li>KPI (bước 5) đọc cache LLM để tính 2 KPI scope <code>llm</code>. Chạy KPI trước thì <code>kpi_metrics.csv</code> thiếu 2 dòng đó và hình 08 không được vẽ.</li></ul>
 
@@ -162,18 +162,18 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Bước 4b. Chỉ gọi khi đã chia nhóm (<code>seg</code> khác <code>None</code>); nếu không có mục <code>segments</code> trong config thì <code>comparison = None</code>. <code>llm_segments.run</code> trả <code>None</code> khi cache LLM không tồn tại, ngược lại trả đường dẫn bảng so sánh.</p>
 
 === 163-167
-<p>Có bảng so sánh thì in đường dẫn, rồi gọi <code>run_cohorts</code> để ghi 2 bảng mở rộng (từng cohort và bảng gộp). <code>if cohort_paths:</code> để chịu được việc hàm trả <code>None</code> khi thiếu cache của các cohort. Chú thích "chỉ mang tính thăm dò" là quan trọng khi bị hỏi: các bảng này không dùng để công bố KPI.</p>
+<p>Có bảng so sánh thì in đường dẫn, rồi gọi <code>run_cohorts</code> để ghi 2 bảng mở rộng (từng cohort và bảng gộp). <code>if cohort_paths:</code> để chịu được việc hàm trả <code>None</code> khi thiếu cache của các cohort. Chú thích "chỉ mang tính thăm dò" trả lời được câu hỏi: các bảng này không dùng để công bố KPI.</p>
 
 === 168-171
-<p>Không có cache LLM nhưng <b>đã có</b> bảng so sánh từ lần chạy trước: in cảnh báo bảng cũ không được cập nhật. Kiểm tra sự tồn tại của đúng tên file mà 4b ghi (<code>llm_segment_aspects.csv</code>) trong <code>segments.output_dir/&lt;city&gt;</code>.</p>
-<p>Điểm cần nhớ: nhánh này <b>không</b> xoá file cũ. Việc không vẽ hình từ file cũ do bước 6b lo, qua tham số <code>exclude</code> (<a href="#run_pipeline-L199">dòng 199</a>).</p>
+<p>Không có cache LLM nhưng đã có bảng so sánh từ lần chạy trước: in cảnh báo bảng cũ không được cập nhật. Kiểm tra sự tồn tại của đúng tên file mà 4b ghi (<code>llm_segment_aspects.csv</code>) trong <code>segments.output_dir/&lt;city&gt;</code>.</p>
+<p>Nhánh này không xoá file cũ. Việc không vẽ hình từ file cũ do bước 6b lo, qua tham số <code>exclude</code> (<a href="#run_pipeline-L199">dòng 199</a>).</p>
 
 === 173-174
 <p>Bước 4c: chấm LLM và baseline trên nhãn tay. Tách thành hàm để test gọi riêng được và để logic "thiếu nhãn tay thì bỏ qua" nằm một chỗ.</p>
 
 === 176-180
-<p>Bước 5. Truyền thẳng <code>flagged</code> từ bước 2. Chú thích WHY nói rõ KPI phi giá phải bỏ dòng lỗi lõi (<code>qa_has_error_excl_price</code>) nhưng <b>không</b> loại oan dòng chỉ vướng cờ giá — nếu loại cả cờ giá, tỉ lệ như <code>long_stay_restriction_rate</code> sẽ tính trên mẫu bị cắt không đều.</p>
-<p>Test <code>test_cli_kpi_uses_only_rows_that_passed_qa</code> đặt <code>min_nights_cap = 2</code> để một căn bị gắn cờ, rồi kiểm <code>n_obs = 1</code> và giá trị 0,0 — chứng minh dòng bị cờ không tham gia KPI.</p>
+<p>Bước 5. Truyền thẳng <code>flagged</code> từ bước 2. Chú thích WHY nói rõ KPI phi giá phải bỏ dòng lỗi lõi (<code>qa_has_error_excl_price</code>) nhưng không loại oan dòng chỉ vướng cờ giá; nếu loại cả cờ giá, tỉ lệ như <code>long_stay_restriction_rate</code> sẽ tính trên mẫu bị cắt không đều.</p>
+<p>Test <code>test_cli_kpi_uses_only_rows_that_passed_qa</code> đặt <code>min_nights_cap = 2</code> để một căn bị gắn cờ, rồi kiểm <code>n_obs = 1</code> và giá trị 0,0, chứng minh dòng bị cờ không tham gia KPI.</p>
 
 === 181-186
 <p>Bước 5b, chỉ khi <code>seg["scope"] == "full"</code>:</p>
@@ -182,15 +182,15 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Trong repo, <code>kpi_phantom.csv</code> có 216 dòng (6 cột: <code>snapshot</code>, <code>scope</code>, <code>group_name</code>, <code>kpi_name</code>, <code>value</code>, <code>n_obs</code>).</p>
 
 === 188-190
-<p>Bước 6. <code>viz.run</code> trả danh sách file đã ghi. Trong repo, lần chạy đầy đủ ghi <b>8</b> hình vào <code>figures/</code>: 01–05 (xu hướng theo mốc), 06 (availability theo khu), 07 (commercialized theo <code>analysis_area</code>), 08 (KPI LLM — chỉ vẽ khi <code>kpi_metrics.csv</code> có dòng <code>scope=llm</code>). Hình <code>figures/evaluation/eval_confusion_matrices.png</code> do bước 4c ghi, không nằm trong danh sách này.</p>
+<p>Bước 6. <code>viz.run</code> trả danh sách file đã ghi. Trong repo, lần chạy đầy đủ ghi <b>8</b> hình vào <code>figures/</code>: 01–05 (xu hướng theo mốc), 06 (availability theo khu), 07 (commercialized theo <code>analysis_area</code>), 08 (KPI LLM, chỉ vẽ khi <code>kpi_metrics.csv</code> có dòng <code>scope=llm</code>). Hình <code>figures/evaluation/eval_confusion_matrices.png</code> do bước 4c ghi, không nằm trong danh sách này.</p>
 <p>Bước này có thể ném lỗi nếu config không đúng 4 mốc khác nhau (<code>viz.run</code> kiểm trước khi vẽ), nên đổi số mốc là phải sửa cả <code>viz</code>.</p>
 
 === 191-192
-<p><code>paths[0].parent</code> để in đúng thư mục, không hard-code "figures". Khi <code>paths</code> rỗng (không vẽ được hình nào) thì dùng chuỗi <code>"figures"</code> — chỉ để in, không dùng làm đường dẫn, nên kiểu <code>str</code> ở nhánh này không gây lỗi.</p>
+<p><code>paths[0].parent</code> để in đúng thư mục, không hard-code "figures". Khi <code>paths</code> rỗng (không vẽ được hình nào) thì dùng chuỗi <code>"figures"</code>, chỉ để in, không dùng làm đường dẫn, nên kiểu <code>str</code> ở nhánh này không gây lỗi.</p>
 
 === 194-198
 <p>Bước 6b. Chú thích nói rõ hợp đồng: đọc CSV của bước 3, 4b, 5b; thiếu file nào thì <code>viz_phantom</code> bỏ hình đó. Vì vậy bước này cần <code>seg</code>, không cần scope full.</p>
-<p><code>stale</code> là danh sách khoá đầu vào <b>không được làm mới</b> trong lần chạy này. Mục đích: trên đĩa có thể còn CSV của lần chạy cũ; nếu vẽ từ chúng, hình sẽ mô tả dữ liệu không còn đúng với lần chạy hiện tại. Đây chính là câu trả lời cho "sao không vẽ từ file cũ còn sót".</p>
+<p><code>stale</code> là danh sách khoá đầu vào không được làm mới trong lần chạy này. Trên đĩa có thể còn CSV của lần chạy cũ; vẽ từ chúng thì hình sẽ mô tả dữ liệu không còn đúng với lần chạy hiện tại. Vì vậy hình không vẽ từ file cũ còn sót.</p>
 
 === 199-200
 <p>Không có bảng so sánh LLM (<code>comparison is None</code>) → đánh dấu <code>llm_aspects</code> là cũ. Hệ quả: hình <code>08_llm_complaints_by_segment.png</code> không được vẽ dù file CSV cũ vẫn nằm trên đĩa. Test <code>test_main_warns_when_old_comparison_cannot_be_updated</code> tạo sẵn CSV cũ và kiểm đúng dòng "Bỏ qua 08_llm_complaints_by_segment.png: … chưa được cập nhật".</p>
@@ -199,7 +199,7 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Scope không phải <code>full</code> → bước 5b vừa bị bỏ, nên <code>kpi_phantom.csv</code> trên đĩa là của lần chạy khác; đánh dấu để không vẽ các hình dùng nó.</p>
 
 === 203-205
-<p>Gọi <code>viz_phantom.run(config, scope=seg["scope"], exclude=tuple(stale))</code>. Test <code>test_main_full_scope_runs_phantom_kpi_and_passes_fresh_tables_to_viz</code> kiểm <code>exclude</code> là tuple rỗng khi scope full và có bảng LLM. Dòng in dùng <code>viz_phantom.DEFAULT_OUTPUT_DIR</code> (<code>figures/phantom</code>), không dùng đường dẫn trả về — nếu ai đổi thư mục đầu ra của <code>viz_phantom</code>, dòng in vẫn đúng vì cùng hằng số.</p>
+<p>Gọi <code>viz_phantom.run(config, scope=seg["scope"], exclude=tuple(stale))</code>. Test <code>test_main_full_scope_runs_phantom_kpi_and_passes_fresh_tables_to_viz</code> kiểm <code>exclude</code> là tuple rỗng khi scope full và có bảng LLM. Dòng in dùng <code>viz_phantom.DEFAULT_OUTPUT_DIR</code> (<code>figures/phantom</code>), không dùng đường dẫn trả về; nếu ai đổi thư mục đầu ra của <code>viz_phantom</code>, dòng in vẫn đúng vì cùng hằng số.</p>
 
 === 206-207
 <p>Không có mục <code>segments</code> → bỏ cả bước 6b, in một dòng. Không có ngoại lệ nào bị nuốt: đây là nhánh chủ động.</p>
@@ -208,7 +208,7 @@ lead: Điểm vào duy nhất của pipeline. File chỉ điều phối: đọc 
 <p>Dòng cuối cùng của stdout khi thành công. Test E2E so <code>lines[-1] == DONE</code> và tổng số dòng là 38 cho project tối thiểu.</p>
 
 === 212-213
-<p>Chỉ chạy khi gọi trực tiếp <code>python run_pipeline.py</code>. Khi bị import (test gọi <code>run_pipeline.main()</code> với <code>sys.argv</code> đã gán), khối này không chạy — nhờ vậy test điều khiển được tham số.</p>
+<p>Chỉ chạy khi gọi trực tiếp <code>python run_pipeline.py</code>. Khi bị import (test gọi <code>run_pipeline.main()</code> với <code>sys.argv</code> đã gán), khối này không chạy, nhờ vậy test điều khiển được tham số.</p>
 
 --- flow
 ## Khởi động
@@ -248,7 +248,7 @@ ok | Không sinh dữ liệu giả | Ba nhánh thiếu key/cache/nhãn tay đề
 ? Vì sao chia nhóm căn trước LLM?
 <p>Bước 4b nối nhãn LLM với nhóm căn qua <code>segments_&lt;scope&gt;.csv</code> và cần <code>seg["scope"]</code>. Không có bước 3 thì <code>comparison = None</code>, 4b bị bỏ, kéo theo 6b không vẽ hình 08.</p>
 ? Đổi 4 mốc trong yaml thì pipeline có dừng oan không?
-<p>Không. <code>expected_applies</code> so <code>qa.expected.snapshots</code> với <code>config["snapshots"]</code> (dòng 125); khác thì <code>without_expected</code> bỏ đối chiếu 1.000 căn / 875-125 / 50-30-25-25. Còn nếu giữ đúng mốc mà mẫu sai thì QA vẫn dừng với <code>QAConstraintError</code> — test <code>test_cli_still_enforces_assignment_counts_on_the_assigned_snapshots</code> kiểm điều này.</p>
+<p>Không. <code>expected_applies</code> so <code>qa.expected.snapshots</code> với <code>config["snapshots"]</code> (dòng 125); khác thì <code>without_expected</code> bỏ đối chiếu 1.000 căn / 875-125 / 50-30-25-25. Còn nếu giữ đúng mốc mà mẫu sai thì QA vẫn dừng với <code>QAConstraintError</code>; test <code>test_cli_still_enforces_assignment_counts_on_the_assigned_snapshots</code> kiểm điều này.</p>
 ? <code>stale</code> ở bước 6b để làm gì?
 <p>Để không vẽ hình từ CSV cũ còn trên đĩa. Không có cache LLM thì <code>llm_aspects</code> bị loại; scope không full thì <code>kpi_phantom</code> bị loại. Ví dụ đã kiểm: CSV <code>llm_segment_aspects.csv</code> cũ vẫn còn, nhưng hình 08 bị bỏ với lý do "chưa được cập nhật".</p>
 ? Vì sao bước 5b cần scope full?

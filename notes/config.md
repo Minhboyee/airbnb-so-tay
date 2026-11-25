@@ -1,13 +1,13 @@
 --- meta
 title: config.py
-lead: Cửa vào duy nhất của cấu hình. <code>run_pipeline.py</code> gọi <code>load_config</code> đúng một lần, nhận lại một dict đã kiểm khoá và chuẩn hoá; mọi bước sau chỉ đọc dict đó, không module nào tự mở file yaml. Hai việc chuẩn hoá quan trọng: đổi ngày về chuỗi <code>"YYYY-MM-DD"</code>, và chép ngưỡng giá <code>price_max_aud</code> sang tên chung <code>qa.price_max</code>.
+lead: Cửa vào duy nhất của cấu hình. <code>run_pipeline.py</code> gọi <code>load_config</code> đúng một lần, nhận lại một dict đã kiểm khoá và chuẩn hoá; mọi bước sau chỉ đọc dict đó, không module nào tự mở file yaml. Có hai việc chuẩn hoá: đổi ngày về chuỗi <code>"YYYY-MM-DD"</code>, và chép ngưỡng giá <code>price_max_aud</code> sang tên chung <code>qa.price_max</code>.
 
 --- blocks
 === 1-17
 <p>Docstring đầu file nói ba điều cần nhớ khi vấn đáp:</p>
-<ul><li><b>Vị trí:</b> được gọi trước bước 1, và cả khi chạy riêng một module (<code>python -m src.llm</code>…). Nhờ vậy mọi đường chạy đều thấy cùng một config đã chuẩn hoá.</li>
-<li><b>Khoá bắt buộc</b> theo mẫu đề, và <b>khoá tuỳ chọn</b> của nhóm (<code>segments</code>, <code>qa.expected</code>, <code>labels</code>, <code>eval</code>): thiếu khoá tuỳ chọn thì bước tương ứng tự bỏ qua, xem <a href="#run_pipeline-L151">run_pipeline dòng 151</a>.</li>
-<li><b>Hai phép chuẩn hoá</b> giải thích ở <a href="#config-L56">dòng 56–66</a>.</li></ul>
+<ul><li>Vị trí: được gọi trước bước 1, và cả khi chạy riêng một module (<code>python -m src.llm</code>…). Nhờ vậy mọi đường chạy đều thấy cùng một config đã chuẩn hoá.</li>
+<li>Khoá bắt buộc theo mẫu đề, và khoá tuỳ chọn của nhóm (<code>segments</code>, <code>qa.expected</code>, <code>labels</code>, <code>eval</code>): thiếu khoá tuỳ chọn thì bước tương ứng tự bỏ qua, xem <a href="#run_pipeline-L151">run_pipeline dòng 151</a>.</li>
+<li>Hai phép chuẩn hoá giải thích ở <a href="#config-L56">dòng 56–66</a>.</li></ul>
 
 === 19
 <p><code>from __future__ import annotations</code> làm mọi chú thích kiểu (<code>dict[str, Any]</code>, <code>str | Path</code>) được lưu dưới dạng chuỗi, không bị Python tính lúc định nghĩa hàm. Nhờ vậy cú pháp <code>X | Y</code> chạy được cả trên Python 3.10, phiên bản CI kiểm (<a href="#ci-L1">ci.yml</a>).</p>
@@ -33,13 +33,13 @@ lead: Cửa vào duy nhất của cấu hình. <code>run_pipeline.py</code> gọ
 === 44-54
 <p><code>normalize</code> nhận dict thô từ YAML. Trước khi chuẩn hoá, nó kiểm theo thứ tự và dừng ở lỗi đầu tiên:</p>
 <ol><li>File rỗng (<code>safe_load</code> trả <code>None</code>) hoặc không phải bảng khoá → <code>TypeError</code>.</li>
-<li>Thiếu khoá nào trong <code>REQUIRED_KEYS</code> → <code>KeyError</code> liệt kê <b>tất cả</b> khoá thiếu một lần, không bắt sửa từng cái.</li>
+<li>Thiếu khoá nào trong <code>REQUIRED_KEYS</code> → <code>KeyError</code> liệt kê tất cả khoá thiếu một lần, không bắt sửa từng cái.</li>
 <li><code>city</code> không phải chuỗi (ví dụ YAML đọc nhầm thành số) → <code>TypeError</code>. <code>city</code> được dùng làm tên thư mục nên phải là chuỗi.</li>
 <li>Thiếu <code>qa.min_nights_cap</code> → <code>KeyError</code>; đề yêu cầu khoá này trong mục <code>qa</code>.</li></ol>
 <p>Nguyên tắc: config sai thì dừng ngay ở đây với thông báo rõ, thay vì để một bước giữa pipeline hỏng khó hiểu.</p>
 
 === 56-57
-<p>Bắt đầu dựng dict <b>mới</b> (<code>{**raw, ...}</code> là sao chép nông), nên dict đọc từ YAML không bị sửa. Hai việc:</p>
+<p>Bắt đầu dựng dict mới (<code>{**raw, ...}</code> là sao chép nông), nên dict đọc từ YAML không bị sửa. Hai việc:</p>
 <ul><li><code>snapshots</code> đổi hết về chuỗi bằng <code>_as_text</code>.</li>
 <li><code>qa</code> được chép lại và thêm khoá <code>price_max</code> từ <code>_price_cap</code>. Từ đây code chỉ đọc <code>config["qa"]["price_max"]</code>, không cần biết tiền tệ.</li></ul>
 
@@ -57,7 +57,7 @@ lead: Cửa vào duy nhất của cấu hình. <code>run_pipeline.py</code> gọ
 <p>Trả về dict đã chuẩn hoá. Các khoá khác (<code>kpi</code>, <code>llm</code>, <code>seed</code>, <code>labels</code>, <code>eval</code>…) đi qua nguyên vẹn.</p>
 
 === 70-77
-<p>Docstring giải thích vấn đề: các số trong <code>qa.expected</code> chỉ đúng cho đúng 4 mốc được giao. Nếu giảng viên đổi mốc (yêu cầu “đổi thành phố hoặc mốc chỉ sửa yaml” của đề), so số căn 0 review theo <b>vị trí</b> (mốc thứ nhất 50, thứ hai 30…) sẽ sai và dừng pipeline oan ở bước QA.</p>
+<p>Docstring giải thích vấn đề: các số trong <code>qa.expected</code> chỉ đúng cho đúng 4 mốc được giao. Nếu giảng viên đổi mốc (đề cho phép "đổi thành phố hoặc mốc chỉ sửa yaml"), so số căn 0 review theo vị trí (mốc thứ nhất 50, thứ hai 30…) sẽ sai và dừng pipeline oan ở bước QA.</p>
 
 === 78-82
 <p>Logic:</p>

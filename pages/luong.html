@@ -1,13 +1,13 @@
 <section class="head">
   <span class="kicker">Mức 0 · toàn cảnh</span>
   <h1>Luồng chính: một lệnh, mười bước con</h1>
-  <p class="lead">Toàn bộ pipeline chạy bằng <code>python run_pipeline.py --config configs/sydney.yaml</code>. File <a href="#f-run_pipeline">run_pipeline.py</a> chỉ điều phối: mỗi bước nằm trong một module riêng và được gọi theo đúng thứ tự dưới đây. Bấm vào ô nào trong sơ đồ để nhảy tới trang và code của bước đó.</p>
+  <p class="lead">Cả pipeline chạy bằng một lệnh: <code>python run_pipeline.py --config configs/sydney.yaml</code>. <a href="#f-run_pipeline">run_pipeline.py</a> lo phần điều phối, mỗi bước nằm trong một module riêng và được gọi theo đúng thứ tự dưới đây. Bấm vào ô trong sơ đồ để nhảy tới trang và code của bước đó.</p>
 </section>
 
 <section class="block">
   {{diagram:overview}}
   <div class="steps-grid">
-    <a class="stepcard" href="#buoc-0"><span class="n">0 · Điều phối</span><b>Một lệnh chạy hết</b><code>run_pipeline.py · config.py · sydney.yaml · ci.yml</code><span>Đọc config, gọi các bước, quyết định bước nào bỏ qua.</span></a>
+    <a class="stepcard" href="#buoc-0"><span class="n">0 · Điều phối</span><b>Một lệnh chạy hết</b><code>run_pipeline.py · config.py · sydney.yaml · ci.yml</code><span>Đọc config, gọi từng bước và quyết định bước nào bỏ qua.</span></a>
     <a class="stepcard" href="#buoc-1"><span class="n">1 · Tải & lọc</span><b>Đúng tập ID của nhóm</b><code>download.py</code><span>Tải 3 bảng × 4 mốc, kiểm raw, lọc 1.000 listing / 5.000 review.</span></a>
     <a class="stepcard" href="#buoc-2"><span class="n">2 · QA</span><b>Gắn cờ, không xoá</b><code>qa.py · qa_constraints.py · qa_rules.py</code><span>Sai ràng buộc mẫu thì dừng; còn lại gắn 7 cờ theo dòng.</span></a>
     <a class="stepcard" href="#buoc-3"><span class="n">3 · 7 nhóm căn</span><b>Ai là căn ảo</b><code>segments/</code><span>Luật khớp trước thì thắng, ma trận đổi nhóm, kiểm mốc tháng 3.</span></a>
@@ -21,15 +21,15 @@
 <section class="block">
   <h2>Ba nguyên tắc của repo</h2>
   <div class="cards">
-    <div class="card"><b>1. run_pipeline.py chỉ điều phối</b><span>Không có phép tính nào trong file điều phối. Muốn hiểu một con số, đi vào module của bước đó. Nhờ vậy mỗi module test riêng được.</span></div>
-    <div class="card"><b>2. QA chỉ gắn cờ</b><span>QA không xoá dòng. Bảng đã gắn cờ được truyền thẳng trong RAM sang KPI (<a href="#run_pipeline-L180">dòng 180</a>), và KPI mới loại dòng lỗi. Dòng chỉ vướng cờ giá không bị loại oan khỏi KPI về lịch, host, điểm đánh giá.</span></div>
-    <div class="card"><b>3. Không sinh dữ liệu giả</b><span>Thiếu <code>GEMINI_API_KEY</code> và cache thì bỏ qua LLM, in lý do (<a href="#run_pipeline-L91">run_llm_stage</a>). Các bước 4b, 4c và 2 KPI LLM tự bỏ qua theo.</span></div>
+    <div class="card"><b>1. run_pipeline.py chỉ điều phối</b><span>File điều phối không tính toán gì. Muốn hiểu một con số thì vào module của bước đó. Nhờ vậy mỗi module test riêng được.</span></div>
+    <div class="card"><b>2. QA chỉ gắn cờ</b><span>QA không xoá dòng nào. Bảng đã gắn cờ được truyền thẳng trong RAM sang KPI (<a href="#run_pipeline-L180">dòng 180</a>), KPI mới là chỗ loại dòng lỗi. Dòng chỉ vướng cờ giá vẫn được tính cho KPI về lịch, host, điểm đánh giá.</span></div>
+    <div class="card"><b>3. Không sinh dữ liệu giả</b><span>Thiếu <code>GEMINI_API_KEY</code> và cache thì bỏ qua LLM và in lý do (<a href="#run_pipeline-L91">run_llm_stage</a>). Bước 4b, 4c và 2 KPI LLM cũng tự bỏ qua.</span></div>
   </div>
 </section>
 
 <section class="block">
   <h2>Mức 1 · Từng bước đọc gì, ghi gì</h2>
-  <p class="text">Đúng thứ tự trong <a href="#run_pipeline-L117">main()</a>. Chú ý LLM (4) chạy <b>trước</b> KPI (5) vì KPI đọc cache LLM; chia nhóm (3) chạy trước LLM vì bước 4b cần nhóm căn.</p>
+  <p class="text">Thứ tự dưới đây đúng như trong <a href="#run_pipeline-L117">main()</a>. LLM (4) chạy <b>trước</b> KPI (5) vì KPI đọc cache LLM; chia nhóm (3) chạy trước LLM vì bước 4b cần nhóm căn.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>Bước</th><th>Module</th><th>Đầu vào</th><th>Việc làm</th><th>Đầu ra</th></tr></thead>
     <tbody>
@@ -60,7 +60,7 @@
       <tr><td>Config không có mục <code>segments</code></td><td>Bỏ bước 3, 4b, 5b, 6b.</td></tr>
     </tbody>
   </table></div>
-  <p class="muted">CI (<a href="#f-ci">ci.yml</a>): ruff check/format → mypy → pytest trên Python 3.10 và 3.12, coverage nhánh ≥ 95%, test chạy offline. Ở tag <code>final</code>: 453 test pass, coverage 97,92% (chạy lại khi làm sổ tay này).</p>
+  <p class="muted">CI (<a href="#f-ci">ci.yml</a>) chạy ruff check/format, rồi mypy, rồi pytest trên Python 3.10 và 3.12; coverage nhánh ≥ 95% và test chạy offline. Ở tag <code>final</code>: 453 test pass, coverage 97,92% (chạy lại khi làm sổ tay này).</p>
 </section>
 
 <section class="block">

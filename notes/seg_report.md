@@ -31,10 +31,10 @@ lead: Bước cuối của package: ghi kết quả phân nhóm ra CSV và in t�
 <p><code>rows</code> gom dòng; với mỗi mốc, <code>value_counts()</code> đếm số căn mỗi nhóm rồi <code>reindex(SEGMENTS, fill_value=0)</code> để nhóm vắng mặt vẫn có dòng 0. <code>total = int(vc.sum()) or 1</code>: <code>or 1</code> chặn chia cho 0 khi mốc rỗng (comment dòng 41).</p>
 
 === 42-52
-<p>Với từng nhóm, thêm một dòng gồm <code>snapshot</code>, <code>segment</code>, nhãn tiếng Việt, <code>n</code>, <code>share = n / total</code> (làm tròn 4 chữ số) và <code>is_phantom</code> (nhóm có trong <code>PHANTOM</code>). Mỗi mốc đúng 7 dòng, nên 4 mốc cho 28 dòng — khớp file <code>segments_counts_full.csv</code>. Tổng share mỗi mốc bằng 1 (test <code>test_write_outputs_writes_every_table</code> kiểm <code>round(4)</code>).</p>
+<p>Với từng nhóm, thêm một dòng gồm <code>snapshot</code>, <code>segment</code>, nhãn tiếng Việt, <code>n</code>, <code>share = n / total</code> (làm tròn 4 chữ số) và <code>is_phantom</code> (nhóm có trong <code>PHANTOM</code>). Mỗi mốc đúng 7 dòng, nên 4 mốc cho 28 dòng, khớp file <code>segments_counts_full.csv</code>. Tổng share mỗi mốc bằng 1 (test <code>test_write_outputs_writes_every_table</code> kiểm <code>round(4)</code>).</p>
 
 === 53
-<p>Trả DataFrame. Nếu không có mốc nào, <code>rows=[]</code> nên DataFrame rỗng không cột — file CSV ghi ra sẽ trắng (chỉ là ca biên, test chỉ kiểm file tồn tại).</p>
+<p>Trả DataFrame. Nếu không có mốc nào, <code>rows=[]</code> nên DataFrame rỗng không cột, file CSV ghi ra sẽ trắng (chỉ là ca biên, test chỉ kiểm file tồn tại).</p>
 
 === 56-57
 <p><code>_listings</code> gộp các mốc thành một bảng dài theo listing, để tra một căn cụ thể.</p>
@@ -55,7 +55,7 @@ lead: Bước cuối của package: ghi kết quả phân nhóm ra CSV và in t�
 <p>Gom các ma trận chuyển thành một bảng dài: mỗi cặp mốc thêm hai cột <code>src</code>/<code>dst</code> rồi chọn sáu cột cố định. Danh sách rỗng nếu config không khai cặp transitions nào.</p>
 
 === 93-100
-<p>Ghi <code>segments_transitions_&lt;scope&gt;.csv</code>. Nếu không có cặp nào, ghi DataFrame rỗng <b>đúng tên cột</b> thay vì lỗi — test <code>test_write_outputs_handles_no_transitions</code> kiểm file rỗng đọc lại được. Khi có dữ liệu, file chứa cả hai cặp (09/2025→06/2026 và 12/2025→06/2026) với 56 dòng mỗi cặp (7×8).</p>
+<p>Ghi <code>segments_transitions_&lt;scope&gt;.csv</code>. Nếu không có cặp nào, ghi DataFrame rỗng <b>đúng tên cột</b> thay vì lỗi. Test <code>test_write_outputs_handles_no_transitions</code> kiểm file rỗng đọc lại được. Khi có dữ liệu, file chứa cả hai cặp (09/2025→06/2026 và 12/2025→06/2026) với 56 dòng mỗi cặp (7×8).</p>
 
 === 102
 <p>Ghi thống kê từng mốc ra <code>segments_gap_audit_&lt;scope&gt;.csv</code> (<code>audit["per_snapshot"]</code> luôn có, kể cả khi không có gap).</p>
@@ -82,7 +82,7 @@ lead: Bước cuối của package: ghi kết quả phân nhóm ra CSV và in t�
 <p>Dòng tiêu đề cố định. Test <code>test_summary_lines_reports_phantom_share_stay_rate_and_gap</code> kiểm đúng chuỗi này và số dòng khi không có transition (4 dòng: tiêu đề + 2 mốc + gap).</p>
 
 === 132-134
-<p>Với mỗi mốc, tính <code>share = df["segment"].isin(PHANTOM).mean()</code> — tỉ lệ căn thuộc 3 nhóm ảo — rồi in kèm số căn. Mốc 2026-06-16: 4.359/20.573 = <b>21,2%</b>, khớp cột <code>is_phantom</code> trong CSV.</p>
+<p>Với mỗi mốc, tính <code>share = df["segment"].isin(PHANTOM).mean()</code>, tức tỉ lệ căn thuộc 3 nhóm ảo, rồi in kèm số căn. Mốc 2026-06-16: 4.359/20.573 = <b>21,2%</b>, khớp cột <code>is_phantom</code> trong CSV.</p>
 
 === 136-139
 <p>Với mỗi cặp mốc, lọc ô <code>D_dormant → D_dormant</code> trong ma trận và in <code>share</code>; nếu không có dòng (ma trận rỗng) thì <code>pct = 0.0</code> nhờ <code>if len(stay) else 0.0</code>. Số thật: 65,44% (09/2025→06/2026), 67,12% (12/2025→06/2026).</p>

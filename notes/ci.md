@@ -14,7 +14,7 @@ lead: Một workflow GitHub Actions, ba job song song: <code>lint</code> (ruff),
 <p><code>test_repo_hygiene.py</code> kiểm workflow có cả <code>push</code> lẫn <code>pull_request</code>, nên xoá một trigger là test đỏ.</p>
 
 === 9-10
-<p><code>permissions: contents: read</code>: token của workflow chỉ đọc nội dung repo, đủ cho <code>actions/checkout</code>. Không cấp quyền ghi vì workflow không commit, không tạo release, không sửa issue. Đây là nguyên tắc quyền tối thiểu.</p>
+<p><code>permissions: contents: read</code>: token của workflow chỉ đọc nội dung repo, đủ cho <code>actions/checkout</code>. Không cấp quyền ghi vì workflow không commit, không tạo release, không sửa issue, đúng nguyên tắc quyền tối thiểu.</p>
 
 === 12-14
 <p><code>concurrency</code>: nhóm theo tên workflow + <code>github.ref</code> (nhánh hoặc tag). <code>cancel-in-progress: true</code> huỷ lần chạy cũ cùng nhánh khi có lần mới, tiết kiệm runner và tránh kết quả cũ ghi đè.</p>
@@ -28,11 +28,11 @@ lead: Một workflow GitHub Actions, ba job song song: <code>lint</code> (ruff),
 <p><code>jobs</code> chứa ba job chạy song song, không job nào <code>needs</code> job khác. Job <code>lint</code>: tên hiển thị tiếng Việt, chạy trên <code>ubuntu-latest</code>, bắt đầu danh sách <code>steps</code>.</p>
 
 === 25
-<p><code>actions/checkout@v4</code> lấy mã nguồn vào runner. Không có <code>fetch-depth</code> đặc biệt, nên chỉ lấy commit mới nhất — đủ cho lint/test, không cần lịch sử git.</p>
+<p><code>actions/checkout@v4</code> lấy mã nguồn vào runner. Không có <code>fetch-depth</code> đặc biệt, nên chỉ lấy commit mới nhất, đủ cho lint/test, không cần lịch sử git.</p>
 
 === 27-31
 <p>Cài Python cho job lint: <code>setup-python@v5</code>, phiên bản 3.12, bật cache pip với khoá là <code>requirements.lock.txt</code>. Cache chỉ đổi khi lockfile đổi, nên các lần chạy sau cài nhanh hơn.</p>
-<p>Lưu ý: job lint chạy Python 3.12 nhưng <code>target-version = "py310"</code> trong <a href="#pyproject-L10">pyproject dòng 10</a>; <code>target-version</code> giữ quy ước 3.10 cho các luật nâng cấp cú pháp, còn cổng chạy thật trên 3.10 là leg test.</p>
+<p>Job lint chạy Python 3.12 nhưng <code>target-version = "py310"</code> trong <a href="#pyproject-L10">pyproject dòng 10</a>; <code>target-version</code> giữ quy ước 3.10 cho các luật nâng cấp cú pháp, còn cổng chạy thật trên 3.10 là leg test.</p>
 
 === 33-34
 <p>Cài đúng lockfile đã ghim, không cài <code>requirements.txt</code> trần. Nhờ vậy CI và máy dev dùng cùng phiên bản. <code>test_repo_hygiene.py</code> kiểm chuỗi <code>requirements.lock.txt</code> phải có trong workflow.</p>
@@ -44,7 +44,7 @@ lead: Một workflow GitHub Actions, ba job song song: <code>lint</code> (ruff),
 <p><code>ruff format --check --diff .</code>: chỉ kiểm định dạng, không sửa. Nếu file chưa đúng format, job đỏ và in diff. Cố ý không chạy <code>ruff format .</code> trong CI vì CI không nên sửa code.</p>
 
 === 42-45
-<p>Job <code>typecheck</code>: cùng khuôn với lint — Ubuntu, checkout, setup Python 3.12. Tách job riêng để log lỗi kiểu không lẫn với lint.</p>
+<p>Job <code>typecheck</code> cùng khuôn với lint: Ubuntu, checkout, setup Python 3.12. Tách job riêng để log lỗi kiểu không lẫn với lint.</p>
 
 === 46
 <p>Checkout mã nguồn cho job typecheck.</p>

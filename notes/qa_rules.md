@@ -5,7 +5,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 --- blocks
 === 1-21
 <p>Docstring là bản đồ của cả file, đọc kỹ trước khi vấn đáp:</p>
-<ul><li>Mỗi luật là <b>một</b> dòng <code>Rule(...)</code> trong <code>RULES</code>. Thêm luật = viết một hàm <code>_check_...</code> và thêm một dòng, không sửa chỗ khác.</li>
+<ul><li>Mỗi luật là một dòng <code>Rule(...)</code> trong <code>RULES</code>. Thêm luật = viết một hàm <code>_check_...</code> và thêm một dòng, không sửa chỗ khác.</li>
 <li>Hàm kiểm tra trả Series bool, <code>True</code> = dòng vi phạm.</li>
 <li>Một cờ "tổng hợp" là phép OR của nhiều hàm con; tên các hàm con được ghi vào cột <code>detail</code> của báo cáo để biết cụ thể cái gì bật.</li></ul>
 <p>Lịch sử: bản cũ báo cáo từng hàm con như một luật riêng (báo cáo PDF nhắc "19 luật"). Hiện có 21 mục con: 19 cũ + 2 mục trùng giữa mốc (<code>listing_stale_copy</code>, <code>review_conflict_across_snapshots</code>). Code là sự thật: 7 tên cờ, 13 luật (test <code>test_rule_metadata_complete_and_unique</code> khoá đúng hai số này).</p>
@@ -17,7 +17,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>Hai kiểu "chỉ được là các chuỗi này": bảng là listings/reviews/calendar; mức độ là error/warning. mypy bắt lỗi gõ nhầm như <code>"listing"</code>.</p>
 
 === 34-35
-<p>Thứ tự gắn cờ trong một mốc. Listings đi đầu vì reviews/calendar cần tập id listing để bắt "mồ côi".</p>
+<p>Trong một mốc, listings được gắn cờ trước vì reviews/calendar cần tập id listing để bắt "mồ côi".</p>
 
 === 37-40
 <p>Tập giá trị hợp lệ cho cột boolean kiểu Inside Airbnb (<code>t</code>/<code>f</code>), so sau khi <code>lower()</code>. Giá trị khác (ví dụ <code>"Yes"</code>) là "trôi phân loại", dùng ở <a href="#qa_rules-L212">_check_bool_category_drift</a>.</p>
@@ -25,7 +25,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 === 42-49
 <p>Ba cờ tổng:</p>
 <ul><li><code>qa_has_error</code>: vi phạm ít nhất một luật mức error (kể cả lỗi giá).</li>
-<li><code>qa_has_error_excl_price</code>: như trên nhưng <b>bỏ luật giá</b>. KPI phi giá (tỉ lệ kín lịch, điểm đánh giá, số đêm tối thiểu, phân nhóm căn ảo) lọc theo cờ này (<a href="#kpi-L849">kpi.py</a>).</li>
+<li><code>qa_has_error_excl_price</code>: như trên nhưng bỏ luật giá. KPI phi giá (tỉ lệ kín lịch, điểm đánh giá, số đêm tối thiểu, phân nhóm căn ảo) lọc theo cờ này (<a href="#kpi-L849">kpi.py</a>).</li>
 <li><code>qa_has_warning</code>: luật mức warning, hiện chỉ có <code>price_outlier</code>.</li></ul>
 <p>Vì sao tách cờ trừ giá: mốc cuối có 20 căn thiếu giá. Thiếu giá không làm sai lịch hay review của căn đó. Nếu lọc bằng <code>qa_has_error</code>, 22 căn bị loại oan khỏi mọi KPI phi giá; với hai mốc đầu (giá trống 100%) còn tệ hơn nếu luật giá chạy. Tách cờ thì mỗi KPI chỉ bỏ dòng có lỗi liên quan đến nó.</p>
 
@@ -56,23 +56,23 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p><code>parse_price</code>: Inside Airbnb ghi giá dạng chữ <code>"$1,234.00"</code>. Bỏ <code>$</code> và dấu phẩy nghìn rồi <code>to_numeric(errors="coerce")</code>: không đọc được thì NaN, không ném lỗi. Chạy thử: <code>""</code>, <code>" "</code>, <code>None</code> → NaN; <code>"$1,234.00"</code> → 1234.0; <code>"-5"</code> → -5.0. Hàm này cũng được <code>qa.py</code> và <code>kpi.py</code> (dòng 301) dùng lại, nên mọi nơi đọc giá cùng một cách.</p>
 
 === 110-113
-<p><code>has_price_data</code>: mốc có ít nhất một giá đọc được không. Đây là công tắc của hai luật giá.</p>
+<p><code>has_price_data</code>: mốc có ít nhất một giá đọc được không. Nó bật/tắt hai luật giá.</p>
 <p>Vì sao cần: hai mốc đầu (2025-09-12, 2025-12-12) cột <code>price</code> trống 100% (<code>download.py</code> cũng ghi "mốc trước giá trống là bình thường"). Nếu vẫn chạy, <code>price_missing</code> bật cho cả 1.000 căn, <code>qa_has_error</code> = True mọi dòng, và báo cáo QA nói "100% lỗi" trong khi dữ liệu chỉ đơn giản là không có giá. Bằng chứng trong <code>reports/qa_report.csv</code>: hai mốc đầu chỉ có 11 dòng luật (thiếu <code>price_unusable</code>, <code>price_outlier</code>), <code>mean_price</code> = NaN.</p>
 
 === 116-118
 <p>Series toàn False cùng index: kết quả "luật không áp dụng". Dùng khắp nơi để mọi nhánh bỏ qua đều trả cùng dạng.</p>
 
 === 121-123
-<p>Đọc cột thành số, ô rác thành NaN. So sánh với NaN luôn ra False, nên ô rác <b>không</b> bị gắn cờ bởi các luật so ngưỡng (ví dụ <code>minimum_nights</code>).</p>
+<p>Đọc cột thành số, ô rác thành NaN. So sánh với NaN luôn ra False, nên ô rác không bị gắn cờ bởi các luật so ngưỡng (ví dụ <code>minimum_nights</code>).</p>
 
 === 126-130
-<p><code>_orphan</code>: dòng có <code>listing_id</code> không nằm trong tập id listing của <b>cùng mốc</b>. Dùng chung cho reviews và calendar. <code>listing_id</code> và <code>id</code> đều đọc dạng chuỗi (<code>ID_DTYPES</code> trong download.py) nên <code>isin</code> không lệch kiểu int/str.</p>
+<p><code>_orphan</code>: dòng có <code>listing_id</code> không nằm trong tập id listing của cùng mốc. Dùng chung cho reviews và calendar. <code>listing_id</code> và <code>id</code> đều đọc dạng chuỗi (<code>ID_DTYPES</code> trong download.py) nên <code>isin</code> không lệch kiểu int/str.</p>
 
 === 133-141
 <p><code>_requires</code> bọc hàm con: bảng thiếu cột cần thì trả toàn False thay vì <code>KeyError</code>. Nhờ vậy mỗi mục con tự an toàn, kể cả khi gọi riêng trong <code>_detail</code>.</p>
 
 === 144-154
-<p><code>_or_checks</code> hợp nhiều hàm con thành một cờ bằng phép OR (<code>|=</code>). Một dòng vi phạm hai mục con vẫn chỉ tính <b>một</b> dòng bị gắn cờ; còn <code>detail</code> đếm theo từng mục con, nên tổng trong <code>detail</code> có thể lớn hơn <code>n_flagged</code>.</p>
+<p><code>_or_checks</code> hợp nhiều hàm con thành một cờ bằng phép OR (<code>|=</code>). Một dòng vi phạm hai mục con vẫn chỉ tính một dòng bị gắn cờ; còn <code>detail</code> đếm theo từng mục con, nên tổng trong <code>detail</code> có thể lớn hơn <code>n_flagged</code>.</p>
 
 === 157-162
 <p>Mục con <code>price_missing</code>: ô giá NaN. Mốc cuối: 20 (khớp đề), mốc 2026-03-21: 1.</p>
@@ -94,20 +94,20 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>Để hình dung: nếu dữ liệu chuẩn, Q3 ≈ μ + 0,674σ và IQR ≈ 1,349σ, nên k = 1,5 tương ứng ±2,7σ (bắt khoảng 0,7% dòng) còn k = 3 tương ứng ±4,7σ (gần như 0). Giá Airbnb lệch phải mạnh, nên dù k = 3 vẫn bắt 51–52 căn (5,1–5,2%).</p>
 
 === 185-186
-<p>Tính Q1, Q3 trên giá đọc được của <b>chính mốc đó</b> (bỏ NaN). Vì sao dùng IQR thay vì trung bình ± 3 độ lệch chuẩn: phân vị gần như không bị kéo bởi chính các giá cực đoan cần bắt, còn trung bình và độ lệch chuẩn thì bị kéo mạnh (hai căn &gt; 10.000 AUD đủ đẩy trung bình lên khoảng 26 AUD, xem <a href="#qa-L55">qa.py</a>). Lưu ý: phân vị tính cả giá ≤ 0 và giá &gt; cap, nhưng vài giá như vậy hầu như không dịch Q1/Q3.</p>
+<p>Tính Q1, Q3 trên giá đọc được của chính mốc đó (bỏ NaN). Vì sao dùng IQR thay vì trung bình ± 3 độ lệch chuẩn: phân vị gần như không bị kéo bởi chính các giá cực đoan cần bắt, còn trung bình và độ lệch chuẩn thì bị kéo mạnh (hai căn &gt; 10.000 AUD đủ đẩy trung bình lên khoảng 26 AUD, xem <a href="#qa-L55">qa.py</a>). Phân vị tính cả giá ≤ 0 và giá &gt; cap, nhưng vài giá như vậy hầu như không dịch Q1/Q3.</p>
 
 === 187
 <p>k đọc từ <code>qa.outlier_iqr_k</code> (configs/sydney.yaml đặt 3.0), mặc định 3.</p>
 
 === 188
 <p>Gắn cờ hai phía. Thực tế rào dưới thường âm: Q1 − 3(Q3 − Q1) &lt; 0 khi Q3 &gt; 4/3·Q1, điều gần như luôn đúng với giá thuê. Khi đó chỉ rào trên có tác dụng; giá quá thấp (≤ 0) đã do <code>price_non_positive</code> lo. Ví dụ chạy thử 10 giá 80…500 và 20.000: Q1 = 162,5, Q3 = 387,5, rào = [−512,5; 1.062,5], chỉ 20.000 bị gắn cờ.</p>
-<p>Giá &gt; cap cũng ngoài rào trên, nên nằm trong cả hai cờ. Kiểm bằng số thật: mốc cuối 52 cảnh báo, nhưng bỏ cảnh báo chỉ làm 978 → 928 (bớt 50); 2 căn còn lại chính là 2 căn &gt; 10.000 AUD đã bị bỏ ở mức lỗi. Mốc 2026-03-21: 51 cảnh báo, 997 → 948 (bớt 49), cũng chồng 2.</p>
+<p>Giá &gt; cap cũng ngoài rào trên, nên nằm trong cả hai cờ. Kiểm bằng số thật: mốc cuối 52 cảnh báo, nhưng bỏ cảnh báo chỉ làm 978 xuống 928 (bớt 50); 2 căn còn lại chính là 2 căn &gt; 10.000 AUD đã bị bỏ ở mức lỗi. Mốc 2026-03-21: 51 cảnh báo, 997 xuống 948 (bớt 49), cũng chồng 2.</p>
 
 === 191-193
 <p><code>min_nights_above_cap</code>: <code>minimum_nights</code> &gt; <code>qa.min_nights_cap</code> = 365 (khoá đề bắt buộc). Bắt căn thực chất không cho thuê ngắn hạn hoặc nhập sai.</p>
 
 === 196-201
-<p><code>listing_duplicate</code>: trùng bộ khoá <code>qa.dedupe_keys</code> = (<code>id</code>, <code>last_scraped</code>) trong cùng mốc. <code>keep=False</code> gắn cờ <b>tất cả</b> bản trùng, không chừa bản đầu: QA không đoán bản nào đúng. Thiếu khoá trong config hoặc trong bảng thì bỏ qua.</p>
+<p><code>listing_duplicate</code>: trùng bộ khoá <code>qa.dedupe_keys</code> = (<code>id</code>, <code>last_scraped</code>) trong cùng mốc. <code>keep=False</code> gắn cờ tất cả bản trùng, không chừa bản đầu: QA không đoán bản nào đúng. Thiếu khoá trong config hoặc trong bảng thì bỏ qua.</p>
 
 === 204-209
 <p><code>room_type_unknown</code>: loại phòng không có trong <code>qa.expected.room_type_counts</code>. Phụ thuộc mục <code>expected</code>: khi run_pipeline bỏ <code>expected</code> (đổi mốc, mẫu theo seed) thì mục con này tự tắt (test <code>test_room_type_unknown_without_expected_flags_nothing</code>). Ô trống không bị gắn cờ.</p>
@@ -128,7 +128,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p><code>review_text_missing</code>: <code>comments</code> trống hoặc chỉ khoảng trắng. Chạy thử: comment <code>"  "</code> bật <code>qa_review_empty</code>. Review rỗng vô dụng cho bước LLM.</p>
 
 === 256-263
-<p><code>review_date_after_snapshot</code>: ngày review sau ngày mốc, điều không thể có trong dữ liệu chụp tại mốc. So <b>nghiêm ngặt</b> (&gt;), review đúng ngày mốc là hợp lệ (đã chạy thử). Ngày không đọc được thành NaT, so sánh ra False.</p>
+<p><code>review_date_after_snapshot</code>: ngày review sau ngày mốc, điều không thể có trong dữ liệu chụp tại mốc. So nghiêm ngặt (&gt;), review đúng ngày mốc là hợp lệ (đã chạy thử). Ngày không đọc được thành NaT, so sánh ra False.</p>
 
 === 266-268
 <p><code>review_id_duplicate</code>: <code>id</code> review lặp trong cùng mốc. Bỏ qua id trống để nhiều ô trống không bị coi là "trùng nhau".</p>
@@ -137,7 +137,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p><code>calendar_duplicate</code>: cặp (<code>listing_id</code>, <code>date</code>) lặp, tức một ngày khai hai lần.</p>
 
 === 276-279
-<p><code>calendar_incomplete</code>: đếm số dòng lịch của từng listing (<code>transform("size")</code> trả số đếm về từng dòng), khác 365 thì gắn cờ <b>mọi dòng</b> của listing đó. Chạy thử với <code>calendar_days=3</code>: listing có 2 dòng trùng ngày bị gắn cờ, listing đủ 3 ngày thì không. Lưu ý: listing không có dòng lịch nào thì không có dòng để gắn cờ, luật này không thấy. Dữ liệu thật: 365.000 dòng = 1.000 × 365, 0 vi phạm.</p>
+<p><code>calendar_incomplete</code>: đếm số dòng lịch của từng listing (<code>transform("size")</code> trả số đếm về từng dòng), khác 365 thì gắn cờ mọi dòng của listing đó. Chạy thử với <code>calendar_days=3</code>: listing có 2 dòng trùng ngày bị gắn cờ, listing đủ 3 ngày thì không. Listing không có dòng lịch nào thì không có dòng để gắn cờ, luật này không thấy. Dữ liệu thật: 365.000 dòng = 1.000 × 365, 0 vi phạm.</p>
 
 === 282-290
 <p>Lấy bảng của các mốc trước từ <code>ctx.previous</code>; chưa có (mốc đầu) hoặc rỗng thì <code>None</code>, luật trùng giữa mốc tự tắt.</p>
@@ -146,16 +146,16 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>So bộ khoá của từng dòng với tập khoá đã thấy, bằng <code>MultiIndex.isin</code> (so cả bộ, không so từng cột rời). Ép <code>str</code> hai phía để không lệch kiểu giữa các mốc. Dòng thiếu khoá luôn False.</p>
 
 === 300-310
-<p><code>listing_stale_copy</code> (cờ <code>cross_snapshot_duplicate</code> của listings). Cùng <code>id</code> ở nhiều mốc là bình thường: đó chính là theo dõi một căn qua thời gian, nền của cả bài "căn ảo". Nhưng cùng <code>id</code> <b>và</b> cùng <code>last_scraped</code> nghĩa là bản ghi mốc cũ bị chép nguyên sang mốc sau, KPI mốc sau dùng dữ liệu cũ. Dữ liệu thật: 0 ở mọi mốc.</p>
+<p><code>listing_stale_copy</code> (cờ <code>cross_snapshot_duplicate</code> của listings). Cùng <code>id</code> ở nhiều mốc là bình thường: đó là theo dõi một căn qua thời gian, nền của cả bài "căn ảo". Nhưng cùng <code>id</code> và cùng <code>last_scraped</code> nghĩa là bản ghi mốc cũ bị chép nguyên sang mốc sau, KPI mốc sau dùng dữ liệu cũ. Dữ liệu thật: 0 ở mọi mốc.</p>
 
 === 313-318
 <p>Phép đếm <code>info</code>, không gắn cờ: bao nhiêu listing đã có id ở mốc trước. Báo cáo ghi <code>id_seen_in_earlier_snapshot:1000</code> ở ba mốc sau, tức 1.000/1.000 căn được theo dõi xuyên suốt (mẫu cố định).</p>
 
 === 321-330
-<p><code>review_conflict_across_snapshots</code>: <code>reviews.csv</code> của Inside Airbnb <b>cộng dồn</b>, review cũ lặp lại ở mọi mốc sau là bình thường. Chỉ lỗi khi cùng <code>id</code> review mà khác <code>listing_id</code> hoặc <code>date</code>: không biết bản nào đúng.</p>
+<p><code>review_conflict_across_snapshots</code>: <code>reviews.csv</code> của Inside Airbnb cộng dồn, review cũ lặp lại ở mọi mốc sau là bình thường. Chỉ lỗi khi cùng <code>id</code> review mà khác <code>listing_id</code> hoặc <code>date</code>: không biết bản nào đúng.</p>
 
 === 331-333
-<p>Dựng bảng tra từ các mốc trước: bỏ id trống, ép chuỗi, giữ bản <b>mới nhất</b> của mỗi id (<code>keep="last"</code>, vì <code>previous</code> ghép theo thứ tự thời gian), đặt <code>id</code> làm index.</p>
+<p>Dựng bảng tra từ các mốc trước: bỏ id trống, ép chuỗi, giữ bản mới nhất của mỗi id (<code>keep="last"</code>, vì <code>previous</code> ghép theo thứ tự thời gian), đặt <code>id</code> làm index.</p>
 
 === 334-338
 <p>Với dòng có id đã biết, tra <code>listing_id</code>/<code>date</code> cũ và so. Chạy thử: review có <code>listing_id</code> trống bị coi là "khác" (chuỗi <code>"nan"</code> ≠ id cũ) nên bật cờ này, đồng thời bật <code>orphan_fk</code>. Dữ liệu thật: 0.</p>
@@ -164,7 +164,7 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>Phép đếm <code>info</code>: review đã có ở mốc trước. Báo cáo ghi <code>review_seen_in_earlier_snapshot:5000</code> ở ba mốc sau: cả 5.000 review của nhóm lặp lại ở mọi mốc, đúng với README ("5.000/5.000 review lặp lại hợp lệ"). Khi gộp nhiều mốc, bước sau khử trùng theo id.</p>
 
 === 349-358
-<p>Từ đây là phần "lắp ráp": mỗi tuple gồm (tên mục con, hàm đã bọc <code>_requires</code>). Thứ tự trong tuple là thứ tự ghi <code>detail</code>. <code>price_unusable</code> gồm 4 mục: thiếu, sai kiểu, ≤ 0, &gt; cap.</p>
+<p>Phần lắp ráp: mỗi tuple gồm (tên mục con, hàm đã bọc <code>_requires</code>). Thứ tự trong tuple là thứ tự ghi <code>detail</code>. <code>price_unusable</code> gồm 4 mục: thiếu, sai kiểu, ≤ 0, &gt; cap.</p>
 
 === 359
 <p><code>price_outlier</code>: một mục con IQR.</p>
@@ -179,16 +179,16 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>Hợp đồng reviews (ngày sau mốc), hợp đồng calendar (đủ 365 ngày), review rỗng.</p>
 
 === 376-379
-<p>Hai mục trùng giữa mốc và hai phép đếm <code>info</code> đi kèm. Lưu ý: <code>_REVIEW_CROSS</code> <b>không</b> bọc <code>_requires</code> theo cột của bảng hiện tại, chỉ kiểm cột của bảng mốc trước (xem nhận xét lỗi).</p>
+<p>Hai mục trùng giữa mốc và hai phép đếm <code>info</code> đi kèm. <code>_REVIEW_CROSS</code> không bọc <code>_requires</code> theo cột của bảng hiện tại, chỉ kiểm cột của bảng mốc trước (xem nhận xét lỗi).</p>
 
 === 381-383
 <p><code>RULES</code>: 13 luật. Thứ tự ở đây là thứ tự cột <code>qa_*</code> và thứ tự dòng trong <code>reports/qa_report.csv</code>.</p>
 
 === 384-393
-<p>Luật 1, listings, <b>error</b>, <code>is_price=True</code>: giá không dùng được. Số thật: mốc 2026-03-21 gắn cờ 3 (<code>price_missing:1; price_above_cap:2</code>); mốc 2026-06-16 gắn cờ 22 (<code>price_missing:20; price_above_cap:2</code>), 2,2%.</p>
+<p>Luật 1, listings, error, <code>is_price=True</code>: giá không dùng được. Số thật: mốc 2026-03-21 gắn cờ 3 (<code>price_missing:1; price_above_cap:2</code>); mốc 2026-06-16 gắn cờ 22 (<code>price_missing:20; price_above_cap:2</code>), 2,2%.</p>
 
 === 394-403
-<p>Luật 2, listings, <b>warning</b>, <code>is_price=True</code>: ngoại lệ IQR. Mức warning vì giá cao bất thường có thể là thật (biệt thự, căn sự kiện), không chắc là lỗi. Số thật: 51 (5,1%) và 52 (5,2%).</p>
+<p>Luật 2, listings, warning, <code>is_price=True</code>: ngoại lệ IQR. Mức warning vì giá cao bất thường có thể là thật (biệt thự, căn sự kiện), không chắc là lỗi. Số thật: 51 (5,1%) và 52 (5,2%).</p>
 
 === 404-412
 <p>Luật 3, listings: trùng (<code>id</code>, <code>last_scraped</code>) trong mốc. 0 ở mọi mốc.</p>
@@ -224,25 +224,25 @@ lead: Bộ luật QA theo từng dòng. <code>apply_rules</code> nhận ba bản
 <p>Luật 13, calendar: số ngày lịch khác 365. Cả ba luật calendar chạy trên 365.000 dòng mỗi mốc, đều 0 vi phạm.</p>
 
 === 522-529
-<p><code>_evaluate</code>: hai cổng trước khi chạy luật: thiếu cột <code>needs</code>, hoặc luật giá mà mốc không có giá, thì trả toàn False. <code>fillna(False).astype(bool)</code> đảm bảo cột cờ luôn là bool thật (NaN = không vi phạm).</p>
+<p><code>_evaluate</code>: hai cổng trước khi chạy luật: thiếu cột <code>needs</code>, hoặc luật giá mà mốc không có giá, thì trả toàn False. <code>fillna(False).astype(bool)</code> để cột cờ luôn là bool thật (NaN = không vi phạm).</p>
 
 === 532-537
-<p><code>flag_table</code>: làm trên <b>bản sao</b> (<code>df.copy()</code>), thêm một cột <code>qa_*</code> cho mỗi luật của bảng. Bảng gốc giữ nguyên, số dòng giữ nguyên (test <code>test_apply_rules_preserves_rows_and_adds_qa_has_error</code>).</p>
+<p><code>flag_table</code>: làm trên bản sao (<code>df.copy()</code>), thêm một cột <code>qa_*</code> cho mỗi luật của bảng. Bảng gốc giữ nguyên, số dòng giữ nguyên (test <code>test_apply_rules_preserves_rows_and_adds_qa_has_error</code>).</p>
 
 === 539-540
 <p><code>any_of</code>: OR theo hàng của các cột cờ được chọn; danh sách rỗng (ví dụ calendar không có luật warning) thì toàn False.</p>
 
 === 542-546
-<p>Tính ba cờ tổng từ <b>các cột luật</b>, không từ cột cũ nào có sẵn: nếu bảng vào đã có cột <code>qa_has_error</code> thì bị ghi đè (test <code>test_add_any_flag_ignores_existing_qa_has_error</code>). Ví dụ chạy thử một dòng giá 15.000: <code>qa_price_unusable</code> và <code>qa_price_outlier</code> bật, nên <code>qa_has_error</code> = True, <code>qa_has_warning</code> = True, còn <code>qa_has_error_excl_price</code> = False: KPI phi giá vẫn giữ căn này.</p>
+<p>Tính ba cờ tổng từ các cột luật, không từ cột cũ nào có sẵn: nếu bảng vào đã có cột <code>qa_has_error</code> thì bị ghi đè (test <code>test_add_any_flag_ignores_existing_qa_has_error</code>). Ví dụ chạy thử một dòng giá 15.000: <code>qa_price_unusable</code> và <code>qa_price_outlier</code> bật, nên <code>qa_has_error</code> = True, <code>qa_has_warning</code> = True, còn <code>qa_has_error_excl_price</code> = False: KPI phi giá vẫn giữ căn này.</p>
 
 === 549-557
-<p><code>_detail</code>: chạy lại từng mục con và <code>info</code>, ghi những cái có đếm &gt; 0 dạng <code>tên:số; tên:số</code>. Không bật gì thì chuỗi rỗng (trong CSV đọc ra NaN). Hàm gọi thẳng <code>check</code> của mục con, <b>không qua cổng <code>needs</code></b> như <code>_evaluate</code>.</p>
+<p><code>_detail</code>: chạy lại từng mục con và <code>info</code>, ghi những cái có đếm &gt; 0 dạng <code>tên:số; tên:số</code>. Không bật gì thì chuỗi rỗng (trong CSV đọc ra NaN). Hàm gọi thẳng <code>check</code> của mục con, không qua cổng <code>needs</code> như <code>_evaluate</code>.</p>
 
 === 560-575
 <p>Một dòng báo cáo: <code>n_flagged</code> là số dòng có cột cờ True (sau OR), <code>pct_flagged</code> làm tròn 2 chữ số. <code>action</code> luôn là <code>"flag"</code>: QA không có hành động xoá.</p>
 
 === 578-591
-<p><code>apply_rules</code>: cửa vào từ <a href="#qa-L148">qa.py dòng 148</a>. Docstring giải thích vì sao mốc không có giá thì <b>không ghi dòng báo cáo</b> cho luật giá: ghi "0 lỗi giá" sẽ hiểu nhầm là đã kiểm và giá sạch, trong khi thực ra không có giá để kiểm.</p>
+<p><code>apply_rules</code>: cửa vào từ <a href="#qa-L148">qa.py dòng 148</a>. Docstring giải thích vì sao mốc không có giá thì không ghi dòng báo cáo cho luật giá: ghi "0 lỗi giá" sẽ hiểu nhầm là đã kiểm và giá sạch, trong khi thực ra không có giá để kiểm.</p>
 
 === 592-595
 <p>Lấy tập id listing của mốc cho luật mồ côi. Không có listings thì tập rỗng, mọi review/lịch bị coi là mồ côi (test <code>test_apply_rules_skips_missing_tables</code>). Dựng <code>Context</code> một lần cho cả mốc.</p>

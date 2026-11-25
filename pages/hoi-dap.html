@@ -1,6 +1,6 @@
 <section class="head">
   <h1>Hỏi đáp</h1>
-  <p class="lead">Mười lăm câu tổng quát hay bị hỏi nhất, trả lời theo trạng thái tag <code>final</code>. Bên dưới là câu hỏi gom tự động từ chú giải từng file và bảng nhận xét code.</p>
+  <p class="lead">Mười lăm câu tổng quát hay bị hỏi nhất, trả lời theo trạng thái tag <code>final</code>. Phần sau gom câu hỏi tự động từ chú giải từng file và bảng nhận xét code.</p>
   <div class="btns"><button class="b" type="button" data-qa="open">Mở hết</button><button class="b" type="button" data-qa="close">Đóng hết</button></div>
 </section>
 
@@ -40,7 +40,7 @@
     </div></details>
 
     <details class="qa"><summary>LLM chấm sentiment tốt tới đâu, so với baseline ra sao?</summary><div class="ans">
-      <p>Gold 100 review nhãn tay: 85 positive, 15 mixed, 0 negative. Gemini đạt accuracy <b>0,970</b> so với baseline từ khoá <b>0,870</b>; macro-F1 <b>0,936</b> so với <b>0,622</b>; Cohen’s kappa <b>0,872</b> so với <b>0,270</b>. Kappa quan trọng hơn accuracy ở đây: baseline đoán gần hết là positive nên accuracy cao nhưng kappa thấp. Số từ <code>reports/evaluation/eval_summary.csv</code>, code chấm ở <a href="#metrics-L66">kappa</a> và <a href="#metrics-L107">macro-F1</a>.</p>
+      <p>Gold 100 review nhãn tay: 85 positive, 15 mixed, 0 negative. Gemini đạt accuracy <b>0,970</b> so với baseline từ khoá <b>0,870</b>; macro-F1 <b>0,936</b> so với <b>0,622</b>; Cohen’s kappa <b>0,872</b> so với <b>0,270</b>. Ở đây kappa đáng tin hơn accuracy: baseline đoán gần hết là positive nên accuracy cao mà kappa thấp. Số từ <code>reports/evaluation/eval_summary.csv</code>, code chấm ở <a href="#metrics-L66">kappa</a> và <a href="#metrics-L107">macro-F1</a>.</p>
     </div></details>
 
     <details class="qa"><summary>Vì sao macro-F1 bỏ lớp negative, có phải che điểm yếu?</summary><div class="ans">

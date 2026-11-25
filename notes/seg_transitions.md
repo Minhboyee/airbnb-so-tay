@@ -4,7 +4,7 @@ lead: Theo dõi listing đổi nhóm giữa các mốc và kiểm tra mốc bị
 
 --- blocks
 === 1-8
-<p>Docstring nêu bối cảnh quan trọng: mốc gap (2026-03-21) bị lọc nên thiếu căn, vì vậy module tách riêng căn "vắng" do bộ lọc khỏi căn chủ nhà thật sự rời sàn. Chạy sau khi <code>rules.py</code> đã gán cột <code>segment</code>. Vào/ra đều trong RAM; ghi file do <code>report.py</code>.</p>
+<p>Docstring nêu bối cảnh: mốc gap (2026-03-21) bị lọc nên thiếu căn, vì vậy module tách riêng căn "vắng" do bộ lọc khỏi căn chủ nhà thật sự rời sàn. Chạy sau khi <code>rules.py</code> đã gán cột <code>segment</code>. Vào/ra đều trong RAM; ghi file do <code>report.py</code>.</p>
 
 === 10
 <p><code>from __future__ import annotations</code> cho cú pháp kiểu hiện đại.</p>
@@ -49,10 +49,10 @@ lead: Theo dõi listing đổi nhóm giữa các mốc và kiểm tra mốc bị
 <p>Tính tổng theo <code>from_segment</code>, rồi <code>share = n / total</code>. Mẹo <code>total.where(total &gt; 0, 1)</code>: nhóm nguồn rỗng chia cho 1 thay vì 0 để tránh chia cho 0. Kết quả làm tròn 4 chữ số và sắp theo (from, to). Số thật: <code>D_dormant → D_dormant</code> = <b>0,6544</b> (09/2025→06/2026) và <b>0,6712</b> (12/2025→06/2026); <code>H_healthy</code> giữ <b>0,6941</b> / <b>0,7281</b> (file <code>segments_transitions_full.csv</code>).</p>
 
 === 61-67
-<p>Docstring <code>gap_audit</code> định nghĩa <code>n_explained</code>: ở mốc cuối, căn đó đòi <b>&gt; 7 đêm</b> (<code>gap_explain_min_nights</code>) hoặc đã kín lịch (<code>availability &lt;= blocked_max</code>), tức bị bộ lọc của mốc gap loại chứ không phải chủ nhà rời sàn. Lưu ý ngưỡng là <b>7</b>, không phải 90 của <code>stay_type</code>.</p>
+<p>Docstring <code>gap_audit</code> định nghĩa <code>n_explained</code>: ở mốc cuối, căn đó đòi <b>&gt; 7 đêm</b> (<code>gap_explain_min_nights</code>) hoặc đã kín lịch (<code>availability &lt;= blocked_max</code>), tức bị bộ lọc của mốc gap loại chứ không phải chủ nhà rời sàn. Ngưỡng ở đây là <b>7</b>, không phải 90 của <code>stay_type</code>.</p>
 
 === 68-70
-<p>Vòng đầu tính thống kê từng mốc. <code>availability_365</code> ép số, NaN → 0.</p>
+<p>Vòng đầu tính thống kê từng mốc. <code>availability_365</code> ép số, NaN thành 0.</p>
 
 === 71-79
 <p>Mỗi mốc một dòng gồm: <code>n_listings</code>, <code>max_minimum_nights</code> (đòi đêm tối thiểu cao nhất), và <code>share_blocked</code> = tỉ lệ avail <code>&lt;= blocked_max</code>. Comment dòng 76 nhắc <code>availability_365 &lt;= 0</code> nghĩa là cả năm tới không ngày nào đặt được. Số thật ở scope full: n = 17.730 / 20.436 / 13.563 / 20.573; <code>max_minimum_nights</code> = 999 / 500 / <b>7</b> / 500; <code>share_blocked</code> = 9,98% / 7,73% / 0,18% / 10,10%. Con số <b>7</b> ở mốc 2026-03-21 chính là bằng chứng mốc này bị lọc theo <code>minimum_nights &lt;= 7</code>.</p>
@@ -61,13 +61,13 @@ lead: Theo dõi listing đổi nhóm giữa các mốc và kiểm tra mốc bị
 <p>Gom thống kê thành DataFrame (luôn có, kể cả khi không có gap) và khởi tạo dict <code>audit</code> với các bộ đếm bằng 0. <code>per_snapshot</code> luôn được ghi ra <code>segments_gap_audit_*.csv</code>.</p>
 
 === 88-89
-<p>Không có mốc gap hoặc mốc gap không được nạp → trả audit với bộ đếm 0. Test <code>test_gap_audit_without_a_usable_gap_snapshot</code> kiểm cả <code>None</code> lẫn mốc không tồn tại.</p>
+<p>Không có mốc gap hoặc mốc gap không được nạp thì trả audit với bộ đếm 0. Test <code>test_gap_audit_without_a_usable_gap_snapshot</code> kiểm cả <code>None</code> lẫn mốc không tồn tại.</p>
 
 === 91-93
 <p><code>others</code> là các mốc bình thường (bỏ mốc gap). Nếu không còn mốc nào khác thì không so được, trả audit 0.</p>
 
 === 95-99
-<p>Comment dòng 95 nói nguyên tắc: chỉ xét căn <b>có mặt ở mọi mốc bình thường</b>, để "vắng" chắc chắn là do mốc gap. <code>common</code> là giao id của 09/2025, 12/2025 và 06/2026; <code>missing</code> = <code>common</code> trừ id có ở mốc gap. Vì đòi có mặt ở <b>tất cả</b> mốc thường, một căn chỉ xuất hiện ở 09 và 06 mà thiếu 12 sẽ không được tính — <code>n_missing</code> vì thế là con số thận trọng (xem review).</p>
+<p>Comment dòng 95 nói nguyên tắc: chỉ xét căn <b>có mặt ở mọi mốc bình thường</b>, để "vắng" chắc chắn là do mốc gap. <code>common</code> là giao id của 09/2025, 12/2025 và 06/2026; <code>missing</code> = <code>common</code> trừ id có ở mốc gap. Vì đòi có mặt ở <b>tất cả</b> mốc thường, một căn chỉ xuất hiện ở 09 và 06 mà thiếu 12 sẽ không được tính, nên <code>n_missing</code> là con số thận trọng (xem review).</p>
 
 === 101-104
 <p><code>last</code> là mốc cuối cùng trong <code>others</code> (ở đây 2026-06-16), index theo id. <code>reindex(sorted(missing))</code> lấy đúng các căn vắng; vì <code>missing ⊆ common</code> nên chắc chắn chúng có mặt ở <code>last</code>. Lấy <code>minimum_nights</code> và <code>availability_365</code> của các căn đó.</p>
@@ -76,14 +76,14 @@ lead: Theo dõi listing đổi nhóm giữa các mốc và kiểm tra mốc bị
 <p><code>explained</code> = (đòi &gt; <code>gap_explain_min_nights</code> đêm) HOẶC (kín lịch, avail <code>&lt;= blocked_max</code>). Đây là heuristic "căn này sẽ bị bộ lọc của mốc gap loại". Số thật: <code>n_missing = 4.645</code>, <code>n_explained = 3.569</code> (76,84%), <code>n_unexplained = 1.076</code>. Tách ra: 2.918 căn chỉ do &gt; 7 đêm, 1.242 căn chỉ do kín lịch, 591 căn thoả cả hai (mình tự tính lại từ <code>data/raw</code>).</p>
 
 === 109-112
-<p>Ghi ba bộ đếm vào audit rồi trả. <code>n_unexplained = n_missing − n_explained</code> là phần chưa giải thích được — với Sydney là 1.076 căn, con số đáng nêu khi bị hỏi "vì sao tháng 3 thiếu căn".</p>
+<p>Ghi ba bộ đếm vào audit rồi trả. <code>n_unexplained = n_missing − n_explained</code> là phần chưa giải thích được; với Sydney là 1.076 căn, con số đáng nêu khi bị hỏi "vì sao tháng 3 thiếu căn".</p>
 
 --- flow
 ## Bảng rộng
 fn 0 22 | track | id × mốc, vắng = VANG
 ## Ma trận đổi nhóm
 fn 0 33 | transition_matrix | from/to/n/share, chuẩn hoá hàng
-st 1 40 | Guard | thiếu mốc → bảng rỗng
+st 1 40 | Guard | thiếu mốc thì bảng rỗng
 st 1 44 | Ghép theo id | đích reindex theo nguồn, thiếu = BIEN_MAT
 st 1 50 | Crosstab 7×8 | luôn đủ hàng/cột
 st 1 56 | Chia theo hàng | share = n / tổng from_segment
@@ -110,4 +110,4 @@ low | Hai tên cho một hiện tượng | <code>track</code> dùng <code>VANG</
 ? n_explained tính bằng ngưỡng nào và vì sao?
 <p>Là căn ở mốc cuối đòi <b>&gt; 7 đêm</b> (<code>gap_explain_min_nights</code>) hoặc kín lịch. Mốc gap 2026-03-21 có <code>max_minimum_nights = 7</code>, tức bị lọc theo <code>minimum_nights &lt;= 7</code>, nên căn đòi &gt; 7 đêm hẳn bị loại. Kết quả: 3.569/4.645 giải thích được.</p>
 ? Vì sao tháng 3 thiếu 4.645 căn mà còn 1.076 chưa giải thích được?
-<p>4.645 là số căn có mặt ở mọi mốc thường nhưng vắng ở mốc gap. Trong đó 3.569 thoả "&gt; 7 đêm hoặc kín lịch" nên quy được cho bộ lọc; 1.076 còn lại không thoả điều kiện nào, tức chưa rõ nguyên nhân — đúng phần <code>n_unexplained</code>.</p>
+<p>4.645 là số căn có mặt ở mọi mốc thường nhưng vắng ở mốc gap. Trong đó 3.569 thoả "&gt; 7 đêm hoặc kín lịch" nên quy được cho bộ lọc; 1.076 còn lại không thoả điều kiện nào, tức chưa rõ nguyên nhân, đúng phần <code>n_unexplained</code>.</p>

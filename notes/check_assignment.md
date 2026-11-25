@@ -7,7 +7,7 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 <p>Docstring một dòng: chỉ dùng file gzip local. Script được thêm ở commit <code>2a58a3f</code> (22/10/2026) cùng hai file bằng chứng; commit ghi “chạy lại auditor trên 4 mốc local cho CSV trùng khớp từng byte”. README nhắc nó ở mục “Kiểm tra dữ liệu được giao”. Không có test nào cho file này, và CI chỉ chạy ruff trên nó (mypy và coverage chỉ tính <code>run_pipeline.py</code>, <code>src</code>, <code>tests</code>, theo <code>pyproject.toml</code>).</p>
 
 === 3-12
-<p>Import. <code>hashlib</code> để tính SHA-256 từng file (chứng minh đúng file nào đã được kiểm). <code>yaml</code> đọc config trực tiếp bằng <code>yaml.safe_load</code>, <b>không</b> qua <code>src/config.load_config</code>; hệ quả ở <a href="#check_assignment-L213">dòng 213</a>.</p>
+<p>Import. <code>hashlib</code> để tính SHA-256 từng file (chứng minh đúng file nào đã được kiểm). <code>yaml</code> đọc config trực tiếp bằng <code>yaml.safe_load</code>, không qua <code>src/config.load_config</code>; hệ quả ở <a href="#check_assignment-L213">dòng 213</a>.</p>
 
 === 14-33
 <p>Hằng số:</p>
@@ -16,7 +16,7 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 <li><code>CSV_COLUMNS</code>: 16 cột của file CSV bằng chứng, tên tiếng Việt không dấu theo mẫu đề: <code>tai_ve_ok</code> (co/khong), <code>*_bytes</code>, <code>*_dong</code>, <code>khong_co_review</code>, <code>thieu_price</code>, <code>so_cot_listings</code>, <code>so_cot_nan_90</code> (số cột thiếu ≥ 90%).</li></ul>
 
 === 36-37
-<p>Chuẩn hoá ô: <code>None</code> → chuỗi rỗng, còn lại <code>str()</code> rồi bỏ khoảng trắng hai đầu.</p>
+<p>Chuẩn hoá ô: <code>None</code> thành chuỗi rỗng, còn lại <code>str()</code> rồi bỏ khoảng trắng hai đầu.</p>
 
 === 40-42
 <p>Lấy mảng <code>values</code> của một sheet trong JSON, chỉ giữ các dòng là list. Dạng <code>{"range": ..., "values": [[...], ...]}</code> giống kết quả đọc một vùng của Google Sheets. JSON sai cấu trúc thì trả danh sách rỗng chứ không lỗi ở đây.</p>
@@ -26,7 +26,7 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 
 === 47-59
 <p>Sheet Listing: 5 cột theo vị trí (lớp, nhóm, mã, <code>listing_id</code>, <code>analysis_area</code>). Bỏ dòng ngắn hơn 5 ô. Mọi giá trị qua <code>_text</code> nên ID là chuỗi, đúng ghi chú trợ giảng; điều kiện là JSON lưu ID dạng chuỗi (nếu lưu dạng số 19 chữ số thì đã sai ngay khi <code>json.loads</code> chuyển thành float).</p>
-<p>Chú ý: cột <code>code</code> được đọc nhưng <b>không dùng để lọc</b> theo mã nhóm. Script tin rằng JSON chỉ chứa vùng của nhóm 06. Nếu đưa vào JSON của cả workbook (84 nhóm) thì “ID chính thức” sẽ là ID của mọi nhóm.</p>
+<p>Cột <code>code</code> được đọc nhưng không dùng để lọc theo mã nhóm. Script tin rằng JSON chỉ chứa vùng của nhóm 06. Nếu đưa vào JSON của cả workbook (84 nhóm) thì “ID chính thức” sẽ là ID của mọi nhóm.</p>
 
 === 60-77
 <p>Sheet Review: 7 cột, hai cột cuối <code>mau_llm</code>, <code>nhan_tay</code> có thể thiếu (ô trống cuối dòng thường bị cắt) nên kiểm <code>len(r)</code>. Thiếu một trong hai sheet thì <code>ValueError</code>: không kiểm với danh sách rỗng.</p>
@@ -55,7 +55,7 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 <p>Reviews: đọc chunk, mọi cột chuỗi, lọc theo cột <code>id</code> (review_id), cùng quy tắc với bước 1. Trả số cột gốc (6 ở cả 4 mốc).</p>
 
 === 127-133
-<p>Cột thiếu từ 90% trở lên trên bảng <b>đã lọc</b>, kèm số ô thiếu và tỉ lệ. <code>if total</code> tránh chia cho 0. Audit: mốc 1 và 2 có 6 cột (trong đó <code>price</code>, <code>calendar_updated</code>, <code>estimated_revenue_l365d</code>); mốc 3 và 4 có 13 cột, thêm nhiều cột host như <code>host_since</code>, <code>host_response_time</code>. Calendar và reviews không có cột nào.</p>
+<p>Cột thiếu từ 90% trở lên trên bảng đã lọc, kèm số ô thiếu và tỉ lệ. <code>if total</code> tránh chia cho 0. Audit: mốc 1 và 2 có 6 cột (trong đó <code>price</code>, <code>calendar_updated</code>, <code>estimated_revenue_l365d</code>); mốc 3 và 4 có 13 cột, thêm nhiều cột host như <code>host_since</code>, <code>host_response_time</code>. Calendar và reviews không có cột nào.</p>
 
 === 136-151
 <p>Đếm trên listings đã lọc: số dòng, số căn <code>Entire home/apt</code>, <code>Private room</code>, số căn <code>number_of_reviews</code> = 0 (đổi số bằng <code>to_numeric(errors="coerce")</code> vì đang là chuỗi), số căn thiếu <code>price</code>. Cột không có thì trả 0 hoặc <code>None</code>, không lỗi.</p>
@@ -70,8 +70,8 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 <p>Lọc calendar và reviews, rồi lấy tập ID thực sự thấy được, để so với tập chính thức ở phần <code>key_integrity</code>.</p>
 
 === 168-171
-<p>Thông tin file: đường dẫn, số byte, SHA-256. Lưu ý <code>path</code> trong audit đã commit có dạng <code>data\raw\sydney\...</code>: script được chạy trên Windows.</p>
-<p>Hash bị tính <b>hai lần</b> cho mỗi file: ở đây và ở <a href="#check_assignment-L238">dòng 238</a>. Kết quả đúng, chỉ tốn thời gian (đọc lại khoảng 100 MB mỗi mốc).</p>
+<p>Thông tin file: đường dẫn, số byte, SHA-256. <code>path</code> trong audit đã commit có dạng <code>data\raw\sydney\...</code> vì script chạy trên Windows.</p>
+<p>Hash bị tính hai lần cho mỗi file: ở đây và ở <a href="#check_assignment-L238">dòng 238</a>. Kết quả đúng, chỉ tốn thời gian (đọc lại khoảng 100 MB mỗi mốc).</p>
 
 === 172-181
 <p>Cờ mẫu của đề: số review có <code>mau_llm = x</code> (1.000) và <code>nhan_tay = x</code> (100), và bao nhiêu trong đó có mặt ở mốc này. Audit: 1.000 và 100 ở cả 4 mốc, tức mẫu LLM và mẫu nhãn tay đều đọc được ở mọi mốc.</p>
@@ -80,7 +80,7 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 <p>Kết quả chi tiết của một mốc. Phần đáng hỏi là <code>key_integrity</code>:</p>
 <ul><li>ID chính thức thiếu trong dữ liệu (<code>missing</code>) và ID lọt vào mà không chính thức (<code>unexpected</code>), cho cả listing và review.</li>
 <li>Số ID trùng sau khi lọc.</li></ul>
-<p>Audit: cả 6 giá trị đều rỗng hoặc 0 ở cả 4 mốc. Nghĩa là 1.000 listing và 5.000 review của đề đều có mặt ở <b>mọi</b> mốc, không thừa, không trùng.</p>
+<p>Audit: cả 6 giá trị đều rỗng hoặc 0 ở cả 4 mốc. Nghĩa là 1.000 listing và 5.000 review của đề đều có mặt ở mọi mốc, không thừa, không trùng.</p>
 
 === 206-212
 <p>Tham số dòng lệnh: <code>--config</code> và <code>--workbook-json</code> bắt buộc; hai đường ra tuỳ chọn. Ví dụ chạy từ thư mục gốc: <code>python scripts/check_assignment_data.py --config configs/sydney.yaml --workbook-json &lt;file JSON&gt;</code>.</p>
@@ -100,14 +100,14 @@ lead: Script kiểm tra độc lập, <b>ngoài pipeline</b>: đọc 12 file <co
 
 === 244-255
 <p>Thiếu bất kỳ file nào: ghi trạng thái <code>missing_input</code>, thêm dòng CSV <code>tai_ve_ok = khong</code> với các cột số để trống, rồi sang mốc khác.</p>
-<p>Lỗi đã kiểm chứng: nhánh này <b>không thêm gì vào <code>failures</code></b>. Chạy thử với yaml cũ khi không có file nào: cả 4 mốc <code>missing_input</code> mà <code>failures</code> vẫn là <code>[]</code>. Ai chỉ đọc <code>failures</code> sẽ tưởng đạt. Script cũng luôn thoát mã 0, kể cả khi có failure.</p>
+<p>Nhánh này không thêm gì vào <code>failures</code>, đã kiểm chứng: chạy thử với yaml cũ khi không có file nào, cả 4 mốc <code>missing_input</code> mà <code>failures</code> vẫn là <code>[]</code>. Ai chỉ đọc <code>failures</code> sẽ tưởng đạt. Script cũng luôn thoát mã 0, kể cả khi có failure.</p>
 
 === 256-278
 <p>Đủ file thì gọi <code>check_snapshot</code> và dựng một dòng CSV. Dòng thật đã commit, mốc 2026-06-16: 12.633.389 / 17.897.549 / 84.860.225 byte; 1000 listing; 365000 dòng lịch; 5000 review; 875/125; 25 căn 0 review; 20 thiếu giá; 90 cột; 13 cột thiếu ≥ 90%.</p>
 
 === 279-287
-<p>So với kỳ vọng. Chỉ <code>n_listings</code> và số căn 0 review lấy từ yaml; các số còn lại <b>viết cứng</b>: <code>365000</code>, <code>5000</code>, <code>875</code>, <code>125</code>. Khác <code>download.check_expected</code>, nơi mọi số đều đọc từ <code>qa.expected</code>. Với Sydney kết quả như nhau; đổi đề thì phải sửa cả code.</p>
-<ul><li>Review: đòi <b>đủ 5.000 ở từng mốc</b>, chặt hơn bước 1 (bước 1 chỉ đòi hợp qua các mốc bằng 5.000). Dữ liệu Sydney đạt cả hai.</li>
+<p>So với kỳ vọng. Chỉ <code>n_listings</code> và số căn 0 review lấy từ yaml; các số còn lại viết cứng: <code>365000</code>, <code>5000</code>, <code>875</code>, <code>125</code>. Khác <code>download.check_expected</code>, nơi mọi số đều đọc từ <code>qa.expected</code>. Với Sydney kết quả như nhau; đổi đề thì phải sửa cả code.</p>
+<ul><li>Review: đòi đủ 5.000 ở từng mốc, chặt hơn bước 1 (bước 1 chỉ đòi hợp qua các mốc bằng 5.000). Dữ liệu Sydney đạt cả hai.</li>
 <li><code>expected.get(..., [None] * 4)[index]</code>: nhiều hơn 4 mốc thì <code>IndexError</code>; không có <code>qa.expected</code> thì so với <code>None</code> nên luôn báo sai.</li></ul>
 
 === 288-292

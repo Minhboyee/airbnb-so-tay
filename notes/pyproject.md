@@ -1,13 +1,13 @@
 --- meta
 title: pyproject.toml
-lead: Cấu hình công cụ cho CI, không phải gói cài đặt: <code>ruff</code> (lint + format), <code>mypy</code> (type check), <code>pytest</code> + <code>coverage</code>. Ba “cổng” lint / typecheck / test trong <a href="#ci-L21">ci.yml</a> đều lấy ngưỡng từ đây; không có <code>[project]</code> hay <code>[build-system]</code> vì repo chạy bằng script, không phát hành package.
+lead: Cấu hình công cụ cho CI, không phải gói cài đặt: <code>ruff</code> (lint + format), <code>mypy</code> (type check), <code>pytest</code> + <code>coverage</code>. Ba cổng lint / typecheck / test trong <a href="#ci-L21">ci.yml</a> đều lấy ngưỡng từ đây; không có <code>[project]</code> hay <code>[build-system]</code> vì repo chạy bằng script, không phát hành package.
 
 --- blocks
 === 1-6
 <p>Khối comment đầu file là bản đồ của ba cổng CI:</p>
-<ul><li><b>ruff</b> lo lint và format (mục <code>[tool.ruff]</code>).</li>
-<li><b>mypy</b> lo kiểu (mục <code>[tool.mypy]</code>).</li>
-<li><b>pytest</b> + <b>coverage</b> lo test và ngưỡng phủ (mục <code>[tool.pytest.ini_options]</code>, <code>[tool.coverage.*]</code>).</li></ul>
+<ul><li>ruff lo lint và format (mục <code>[tool.ruff]</code>).</li>
+<li>mypy lo kiểu (mục <code>[tool.mypy]</code>).</li>
+<li>pytest + coverage lo test và ngưỡng phủ (mục <code>[tool.pytest.ini_options]</code>, <code>[tool.coverage.*]</code>).</li></ul>
 <p>Comment tách hai nhóm phụ thuộc: runtime ở <code>requirements.txt</code>, công cụ dev/CI ở <code>requirements-dev.txt</code>. Cả hai được gộp và ghim trong <code>requirements.lock.txt</code>; CI chỉ cài từ lockfile (<a href="#ci-L33">ci.yml dòng 33</a>). Dòng 6 ghi thứ tự chạy <code>ruff check . | ruff format --check . | mypy | pytest</code>, khớp ba job lint → typecheck → test của workflow.</p>
 
 === 8-11
@@ -33,7 +33,7 @@ lead: Cấu hình công cụ cho CI, không phải gói cài đặt: <code>ruff<
 <li><code>warn_unreachable = true</code>: code sau <code>return</code>/<code>raise</code> bị báo.</li>
 <li><code>warn_unused_ignores = true</code>: <code># type: ignore</code> thừa cũng là lỗi; sau khi nâng thư viện, ignore cũ có thể làm đỏ CI.</li>
 <li><code>warn_redundant_casts = true</code>: <code>cast()</code> về đúng kiểu sẵn có bị báo.</li></ul>
-<p>Lưu ý: câu “Repo chưa có annotation nào” ở dòng 19 đã lỗi thời — nhiều hàm đã có annotation, ví dụ <code>load_config(path: str | Path) -&gt; dict[str, Any]</code> và <code>classify(df, seen_before, config) -&gt; pd.Series</code>.</p>
+<p>Câu "Repo chưa có annotation nào" ở dòng 19 đã lỗi thời: nhiều hàm đã có annotation, ví dụ <code>load_config(path: str | Path) -&gt; dict[str, Any]</code> và <code>classify(df, seen_before, config) -&gt; pd.Series</code>.</p>
 
 === 27-36
 <p>Mục pytest:</p>
@@ -43,7 +43,7 @@ lead: Cấu hình công cụ cho CI, không phải gói cài đặt: <code>ruff<
 <li><code>--strict-config</code>: khoá cấu hình sai là lỗi.</li>
 <li><code>--cov</code> + <code>--cov-report=term-missing</code>: đo coverage và in dòng chưa phủ.</li>
 <li><code>--cov-fail-under=95</code>: dưới 95% là exit 1.</li></ul>
-<p>Vì <code>--cov-fail-under</code> nằm trong <code>addopts</code>, nó áp cho <b>mọi</b> lần chạy, kể cả khi chỉ chạy một file test. Đã chạy thử <code>pytest tests/test_config.py</code>: 10 test pass nhưng exit 1 vì coverage toàn repo chỉ 1,96%. Muốn chạy lẻ phải thêm <code>--no-cov</code>.</p>
+<p>Vì <code>--cov-fail-under</code> nằm trong <code>addopts</code>, nó áp cho mọi lần chạy, kể cả khi chỉ chạy một file test. Đã chạy thử <code>pytest tests/test_config.py</code>: 10 test pass nhưng exit 1 vì coverage toàn repo chỉ 1,96%. Muốn chạy lẻ phải thêm <code>--no-cov</code>.</p>
 
 === 37-44
 <p><code>filterwarnings</code>:</p>
@@ -86,7 +86,7 @@ fn 0 50 | [tool.coverage.report] | Bỏ dòng main và pragma
 chips 1 | ci:36 ruff check ; ci:57 mypy ; ci:80 pytest
 
 --- review
-mid | Comment mypy lỗi thời | Dòng 19 nói “Repo chưa có annotation nào”, nhưng nhiều hàm đã có annotation (<code>load_config</code>, <code>run</code>, <code>classify</code>...). Lý do bật <code>check_untyped_defs</code> vẫn đúng, nhưng câu mở đầu sai thực tế.
+mid | Comment mypy lỗi thời | Dòng 19 nói "Repo chưa có annotation nào", nhưng nhiều hàm đã có annotation (<code>load_config</code>, <code>run</code>, <code>classify</code>...). Lý do bật <code>check_untyped_defs</code> vẫn đúng, nhưng câu mở đầu sai thực tế.
 mid | Tên SDK trong comment sai | Dòng 39 nói <code>google-generativeai</code>, trong khi <code>src/llm.py</code> dòng 391 import <code>from google import genai</code> và <code>requirements.txt</code> ghim <code>google-genai==2.32.0</code>. Lý do ignore <code>FutureWarning</code> vẫn hợp lý, chỉ tên gói lệch.
 mid | Ngưỡng 95% áp cả khi chạy một test | <code>--cov-fail-under=95</code> nằm trong <code>addopts</code>; đã chạy thử <code>pytest tests/test_config.py</code>, 10 test pass nhưng exit 1 vì coverage 1,96%. Chạy lẻ phải thêm <code>--no-cov</code>.
 low | scripts/ ngoài mypy và coverage | <code>mypy.files</code> chỉ có <code>run_pipeline.py</code>, <code>src</code>, <code>tests</code>; <code>coverage.run.source</code> chỉ <code>src</code> + <code>run_pipeline</code>. Hai script trong <code>scripts/</code> không qua cổng nào.

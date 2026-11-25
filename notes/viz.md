@@ -4,14 +4,14 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 
 --- blocks
 === 1-12
-<p>Giới thiệu hợp đồng của bước trực quan hóa: đọc kết quả đã tính, không tạo số mẫu hay nội suy. Năm hình đầu là năm KPI qua bốn mốc; hình 06–07 so khu vực tại mốc cuối; hình 08 là kết quả LLM gộp review, không phải đường theo thời gian.</p>
+<p>Bước trực quan hóa chỉ đọc kết quả đã tính, không tạo số mẫu hay nội suy. Năm hình đầu là năm KPI qua bốn mốc; hình 06–07 so khu vực tại mốc cuối; hình 08 là kết quả LLM gộp review, không phải đường theo thời gian.</p>
 <p>Chữ “KPI thực tế” nghĩa là số từ pipeline, không có nghĩa mẫu đại diện toàn Sydney. CSV đã commit có <code>n_obs=1.000</code> cho các KPI listing toàn mẫu; không được nhầm với 20.573 căn trong phân tích căn ảo ở <a href="#f-viz_phantom">viz_phantom.py</a>.</p>
 
 === 14-22
 <p>Hai cách gọi cùng một logic: CLI <code>python -m src.viz</code> hoặc <code>viz.run(config)</code>. Hai cờ <code>--kpi</code>, <code>--out</code> đổi đường dẫn vào/ra; mặc định là đường dẫn tương đối với thư mục làm việc. Vì vậy ví dụ yêu cầu chạy từ gốc repo nhóm.</p>
 
 === 24
-<p>Hoãn đánh giá chú thích kiểu. Các kiểu như <code>list[Path]</code> và <code>dict[str, Any]</code> mô tả giao diện hàm, không tự kiểm dữ liệu khi chạy; các kiểm tra thật nằm trong <code>extract_*</code>.</p>
+<p>Dòng này hoãn việc đánh giá chú thích kiểu. Các kiểu như <code>list[Path]</code> và <code>dict[str, Any]</code> chỉ mô tả giao diện hàm, không kiểm dữ liệu lúc chạy; phần kiểm thật nằm trong <code>extract_*</code>.</p>
 
 === 26-30
 <p><code>argparse</code> đọc CLI; <code>math.isfinite</code> loại vô cực; <code>dataclass</code> giữ đặc tả biểu đồ; <code>Path</code> quản lý đường dẫn. <code>Any</code> dành cho dict cấu hình và đối tượng trục matplotlib, không phải schema đầu vào.</p>
@@ -26,8 +26,8 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p><code>ChartSpec</code> gom năm thuộc tính đồng hành để không ghép nhầm tên KPI, tiêu đề, nhãn trục, tên PNG và đơn vị. <code>frozen=True</code> ngăn gán lại các trường sau khởi tạo. Comment giải thích vì sao giữ tên file 01–03: tương thích tài liệu cũ, dù nay có thêm hình.</p>
 
 === 58-66
-<p>Hình <code>01_availability_rate_by_snapshot.png</code> đọc <code>availability_rate</code>. <b>Đọc ảnh thật:</b> bốn điểm 49,65% → 50,08% → 52,18% → 50,76%, đường gần ngang quanh 50 trên trục 0–100. Đây là tỷ lệ ngày lịch có <code>available='t'</code>, không phải tỷ lệ căn trống và cũng không phải tỷ lệ đã đặt.</p>
-<p>Tự đọc lại <code>data/processed/kpi_metrics.csv</code>: mẫu số mỗi mốc là 365.000 ngày hợp lệ. Công thức ở <a href="#kpi-L361">kpi.py</a>; viz chỉ lấy số đã tính.</p>
+<p>Hình <code>01_availability_rate_by_snapshot.png</code> đọc <code>availability_rate</code>. Ảnh thật có bốn điểm 49,65% → 50,08% → 52,18% → 50,76%, đường gần ngang quanh 50 trên trục 0–100. Đây là tỷ lệ ngày lịch có <code>available='t'</code>, không phải tỷ lệ căn trống hay tỷ lệ đã đặt.</p>
+<p>Mở <code>data/processed/kpi_metrics.csv</code> sẽ thấy mẫu số mỗi mốc là 365.000 ngày hợp lệ. Công thức ở <a href="#kpi-L361">kpi.py</a>; viz chỉ lấy số đã tính.</p>
 
 === 67-73
 <p>Hình <code>02_long_stay_restriction_rate_by_snapshot.png</code> đọc <code>long_stay_restriction_rate</code>. Ảnh thật có 7,20% → 8,00% → 3,50% → 4,40%; đường sát đáy vì vẫn dùng thang 0–100. Mốc cuối tương ứng 44/1.000 căn có yêu cầu tối thiểu từ 7 đêm.</p>
@@ -38,7 +38,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>“Khai thác cao” được <a href="#kpi-L386">kpi.py</a> xác định bằng <code>estimated_occupancy_l365d &gt;= 180</code>. Đây là occupancy ước tính của 365 ngày qua, không phải lấy <code>100 - availability_rate</code> của lịch tương lai.</p>
 
 === 81-87
-<p>Hình <code>04_professional_host_presence_by_snapshot.png</code> đọc <code>professional_host_presence</code>. Ảnh thật dao động 50,95% → 51,69% → 47,97% → 52,03%. Đơn vị là <b>host</b>: CSV có mẫu số lần lượt 738 / 739 / 740 / 738; mốc cuối quy đổi thành 384/738 host bằng cách nhân tỷ lệ CSV với mẫu số rồi làm tròn tử số.</p>
+<p>Hình <code>04_professional_host_presence_by_snapshot.png</code> đọc <code>professional_host_presence</code>. Ảnh thật dao động 50,95% → 51,69% → 47,97% → 52,03%. Đơn vị ở đây là host: CSV có mẫu số lần lượt 738 / 739 / 740 / 738. Mốc cuối quy đổi thành 384/738 host bằng cách nhân tỷ lệ CSV với mẫu số rồi làm tròn tử số.</p>
 <p>“Chuyên nghiệp” ở đây chỉ là quy ước host có hơn một listing, không phải chứng nhận nghề nghiệp. <a href="#kpi-L404">KPI</a> gom host trước khi tính, nên không được lấy 52,03% nhân với 1.000 căn.</p>
 
 === 88-95
@@ -82,7 +82,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>Kiểm đủ mọi mốc mà config yêu cầu. Thiếu một mốc thì báo lỗi kèm danh sách, không thay bằng 0, không nối đường bắc qua chỗ thiếu. Các dòng snapshot ngoài config không bù được mốc đang thiếu.</p>
 
 === 172-176
-<p>Lọc bỏ mốc ngoài danh sách trước khi kiểm trùng; hai dòng cùng mốc được chọn là lỗi, không tùy tiện lấy dòng đầu hay lấy trung bình. Sau đó đặt index rồi <code>.loc[snapshots]</code> để giữ <b>thứ tự config</b>, không phải thứ tự CSV hay tự sắp ngày.</p>
+<p>Lọc bỏ mốc ngoài danh sách trước khi kiểm trùng; hai dòng cùng mốc được chọn là lỗi, không tùy tiện lấy dòng đầu hay lấy trung bình. Sau đó đặt index rồi <code>.loc[snapshots]</code> để giữ thứ tự config, không phải thứ tự CSV hay tự sắp ngày.</p>
 <p>Test đảo thứ tự dòng CSV vẫn ra đúng dãy. Chạy thử đảo danh sách config với CSV thật cho dãy availability 50,7595 → 52,18 → 50,0811 → 49,6477; hàm tôn trọng cả danh sách ngày đảo ngược.</p>
 
 === 179-185
@@ -117,24 +117,24 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>Tiêu đề đặt theo tọa độ Figure, tách khỏi vùng dữ liệu. <code>savefig</code> ghi đúng đường dẫn được truyền ở 165 dpi, nền trắng; hàm không tự tạo thư mục cha. <code>run</code> tạo thư mục trước khi gọi, còn người gọi riêng phải chuẩn bị đầu ra.</p>
 
 === 229-234
-<p><code>extract_neighbourhoods</code> đọc ba cột <code>group_name/value/n_obs</code> của KPI availability, đúng snapshot và scope khu vực được cấu hình. <code>area_col</code> ở đây là <b>giá trị của cột scope</b>, không phải tên cột được tra trực tiếp trong bảng KPI.</p>
+<p><code>extract_neighbourhoods</code> đọc ba cột <code>group_name/value/n_obs</code> của KPI availability, đúng snapshot và scope khu vực được cấu hình. <code>area_col</code> ở đây là giá trị của cột scope, không phải tên cột tra trực tiếp trong bảng KPI.</p>
 
 === 235-239
 <p>Không có dữ liệu khu thì lỗi, không lặng lẽ bỏ hình 06. Tên khu thiếu hoặc lặp trong tập đã chọn cũng bị chặn; sau đó kiểm tỷ lệ và mẫu số trên toàn tập khu vực, kể cả các khu sẽ không vào top 10.</p>
 
 === 240-242
-<p>Gán lại hai cột dạng số để xếp hạng theo số, không theo thứ tự từ điển của chuỗi. <b>Chọn 10 khu nhiều quan sát nhất trước, rồi mới sắp theo tỷ lệ tăng dần</b>. Không phải 10 khu trống nhiều nhất. Nếu ít hơn 10 khu thì giữ số khu có sẵn; test dùng 12 khu để kiểm đúng phép chọn và thứ tự.</p>
+<p>Gán lại hai cột dạng số để xếp hạng theo số, không theo thứ tự từ điển của chuỗi. Cách chọn là lấy 10 khu nhiều quan sát nhất trước, rồi mới sắp theo tỷ lệ tăng dần, chứ không phải 10 khu trống nhiều nhất. Nếu ít hơn 10 khu thì giữ số khu có sẵn; test dùng 12 khu để kiểm đúng phép chọn và thứ tự.</p>
 
 === 245-248
-<p>Nhãn <code>n</code> của hình 06 là số listing <b>ước tính</b> từ ngày hợp lệ chia 365, làm tròn rồi ép tối thiểu 1. Với CSV thật: Sydney có 100.010/365 = 274, Pittwater 19.710/365 = 54; đây là hai nhãn đã thấy trên ảnh.</p>
+<p>Nhãn <code>n</code> của hình 06 là số listing ước tính, lấy ngày hợp lệ chia 365, làm tròn rồi ép tối thiểu 1. Với CSV thật: Sydney có 100.010/365 = 274, Pittwater 19.710/365 = 54; đây là hai nhãn đã thấy trên ảnh.</p>
 <p>Không có thao tác đếm ID căn ở đây. Chạy thử 912,5 ngày cho 2,5 rồi <code>round</code> thành 2; quy tắc làm tròn này và việc ép tối thiểu 1 có thể che độ thiếu lịch nếu đầu vào không đủ 365 ngày/căn. Chú thích dưới hình đã nói rõ tính ước lượng.</p>
 
 === 251-257
 <p>Hình 06 dùng khung rộng 11,5 × 7 inch, chừa lề trái 24% cho tên khu dài kèm <code>n</code>. Bật lưới theo x, tắt lưới y vì độ dài cột ngang biểu diễn tỷ lệ.</p>
 
 === 258-264
-<p>Lấy list giá trị và ghép nhãn khu với mẫu số theo từng dòng; <code>strict=True</code> bảo đảm không lệch số nhãn. <code>barh</code> vẽ y từ 0 trở lên, nên tập đã sắp tăng dần sẽ hiện <b>khu cao nhất ở trên cùng</b>. Trục x tới 102 để chừa chỗ chữ.</p>
-<p><b>Đọc ảnh 06 thật:</b> Pittwater trên cùng 68,23% (54 listing ước tính), Sydney 47,37% (274), Auburn cuối 35,35% (32). Cột dài hơn nghĩa tỷ lệ ngày còn trống cao hơn trong các khu đã chọn, không có nghĩa nhiều căn hơn.</p>
+<p>Lấy list giá trị và ghép nhãn khu với mẫu số theo từng dòng; <code>strict=True</code> để không lệch số nhãn. <code>barh</code> vẽ y từ 0 trở lên, nên tập đã sắp tăng dần sẽ hiện khu cao nhất ở trên cùng. Trục x tới 102 để chừa chỗ chữ.</p>
+<p>Ảnh 06 thật cho Pittwater trên cùng 68,23% (54 listing ước tính), Sydney 47,37% (274), Auburn cuối 35,35% (32). Cột dài hơn nghĩa tỷ lệ ngày còn trống cao hơn trong các khu đã chọn, không có nghĩa nhiều căn hơn.</p>
 
 === 265-266
 <p>Ghi tỷ lệ hai số lẻ ở bên phải mỗi cột, cách đầu cột 1,2 đơn vị phần trăm. Đây là tọa độ dữ liệu, khác độ lệch theo point trong hình đường. Chữ hiển thị 68,23% là làm tròn từ 68,2344 trong CSV.</p>
@@ -161,7 +161,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>Khung hình 07 cùng kích thước hình 06; lề trái chỉ 16% vì nhãn A01…A08 ngắn. Lưới dọc và nền/viền dùng chung để so độ dài cột, không có bản đồ địa lý trong hình này.</p>
 
 === 319-325
-<p>Nhãn chỉ lấy <code>group_name</code>; trục x cố định 0–100. <b>Đọc ảnh 07 thật:</b> từ trên xuống A05 70,63%, A02 69,05%, A04 58,33%, A06 57,50%, A07 55,04%, A01 49,59%, A03 45,38%, A08 38,10%.</p>
+<p>Nhãn chỉ lấy <code>group_name</code>; trục x cố định 0–100. Ảnh 07 thật, từ trên xuống: A05 70,63%, A02 69,05%, A04 58,33%, A06 57,50%, A07 55,04%, A01 49,59%, A03 45,38%, A08 38,10%.</p>
 <p>“Thương mại” là <code>Entire home/apt</code> đồng thời host có hơn một listing, theo <a href="#kpi-L449">công thức KPI</a>. Nhân tỷ lệ CSV với mẫu số rồi làm tròn tử số cho A05 là 89/126, A08 là 48/126; mẫu số tám khu cộng thành 1.000. Không suy thành số host hay tỷ lệ căn ảo.</p>
 
 === 326-327
@@ -181,7 +181,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>Nhánh <code>else</code> chỉ đúng vì <code>run</code> đã lọc đúng hai tên KPI. Gọi hàm trực tiếp với KPI lạ sẽ bị đặt nhãn như aspect; hàm vẽ không tự kiểm schema nghiệp vụ.</p>
 
 === 354-358
-<p>Vẽ theo thứ tự dòng đầu vào trên thang 0–100, nhãn trục nhấn mạnh hai mẫu số khác nhau. <b>Đọc ảnh 08 thật:</b> cột dưới 14,00% tương ứng 140/1.000 review có phàn nàn; cột trên amenities 50,00% tương ứng 88/176 lượt nhắc phàn nàn.</p>
+<p>Vẽ theo thứ tự dòng đầu vào trên thang 0–100, nhãn trục nhấn mạnh hai mẫu số khác nhau. Ảnh 08 thật có cột dưới 14,00% tương ứng 140/1.000 review có phàn nàn, cột trên amenities 50,00% tương ứng 88/176 lượt nhắc phàn nàn.</p>
 <p>Không cộng 14% với 50%, không nói một nửa số review phàn nàn về amenities. Một review có thể góp nhiều aspect, nên mẫu số lượt nhắc khác số review.</p>
 
 === 359-361
@@ -189,7 +189,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 
 === 362-370
 <p>Dòng phụ đề xuất hiện nguyên văn trên ảnh đã commit: “Không phải nhãn tay; chưa đo accuracy/F1. Không suy rộng toàn thành phố.” Hai ý về nhãn và phạm vi vẫn đúng; riêng “chưa đo” đã lỗi thời.</p>
-<p>Tự đọc <code>reports/evaluation/eval_summary.csv</code>: phương pháp <code>llm</code> có 100 gold, 100 được chấm, accuracy 0,97 và macro-F1 0,935774. Code vẫn in chữ cũ dù kết quả đánh giá đã có; đây là nhận xét <code>mid</code>, không phải lý do sửa số 14% hay 50%.</p>
+<p>Mở <code>reports/evaluation/eval_summary.csv</code> sẽ thấy phương pháp <code>llm</code> có 100 gold, 100 được chấm, accuracy 0,97 và macro-F1 0,935774. Code vẫn in chữ cũ dù kết quả đánh giá đã có; đây là nhận xét <code>mid</code>, không phải lý do sửa số 14% hay 50%.</p>
 
 === 373-382
 <p><code>run</code> là bộ điều phối công khai. Dấu <code>*</code> buộc đường dẫn tùy chọn phải truyền bằng tên, giảm nhầm thứ tự input/output. Trả list <code>Path</code> của các hình vừa tạo để pipeline biết kết quả.</p>
@@ -205,7 +205,7 @@ lead: Bước 6 đọc <code>data/processed/kpi_metrics.csv</code>, kiểm dữ 
 <p>Lấy scope khu từ <code>config.kpi.area_col</code>, mặc định <code>neighbourhood_cleansed</code> nếu không có mục cấu hình. Cả hình 06 và 07 dùng <code>snapshots[-1]</code>. Với cấu hình hiện tại là 16/06/2026; đảo danh sách sẽ chọn 12/09/2025, dù tên file vẫn là <code>latest</code>.</p>
 
 === 395-399
-<p>LLM chỉ lọc scope và hai tên KPI, <b>không lọc snapshot, không kiểm trùng, không bắt đủ cả hai KPI</b>. Các dòng hiện tại có snapshot <code>ALL</code>, khác bốn mốc, vì cùng mẫu review được gộp. Có dòng nào thì kiểm số và vẽ dòng đó; không có thì list rỗng và bỏ hình 08.</p>
+<p>LLM chỉ lọc scope và hai tên KPI; nó không lọc snapshot, không kiểm trùng và không bắt buộc đủ cả hai KPI. Các dòng hiện tại có snapshot <code>ALL</code>, khác bốn mốc, vì cùng mẫu review được gộp. Có dòng nào thì kiểm số và vẽ dòng đó; không có thì list rỗng và bỏ hình 08.</p>
 <p>Chạy thử bằng bản sao CSV trong bộ nhớ, thêm hai dòng LLM có snapshot <code>1900-01-01</code>, thay các thao tác ghi bằng mock: <code>run</code> vẫn chuyển cả bốn dòng và giá trị 14 / 50 / 14 / 50 vào hàm vẽ. Vì vậy đầu vào gộp nhiều cohort cần được chọn trước khi gọi.</p>
 
 === 401-403

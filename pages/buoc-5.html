@@ -1,7 +1,7 @@
 <section class="head">
   <span class="kicker">Mức 2F · src/kpi.py</span>
   <h1>Bước 5 — KPI</h1>
-  <p class="lead">Ba nhóm chỉ số, ba mẫu số khác nhau. KPI thường tính trên <b>mẫu 1.000 căn đã qua QA</b>. Hai KPI LLM tính trên <b>review</b>. KPI căn ảo (5b) tính trên <b>cả thành phố</b>, đọc file thô và kết quả chia nhóm. Mọi dòng ghi ra có cột <code>n_obs</code> để biết mẫu số.</p>
+  <p class="lead">Có ba nhóm chỉ số với ba mẫu số khác nhau. KPI thường tính trên <b>mẫu 1.000 căn đã qua QA</b>. Hai KPI LLM tính trên <b>review</b>. KPI căn ảo (5b) tính trên <b>cả thành phố</b>, đọc file thô và kết quả chia nhóm. Mọi dòng ghi ra có cột <code>n_obs</code> để biết mẫu số.</p>
 </section>
 <section class="block">
   {{diagram:step5}}
@@ -13,7 +13,7 @@
       <tr><td><code>high_utilization_listing_rate</code></td><td>% căn có occupancy ước tính ≥ 180 ngày</td><td>22,80%</td></tr>
       <tr><td><code>professional_host_presence</code></td><td>% host có &gt; 1 listing</td><td>52,03% (n = 738 host)</td></tr>
       <tr><td><code>high_rated_listing_share</code></td><td>% căn có rating ≥ 4,9</td><td>32,82% (n = 975)</td></tr>
-      <tr><td><code>commercialized_listing_rate</code></td><td>% căn vừa là Entire home/apt vừa thuộc host có <td>theo <code>analysis_area</code> A01–A08</td>gt; 1 listing, theo <code>analysis_area</code> A01–A08</td><td>A05 70,63%, A08 38,10%</td></tr>
+      <tr><td><code>commercialized_listing_rate</code></td><td>% căn vừa là Entire home/apt vừa thuộc host có &gt; 1 listing, theo <code>analysis_area</code> A01–A08</td><td>A05 70,63%, A08 38,10%</td></tr>
       <tr><td><code>availability_rate</code> theo khu</td><td>theo <code>neighbourhood_cleansed</code>, khu ≥ 10 căn</td><td>hình 06</td></tr>
       <tr><td><code>complaint_bearing_review_rate</code></td><td>% review có <code>has_complaint</code></td><td>14,0% (n = 1.000 review)</td></tr>
       <tr><td><code>top_complaint_aspect_share</code></td><td>khía cạnh bị chê nhiều nhất / tổng lượt chê</td><td>amenities 50% (n = 176 lượt)</td></tr>
