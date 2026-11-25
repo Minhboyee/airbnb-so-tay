@@ -167,7 +167,7 @@ button.b[aria-pressed="true"] { background: var(--accent-step); color: var(--acc
 .lines { cursor: pointer; overflow-x: auto; position: relative; }
 .lines:hover { background: var(--step-2); }
 .lines:focus-visible { outline-offset: -2px; }
-.blk.open > .lines { background: var(--accent-step); box-shadow: inset 4px 0 0 var(--accent); }
+.blk.open > .lines { background: var(--accent-step); }
 .blk.open > .lines .ln { color: var(--accent); font-weight: 600; }
 .expl { font: 16px/1.65 var(--f-text); background: var(--ground); margin: 0 12px 10px 12px; padding: 16px 22px 18px; border-radius: 0 0 12px 12px; display: grid; gap: 10px; }
 .expl .where { font-size: 14px; font-weight: 600; color: var(--accent); }
@@ -286,7 +286,7 @@ main .view.file { gap: 56px; }
 .big { font-size: clamp(2.4rem, 6vw, 3.4rem); font-weight: 800; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .card { background: var(--step); border-radius: 14px; padding: 20px 22px; display: grid; gap: 8px; align-content: start; }
-.card.ph { box-shadow: inset 4px 0 0 var(--ph); }
+.card.ph { box-shadow: inset 0 0 0 2px var(--ph); }
 .card .who { font-size: 13px; font-weight: 600; color: var(--soft); }
 .segtable td:first-child { white-space: nowrap; }
 .segtag { font: 600 13px var(--f-code); padding: 2px 9px; border-radius: 99px; background: var(--step-2); }
@@ -311,7 +311,7 @@ input:disabled { opacity: .45; }
 .stepcard.llm .n { color: #7a4fb0; }
 .timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .timeline .card .d { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
-.timeline .card.warn { box-shadow: inset 4px 0 0 var(--warn); }
+.timeline .card.warn { box-shadow: inset 0 0 0 2px var(--warn); }
 
 /* sơ đồ */
 .diagram { background: var(--step); border-radius: 14px; padding: 16px; overflow-x: auto; }
