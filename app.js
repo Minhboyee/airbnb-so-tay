@@ -231,6 +231,7 @@
     document.documentElement.classList.add("adv-open");
 
     let scale = 1, tx = 0, ty = 0;
+    let suppressClickUntil = 0;
     const apply = () => {
       stage.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     };
@@ -274,6 +275,8 @@
     let wheelEvent = null;
     viewport.addEventListener("wheel", (e) => {
       e.preventDefault();
+      // Pinch/scroll không được biến thành click mở link khi vừa dừng tay.
+      suppressClickUntil = performance.now() + 400;
       const r = viewport.getBoundingClientRect();
       wheelEvent = { dx: e.deltaX, dy: e.deltaY, ctrl: e.ctrlKey, x: e.clientX - r.left, y: e.clientY - r.top };
       if (wheelQueued) return;
@@ -320,7 +323,7 @@
     viewport.addEventListener("pointerup", endDrag);
     viewport.addEventListener("pointercancel", endDrag);
     viewport.addEventListener("click", (e) => {
-      if (!advMoved) return;
+      if (!advMoved && performance.now() >= suppressClickUntil) return;
       e.preventDefault();
       e.stopPropagation();
       advMoved = false;
