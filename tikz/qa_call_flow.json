@@ -1,0 +1,153 @@
+{
+  "title": "Bước 2 — QA",
+  "subtitle": "qa.py · qa_constraints.py · qa_rules.py",
+  "image": "qa_call_flow.png",
+  "width": 1147.63,
+  "height": 921.86,
+  "links": [
+    {
+      "left": 40.852,
+      "top": 10.989,
+      "width": 11.17,
+      "height": 3.436,
+      "href": "#run_pipeline-L144",
+      "label": "run_pipeline.main"
+    },
+    {
+      "left": 40.852,
+      "top": 20.516,
+      "width": 11.17,
+      "height": 3.448,
+      "href": "#qa-L127",
+      "label": "qa.run"
+    },
+    {
+      "left": 40.852,
+      "top": 30.361,
+      "width": 11.17,
+      "height": 3.436,
+      "href": "#qa_constraints-L113",
+      "label": "check_sample_constraints"
+    },
+    {
+      "left": 7.136,
+      "top": 16.906,
+      "width": 11.17,
+      "height": 3.288,
+      "href": "#qa_constraints-L22",
+      "label": "_check_room_types"
+    },
+    {
+      "left": 7.136,
+      "top": 23.369,
+      "width": 11.17,
+      "height": 3.275,
+      "href": "#qa_constraints-L41",
+      "label": "_check_no_reviews"
+    },
+    {
+      "left": 7.136,
+      "top": 29.769,
+      "width": 11.17,
+      "height": 3.391,
+      "href": "#qa_constraints-L71",
+      "label": "_check_missing_price"
+    },
+    {
+      "left": 7.136,
+      "top": 36.278,
+      "width": 11.17,
+      "height": 3.288,
+      "href": "#qa_constraints-L88",
+      "label": "_check_areas"
+    },
+    {
+      "left": 7.136,
+      "top": 48.505,
+      "width": 11.17,
+      "height": 3.434,
+      "href": "#qa_constraints-L134",
+      "label": "QAConstraintError"
+    },
+    {
+      "left": 40.852,
+      "top": 40.249,
+      "width": 11.17,
+      "height": 5.801,
+      "href": "#qa_rules-L578",
+      "label": "apply_rules"
+    },
+    {
+      "left": 65.552,
+      "top": 27.924,
+      "width": 11.17,
+      "height": 3.391,
+      "href": "#qa_rules-L532",
+      "label": "flag_table"
+    },
+    {
+      "left": 82.348,
+      "top": 27.924,
+      "width": 11.17,
+      "height": 3.391,
+      "href": "#qa_rules-L525",
+      "label": "_evaluate"
+    },
+    {
+      "left": 82.348,
+      "top": 35.939,
+      "width": 11.17,
+      "height": 4.58,
+      "href": "#qa_rules-L110",
+      "label": "has_price_data"
+    },
+    {
+      "left": 65.552,
+      "top": 50.064,
+      "width": 11.17,
+      "height": 3.391,
+      "href": "#qa_rules-L560",
+      "label": "_report_row"
+    },
+    {
+      "left": 82.348,
+      "top": 50.104,
+      "width": 11.17,
+      "height": 3.311,
+      "href": "#qa_rules-L549",
+      "label": "_detail"
+    },
+    {
+      "left": 40.852,
+      "top": 51.594,
+      "width": 11.17,
+      "height": 4.636,
+      "href": "#qa-L46",
+      "label": "kpi_before_after"
+    },
+    {
+      "left": 40.852,
+      "top": 62.364,
+      "width": 11.17,
+      "height": 4.62,
+      "href": "#qa-L103",
+      "label": "build_report"
+    },
+    {
+      "left": 40.852,
+      "top": 73.125,
+      "width": 11.17,
+      "height": 4.623,
+      "href": "#qa-L119",
+      "label": "write_report"
+    },
+    {
+      "left": 82.348,
+      "top": 44.078,
+      "width": 11.17,
+      "height": 4.292,
+      "href": "#qa_rules-L383",
+      "label": "RULES"
+    }
+  ]
+}

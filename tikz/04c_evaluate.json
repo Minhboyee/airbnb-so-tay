@@ -1,0 +1,81 @@
+{
+  "title": "Bước 4c — Chấm baseline và LLM",
+  "subtitle": "evaluate.py · eval_report.py · baseline.py",
+  "image": "04c_evaluate.png",
+  "width": 1011.97,
+  "height": 702.65,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.246,
+      "width": 13.788,
+      "height": 6.072,
+      "href": "#evaluate-L349",
+      "label": "evaluate.run"
+    },
+    {
+      "left": 37.084,
+      "top": 21.349,
+      "width": 13.788,
+      "height": 7.617,
+      "href": "#evaluate-L51",
+      "label": "load_gold"
+    },
+    {
+      "left": 37.084,
+      "top": 31.408,
+      "width": 13.788,
+      "height": 6.057,
+      "href": "#evaluate-L146",
+      "label": "baseline_predictions"
+    },
+    {
+      "left": 37.084,
+      "top": 40.686,
+      "width": 13.788,
+      "height": 6.057,
+      "href": "#evaluate-L161",
+      "label": "llm_predictions"
+    },
+    {
+      "left": 37.084,
+      "top": 49.965,
+      "width": 13.788,
+      "height": 6.057,
+      "href": "#evaluate-L120",
+      "label": "diagnostic_reasons"
+    },
+    {
+      "left": 37.084,
+      "top": 58.088,
+      "width": 13.788,
+      "height": 9.177,
+      "href": "#evaluate-L191",
+      "label": "score_method"
+    },
+    {
+      "left": 37.084,
+      "top": 68.979,
+      "width": 13.788,
+      "height": 7.566,
+      "href": "#evaluate-L287",
+      "label": "per_aspect_scores"
+    },
+    {
+      "left": 37.084,
+      "top": 79.004,
+      "width": 13.788,
+      "height": 6.072,
+      "href": "#evaluate-L304",
+      "label": "per_review_frame"
+    },
+    {
+      "left": 53.891,
+      "top": 49.995,
+      "width": 14.348,
+      "height": 5.998,
+      "href": "#evaluate-L94",
+      "label": "coverage_table"
+    }
+  ]
+}

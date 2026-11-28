@@ -3,6 +3,7 @@
 Trang web một file (`index.html`) giúp cả nhóm ôn vấn đáp đồ án Inside Airbnb Sydney:
 
 - **Câu chuyện**: căn “ảo” là gì, các con số chính (đã đối chiếu CSV ở tag `final`), ba cái bẫy dữ liệu, cách nói đúng khi vấn đáp.
+- **Sơ đồ chi tiết**: mỗi trang bước có thêm bản TikZ gốc ngay dưới sơ đồ giản lược. Vùng bấm trong suốt phủ lên đúng tên hàm trong ảnh; nút **Toàn màn hình** mở overlay có kéo thả và pinch để thu phóng.
 - **Luồng chính**: sơ đồ pipeline vẽ lại từ `airbnb_flow.pdf`. Bấm vào ô nào thì nhảy tới trang và dòng code của bước đó.
 - **Trang 0 → 6**: hiện **toàn bộ code ở tag `final`** của repo nhóm, chia theo bước. Bấm vào đoạn code để mở giải thích ngay dưới đoạn đó. Pane bên phải tóm tắt luồng của file và tô bước đang đọc.
 - **Kiểm thử, Lý thuyết, Hỏi đáp**: bảng test, kiến thức nền, câu hỏi vấn đáp và nhận xét code.

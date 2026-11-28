@@ -1,0 +1,113 @@
+{
+  "title": "Bước 1 — Tải và lọc dữ liệu",
+  "subtitle": "download.py · run_pipeline.py:136",
+  "image": "01_download.png",
+  "width": 1011.97,
+  "height": 701.91,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.394,
+      "width": 13.788,
+      "height": 6.079,
+      "href": "#download-L505",
+      "label": "download.run"
+    },
+    {
+      "left": 37.084,
+      "top": 23.525,
+      "width": 13.788,
+      "height": 7.625,
+      "href": "#download-L161",
+      "label": "download_snapshots"
+    },
+    {
+      "left": 37.084,
+      "top": 34.825,
+      "width": 13.788,
+      "height": 7.64,
+      "href": "#download-L228",
+      "label": "verify_raw"
+    },
+    {
+      "left": 37.084,
+      "top": 46.921,
+      "width": 13.788,
+      "height": 6.064,
+      "href": "#download-L260",
+      "label": "load_group_ids"
+    },
+    {
+      "left": 37.084,
+      "top": 58.229,
+      "width": 13.788,
+      "height": 6.064,
+      "href": "#download-L313",
+      "label": "group_ids_match_city"
+    },
+    {
+      "left": 37.084,
+      "top": 69.941,
+      "width": 13.788,
+      "height": 6.064,
+      "href": "#download-L471",
+      "label": "process_snapshot"
+    },
+    {
+      "left": 37.084,
+      "top": 81.276,
+      "width": 13.788,
+      "height": 7.625,
+      "href": "#download-L451",
+      "label": "check_review_total"
+    },
+    {
+      "left": 53.891,
+      "top": 19.085,
+      "width": 14.348,
+      "height": 6.005,
+      "href": "#download-L108",
+      "label": "download_file"
+    },
+    {
+      "left": 54.286,
+      "top": 59.717,
+      "width": 13.558,
+      "height": 2.418,
+      "href": "#download-L360",
+      "label": "filter_listings"
+    },
+    {
+      "left": 54.286,
+      "top": 60.853,
+      "width": 13.558,
+      "height": 2.418,
+      "href": "#download-L368",
+      "label": "filter_reviews"
+    },
+    {
+      "left": 53.891,
+      "top": 78.882,
+      "width": 14.348,
+      "height": 7.566,
+      "href": "#download-L401",
+      "label": "check_expected"
+    },
+    {
+      "left": 54.286,
+      "top": 61.988,
+      "width": 13.558,
+      "height": 2.418,
+      "href": "#download-L382",
+      "label": "read_calendar_filtered"
+    },
+    {
+      "left": 28.323,
+      "top": 65.553,
+      "width": 8.168,
+      "height": 2.703,
+      "href": "#download-L290",
+      "label": "sample_ids_by_seed"
+    }
+  ]
+}

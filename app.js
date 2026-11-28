@@ -2,6 +2,13 @@
   const $ = (s) => document.querySelector(s);
   const fmt = (n, d = 0) => n.toLocaleString("vi-VN", { minimumFractionDigits: d, maximumFractionDigits: d });
 
+  function closeAdv() {
+    const ov = document.querySelector(".advoverlay");
+    if (!ov) return;
+    ov.remove();
+    document.documentElement.classList.remove("adv-open");
+  }
+
   /* ---------- sáng / tối ---------- */
   const root = document.documentElement;
   try { const t = localStorage.getItem("theme"); if (t) root.dataset.theme = t; } catch (e) {}
@@ -45,6 +52,7 @@
     const a = e.target.closest('a[href^="#"]');
     if (!a) return;
     e.preventDefault();
+    if (a.closest(".advoverlay")) closeAdv();
     const id = a.getAttribute("href").slice(1);
     if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
     go(id);
@@ -177,6 +185,160 @@
     $("#iqr-k").addEventListener("input", runIqr);
     runIqr();
   }
+
+  /* ---------- sơ đồ chi tiết: toàn màn hình, kéo, thu phóng ---------- */
+  let advDrag = null;
+  let advMoved = false;
+
+  function openAdv(wrap) {
+    closeAdv();
+    const source = wrap.querySelector(".diagram svg");
+    const canvas = wrap.querySelector(".tikzcanvas");
+    if (!source && !canvas) return;
+    const box = source ? source.viewBox.baseVal : null;
+    const w = box && box.width ? box.width : Number(canvas.dataset.w) || 1000;
+    const h = box && box.height ? box.height : Number(canvas.dataset.h) || 600;
+    const title = wrap.dataset.title || "Sơ đồ chi tiết";
+
+    const ov = document.createElement("div");
+    ov.className = "advoverlay";
+    ov.innerHTML =
+      '<div class="advbar"><div class="t"><b></b><span>Kéo hoặc hai ngón để di chuyển · pinch để thu phóng · bấm ô để mở code</span></div>' +
+      '<button type="button" data-out aria-label="Thu nhỏ">−</button>' +
+      '<button type="button" data-in aria-label="Phóng to">+</button>' +
+      '<button type="button" data-fit>Vừa khung</button>' +
+      '<button type="button" data-close>Đóng</button></div>' +
+      '<div class="advviewport"><div class="advstage"></div></div>' +
+      '<div class="advfoot">Sơ đồ chi tiết · bấm một ô để nhảy tới đúng hàm trong code</div>';
+    ov.querySelector(".t b").textContent = title;
+
+    const stage = ov.querySelector(".advstage");
+    const viewport = ov.querySelector(".advviewport");
+    const clone = source ? source.cloneNode(true) : canvas.cloneNode(true);
+    if (source) {
+      clone.removeAttribute("style");
+      clone.setAttribute("width", w);
+      clone.setAttribute("height", h);
+    } else {
+      clone.style.width = w + "px";
+      clone.style.height = h + "px";
+      clone.querySelector("img")?.setAttribute("loading", "eager");
+    }
+    stage.style.width = w + "px";
+    stage.style.height = h + "px";
+    stage.appendChild(clone);
+    document.body.appendChild(ov);
+    document.documentElement.classList.add("adv-open");
+
+    let scale = 1, tx = 0, ty = 0;
+    const apply = () => {
+      stage.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    };
+    const clamp = (v) => Math.max(0.12, Math.min(8, v));
+    const zoom = (factor, cx, cy) => {
+      const px = cx ?? viewport.clientWidth / 2;
+      const py = cy ?? viewport.clientHeight / 2;
+      const next = clamp(scale * factor);
+      tx = px - (px - tx) * (next / scale);
+      ty = py - (py - ty) * (next / scale);
+      scale = next;
+      apply();
+    };
+    const fit = () => {
+      const pad = 36;
+      const vw = viewport.clientWidth || innerWidth;
+      const vh = viewport.clientHeight || innerHeight;
+      // Ưu tiên thấy đủ chiều ngang; nếu cao hơn màn hình thì kéo dọc.
+      scale = clamp(Math.min(1.15, (vw - pad * 2) / w));
+      tx = (vw - w * scale) / 2;
+      ty = (vh - h * scale) / 2;
+      apply();
+    };
+
+    ov.querySelector("[data-close]").addEventListener("click", closeAdv);
+    ov.querySelector("[data-fit]").addEventListener("click", fit);
+    ov.querySelector("[data-in]").addEventListener("click", () => zoom(1.25));
+    ov.querySelector("[data-out]").addEventListener("click", () => zoom(1 / 1.25));
+    requestAnimationFrame(() => {
+      fit();
+      // Ảnh TikZ mở ở 1:1 để chữ đọc được; nút "Vừa khung" thu lại toàn ảnh.
+      if (wrap.classList.contains("tikzwrap")) {
+        scale = clamp(0.9);
+        tx = (viewport.clientWidth - w * scale) / 2;
+        ty = (viewport.clientHeight - h * scale) / 2;
+        apply();
+      }
+    });
+
+    let wheelQueued = false;
+    let wheelEvent = null;
+    viewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const r = viewport.getBoundingClientRect();
+      wheelEvent = { dx: e.deltaX, dy: e.deltaY, ctrl: e.ctrlKey, x: e.clientX - r.left, y: e.clientY - r.top };
+      if (wheelQueued) return;
+      wheelQueued = true;
+      requestAnimationFrame(() => {
+        wheelQueued = false;
+        if (!wheelEvent || !document.body.contains(ov)) return;
+        const event = wheelEvent;
+        wheelEvent = null;
+        if (event.ctrl) {
+          // pinch trên touchpad: gộp nhiều sự kiện nhỏ vào một frame để không giật
+          zoom(Math.exp(-event.dy * 0.008), event.x, event.y);
+        } else {
+          // hai ngón / lăn chuột: pan, không zoom
+          tx -= event.dx;
+          ty -= event.dy;
+          apply();
+        }
+      });
+    }, { passive: false });
+
+    viewport.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      advMoved = false;
+      advDrag = { x: e.clientX, y: e.clientY, tx, ty, id: e.pointerId };
+      viewport.setPointerCapture(e.pointerId);
+      viewport.classList.add("dragging");
+    });
+    viewport.addEventListener("pointermove", (e) => {
+      if (!advDrag || e.pointerId !== advDrag.id) return;
+      const dx = e.clientX - advDrag.x;
+      const dy = e.clientY - advDrag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) advMoved = true;
+      tx = advDrag.tx + dx;
+      ty = advDrag.ty + dy;
+      apply();
+    });
+    const endDrag = (e) => {
+      if (!advDrag || e.pointerId !== advDrag.id) return;
+      advDrag = null;
+      viewport.classList.remove("dragging");
+      try { viewport.releasePointerCapture(e.pointerId); } catch (err) { /* đã nhả */ }
+    };
+    viewport.addEventListener("pointerup", endDrag);
+    viewport.addEventListener("pointercancel", endDrag);
+    viewport.addEventListener("click", (e) => {
+      if (!advMoved) return;
+      e.preventDefault();
+      e.stopPropagation();
+      advMoved = false;
+    }, true);
+
+    ov.addEventListener("click", (e) => {
+      if (e.target === ov) closeAdv();
+    });
+    ov.querySelector("[data-close]").focus();
+  }
+
+  document.querySelectorAll(".advwrap").forEach((wrap) => {
+    const btn = wrap.querySelector(".adv-expand");
+    if (btn) btn.addEventListener("click", () => openAdv(wrap));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAdv();
+  });
 
   go(location.hash.slice(1) || "cau-chuyen");
 })();

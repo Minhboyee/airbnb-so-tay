@@ -1,0 +1,89 @@
+{
+  "title": "Bước 3 — Chia 7 nhóm căn",
+  "subtitle": "segments/__init__.py · rules.py · transitions.py · report.py",
+  "image": "03_segments.png",
+  "width": 1011.97,
+  "height": 702.29,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.211,
+      "width": 13.788,
+      "height": 6.077,
+      "href": "#seg_init-L31",
+      "label": "segments.run"
+    },
+    {
+      "left": 37.084,
+      "top": 22.529,
+      "width": 13.788,
+      "height": 7.622,
+      "href": "#seg_load-L45",
+      "label": "load_listings"
+    },
+    {
+      "left": 37.084,
+      "top": 33.392,
+      "width": 13.788,
+      "height": 6.077,
+      "href": "#seg_rules-L50",
+      "label": "classify"
+    },
+    {
+      "left": 53.891,
+      "top": 38.465,
+      "width": 14.348,
+      "height": 7.233,
+      "href": "#seg_rules-L50",
+      "label": "classify"
+    },
+    {
+      "left": 53.891,
+      "top": 26.191,
+      "width": 14.348,
+      "height": 7.563,
+      "href": "#seg_rules-L96",
+      "label": "seen_before_ids"
+    },
+    {
+      "left": 37.084,
+      "top": 43.491,
+      "width": 13.788,
+      "height": 6.062,
+      "href": "#seg_transitions-L22",
+      "label": "track"
+    },
+    {
+      "left": 37.084,
+      "top": 53.581,
+      "width": 13.788,
+      "height": 6.062,
+      "href": "#seg_transitions-L33",
+      "label": "transition_matrix"
+    },
+    {
+      "left": 37.084,
+      "top": 62.892,
+      "width": 13.788,
+      "height": 7.622,
+      "href": "#seg_transitions-L61",
+      "label": "gap_audit"
+    },
+    {
+      "left": 37.084,
+      "top": 73.765,
+      "width": 13.788,
+      "height": 6.058,
+      "href": "#seg_report-L78",
+      "label": "write_outputs"
+    },
+    {
+      "left": 37.084,
+      "top": 84.258,
+      "width": 13.788,
+      "height": 6.062,
+      "href": "#seg_report-L125",
+      "label": "summary_lines"
+    }
+  ]
+}

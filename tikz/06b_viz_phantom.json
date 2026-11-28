@@ -1,0 +1,73 @@
+{
+  "title": "Bước 6b — Hình câu chuyện căn ảo",
+  "subtitle": "viz_phantom.py",
+  "image": "06b_viz_phantom.png",
+  "width": 1011.97,
+  "height": 704.11,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.39,
+      "width": 13.788,
+      "height": 6.06,
+      "href": "#viz_phantom-L929",
+      "label": "viz_phantom.run"
+    },
+    {
+      "left": 37.084,
+      "top": 23.052,
+      "width": 13.788,
+      "height": 6.06,
+      "href": "#viz_phantom-L116",
+      "label": "real_inputs"
+    },
+    {
+      "left": 37.084,
+      "top": 41.606,
+      "width": 13.788,
+      "height": 7.601,
+      "href": "#viz_phantom-L906",
+      "label": "skip_reason"
+    },
+    {
+      "left": 37.084,
+      "top": 52.046,
+      "width": 13.788,
+      "height": 6.045,
+      "href": "#viz_phantom-L135",
+      "label": "read_input"
+    },
+    {
+      "left": 53.891,
+      "top": 64.95,
+      "width": 14.348,
+      "height": 6.003,
+      "href": "#viz_phantom-L292",
+      "label": "draw_segments"
+    },
+    {
+      "left": 54.286,
+      "top": 66.138,
+      "width": 13.558,
+      "height": 2.411,
+      "href": "#viz_phantom-L368",
+      "label": "draw_transitions"
+    },
+    {
+      "left": 54.286,
+      "top": 67.27,
+      "width": 13.558,
+      "height": 2.411,
+      "href": "#viz_phantom-L727",
+      "label": "draw_march_gap"
+    },
+    {
+      "left": 54.286,
+      "top": 68.402,
+      "width": 13.558,
+      "height": 2.411,
+      "href": "#viz_phantom-L823",
+      "label": "draw_llm_complaints"
+    }
+  ]
+}

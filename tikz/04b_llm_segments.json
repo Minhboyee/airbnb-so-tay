@@ -1,0 +1,57 @@
+{
+  "title": "Bước 4b — LLM × 7 nhóm căn",
+  "subtitle": "llm_segments.py",
+  "image": "04b_llm_segments.png",
+  "width": 1011.97,
+  "height": 706.27,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 12.36,
+      "width": 13.788,
+      "height": 7.594,
+      "href": "#llm_segments-L139",
+      "label": "llm_segments.run"
+    },
+    {
+      "left": 37.084,
+      "top": 20.421,
+      "width": 13.788,
+      "height": 9.131,
+      "href": "#llm_segments-L114",
+      "label": "_sample_listings"
+    },
+    {
+      "left": 37.084,
+      "top": 30.83,
+      "width": 13.788,
+      "height": 7.578,
+      "href": "#llm-L92",
+      "label": "load_sample_reviews"
+    },
+    {
+      "left": 37.084,
+      "top": 40.462,
+      "width": 13.788,
+      "height": 7.579,
+      "href": "#llm_segments-L95",
+      "label": "read_cache"
+    },
+    {
+      "left": 37.084,
+      "top": 49.321,
+      "width": 13.788,
+      "height": 9.128,
+      "href": "#llm_segments-L31",
+      "label": "summarize"
+    },
+    {
+      "left": 37.084,
+      "top": 68.584,
+      "width": 13.788,
+      "height": 9.131,
+      "href": "#llm_segments-L171",
+      "label": "run_cohorts"
+    }
+  ]
+}

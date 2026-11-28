@@ -1,0 +1,81 @@
+{
+  "title": "Bước 5b — KPI căn ảo",
+  "subtitle": "kpi.run_phantom(): segments_full + raw, không QA",
+  "image": "05b_phantom.png",
+  "width": 1011.97,
+  "height": 705.36,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.177,
+      "width": 13.788,
+      "height": 6.049,
+      "href": "#kpi-L980",
+      "label": "kpi.run_phantom"
+    },
+    {
+      "left": 37.084,
+      "top": 22.857,
+      "width": 13.788,
+      "height": 7.588,
+      "href": "#kpi-L81",
+      "label": "load_phantom_kpi_data"
+    },
+    {
+      "left": 37.084,
+      "top": 34.886,
+      "width": 13.788,
+      "height": 6.034,
+      "href": "#kpi-L525",
+      "label": "compute_phantom_kpis"
+    },
+    {
+      "left": 54.171,
+      "top": 26.628,
+      "width": 14.348,
+      "height": 4.868,
+      "href": "#kpi-L140",
+      "label": "phantom_listing_rate"
+    },
+    {
+      "left": 54.566,
+      "top": 34.844,
+      "width": 13.558,
+      "height": 2.406,
+      "href": "#kpi-L152",
+      "label": "by_area"
+    },
+    {
+      "left": 54.171,
+      "top": 41.37,
+      "width": 14.348,
+      "height": 5.925,
+      "href": "#kpi-L173",
+      "label": "long_stay_90_rate_"
+    },
+    {
+      "left": 54.171,
+      "top": 49.535,
+      "width": 14.348,
+      "height": 4.868,
+      "href": "#kpi-L200",
+      "label": "missing_registration_rate"
+    },
+    {
+      "left": 54.566,
+      "top": 57.751,
+      "width": 13.558,
+      "height": 2.406,
+      "href": "#kpi-L215",
+      "label": "min_nights_buckets"
+    },
+    {
+      "left": 54.566,
+      "top": 66.592,
+      "width": 13.558,
+      "height": 2.406,
+      "href": "#kpi-L262",
+      "label": "local_median"
+    }
+  ]
+}

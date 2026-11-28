@@ -13,6 +13,7 @@ import argparse
 import base64
 import os
 import html
+import json
 import re
 import sys
 from dataclasses import dataclass, field
@@ -391,6 +392,8 @@ def render_file(fid: str, probs: Problems) -> str:
 
 FIG_RE = re.compile(r"\{\{fig:([^|}]+)(?:\|([^}]*))?\}\}")
 DIAG_RE = re.compile(r"\{\{diagram:([a-z0-9_]+)\}\}")
+TIKZ_RE = re.compile(r"\{\{tikz:([a-z0-9_]+)\}\}")
+TIKZ_DIR = HERE / "tikz"
 
 
 def expand(text: str, probs: Problems, where: str) -> str:
@@ -415,8 +418,41 @@ def expand(text: str, probs: Problems, where: str) -> str:
             return ""
         return fn()
 
+    def tikz(m: re.Match) -> str:
+        name = m.group(1)
+        meta_path = TIKZ_DIR / f"{name}.json"
+        if not meta_path.exists():
+            probs.add(f"{where}: thiếu meta TikZ {name}")
+            return ""
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        title = html.escape(meta["title"])
+        subtitle = html.escape(meta["subtitle"])
+        image = TIKZ_DIR / str(meta["image"])
+        if not image.exists():
+            probs.add(f"{where}: thiếu ảnh TikZ {image}")
+            return ""
+        spots = "".join(
+            f'<a class="hotspot" style="left:{l["left"]}%;top:{l["top"]}%;'
+            f'width:{l["width"]}%;height:{l["height"]}%" href="{html.escape(l["href"])}" '
+            f'aria-label="{html.escape(l["label"])}"></a>'
+            for l in meta["links"]
+        )
+        w, h = meta["width"], meta["height"]
+        return (
+            f'<div class="advwrap tikzwrap" data-title="{title}">'
+            '<div class="advhead"><div class="advttl"><span>Bản TikZ gốc</span>'
+            f'<b>{title}</b><small>{subtitle}</small></div>'
+            '<button class="adv-expand" type="button">Toàn màn hình</button></div>'
+            f'<div class="tikzbox"><div class="tikzcanvas" data-w="{w}" data-h="{h}" '
+            f'style="aspect-ratio:{w}/{h}"><img src="tikz/{html.escape(str(meta["image"]))}" '
+            f'alt="{title}" loading="lazy">{spots}</div></div>'
+            '<p class="advhint">Bấm vào chữ/hộp để nhảy tới đúng hàm. '
+            'Toàn màn hình: kéo hoặc hai ngón để di chuyển, pinch để thu phóng.</p></div>'
+        )
+
     text = FIG_RE.sub(fig, text)
     text = DIAG_RE.sub(diag, text)
+    text = TIKZ_RE.sub(tikz, text)
     return resolve_links(text, probs, where)
 
 

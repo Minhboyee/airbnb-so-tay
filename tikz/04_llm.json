@@ -1,0 +1,81 @@
+{
+  "title": "Bước 4 — LLM gán nhãn",
+  "subtitle": "llm.py · run_pipeline.run_llm_stage()",
+  "image": "04_llm.png",
+  "width": 1011.97,
+  "height": 704.13,
+  "links": [
+    {
+      "left": 37.084,
+      "top": 13.439,
+      "width": 13.788,
+      "height": 6.059,
+      "href": "#llm-L338",
+      "label": "llm.run"
+    },
+    {
+      "left": 37.084,
+      "top": 21.955,
+      "width": 13.788,
+      "height": 9.157,
+      "href": "#llm-L92",
+      "label": "load_sample_reviews"
+    },
+    {
+      "left": 37.084,
+      "top": 32.798,
+      "width": 13.788,
+      "height": 7.601,
+      "href": "#llm-L158",
+      "label": "load_cache"
+    },
+    {
+      "left": 37.084,
+      "top": 84.27,
+      "width": 13.788,
+      "height": 6.107,
+      "href": "#llm-L158",
+      "label": "load_cache"
+    },
+    {
+      "left": 37.084,
+      "top": 52.927,
+      "width": 13.788,
+      "height": 7.601,
+      "href": "#llm-L195",
+      "label": "build_prompt"
+    },
+    {
+      "left": 37.084,
+      "top": 62.986,
+      "width": 13.788,
+      "height": 7.612,
+      "href": "#llm-L247",
+      "label": "call_gemini_batch"
+    },
+    {
+      "left": 37.084,
+      "top": 74.639,
+      "width": 13.788,
+      "height": 6.044,
+      "href": "#llm-L186",
+      "label": "append_to_cache"
+    },
+    {
+      "left": 53.891,
+      "top": 65.006,
+      "width": 14.348,
+      "height": 5.986,
+      "href": "#llm-L142",
+      "label": "validate_aspect_lists"
+    },
+    {
+      "left": 53.891,
+      "top": 50.969,
+      "width": 14.348,
+      "height": 5.88,
+      "href": "#llm-L77",
+      "label": "ReviewBatch"
+    }
+  ]
+}
